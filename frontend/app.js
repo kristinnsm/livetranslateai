@@ -1,0 +1,541 @@
+/**
+ * Babbelfish Frontend - Real-Time Voice Translation
+ * Handles WebRTC audio capture, WebSocket communication, and UI updates
+ */
+
+// Configuration
+const CONFIG = {
+    wsUrl: 'ws://localhost:8000/ws/translate',
+    sampleRate: 16000,
+    chunkDurationMs: 2000,
+    reconnectDelay: 3000
+};
+
+// Global state
+let websocket = null;
+let mediaRecorder = null;
+let audioContext = null;
+let audioStream = null;
+let isRecording = false;
+let isMuted = false;
+let sessionId = null;
+let segmentCount = 0;
+let latencyStats = [];
+
+// DOM elements
+const elements = {
+    startBtn: document.getElementById('startBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    muteBtn: document.getElementById('muteBtn'),
+    replayBtn: document.getElementById('replayBtn'),
+    sourceLang: document.getElementById('sourceLang'),
+    targetLang: document.getElementById('targetLang'),
+    replayDuration: document.getElementById('replayDuration'),
+    statusDot: document.getElementById('statusDot'),
+    statusText: document.getElementById('statusText'),
+    latencyDisplay: document.getElementById('latencyDisplay'),
+    originalText: document.getElementById('originalText'),
+    translatedText: document.getElementById('translatedText'),
+    sessionIdDisplay: document.getElementById('sessionId'),
+    translationMode: document.getElementById('translationMode'),
+    segmentCountDisplay: document.getElementById('segmentCount'),
+    micLevel: document.getElementById('micLevel'),
+    replayPlayer: document.getElementById('replayPlayer'),
+    replayAudio: document.getElementById('replayAudio'),
+    replaySubtitles: document.getElementById('replaySubtitles'),
+    toastContainer: document.getElementById('toastContainer')
+};
+
+// Event Listeners
+elements.startBtn.addEventListener('click', startTranslation);
+elements.stopBtn.addEventListener('click', stopTranslation);
+elements.muteBtn.addEventListener('click', toggleMute);
+elements.replayBtn.addEventListener('click', triggerReplay);
+elements.sourceLang.addEventListener('change', updateLanguages);
+elements.targetLang.addEventListener('change', updateLanguages);
+
+/**
+ * Start translation session
+ */
+async function startTranslation() {
+    try {
+        // Request microphone access
+        audioStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                sampleRate: CONFIG.sampleRate,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } 
+        });
+
+        // Initialize audio context
+        audioContext = new (window.AudioContext || window.webkitAudioContext)({
+            sampleRate: CONFIG.sampleRate
+        });
+
+        // Setup WebSocket connection
+        await connectWebSocket();
+
+        // Start audio capture
+        startAudioCapture();
+
+        // Update UI
+        updateUIState('recording');
+        showToast('Translation started', 'success');
+
+    } catch (error) {
+        console.error('Start error:', error);
+        showToast(`Failed to start: ${error.message}`, 'error');
+    }
+}
+
+/**
+ * Stop translation session
+ */
+function stopTranslation() {
+    // Stop audio capture
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+    }
+
+    // Stop audio stream
+    if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop());
+        audioStream = null;
+    }
+
+    // Close WebSocket
+    if (websocket) {
+        websocket.close();
+        websocket = null;
+    }
+
+    // Close audio context
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+
+    // Update UI
+    updateUIState('stopped');
+    showToast('Translation stopped', 'info');
+}
+
+/**
+ * Toggle microphone mute
+ */
+function toggleMute() {
+    isMuted = !isMuted;
+    
+    if (audioStream) {
+        audioStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMuted;
+        });
+    }
+
+    elements.muteBtn.innerHTML = isMuted 
+        ? '<span class="btn-icon">🔊</span> Unmute'
+        : '<span class="btn-icon">🔇</span> Mute';
+    
+    elements.muteBtn.classList.toggle('active', isMuted);
+}
+
+/**
+ * Connect to WebSocket server
+ */
+function connectWebSocket() {
+    return new Promise((resolve, reject) => {
+        try {
+            websocket = new WebSocket(CONFIG.wsUrl);
+
+            websocket.onopen = () => {
+                console.log('WebSocket connected');
+                updateStatus('connected', 'Connected');
+                
+                // Send a test message to verify communication
+                setTimeout(() => {
+                    if (websocket && websocket.readyState === WebSocket.OPEN) {
+                        websocket.send(JSON.stringify({ action: 'ping' }));
+                        console.log('Sent ping message');
+                    }
+                }, 1000);
+                
+                resolve();
+            };
+
+            websocket.onmessage = handleWebSocketMessage;
+
+            websocket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateStatus('error', 'Connection error');
+                reject(error);
+            };
+
+            websocket.onclose = () => {
+                console.log('WebSocket closed');
+                updateStatus('disconnected', 'Disconnected');
+                
+                // Auto-reconnect if still recording
+                if (isRecording) {
+                    setTimeout(() => {
+                        showToast('Reconnecting...', 'info');
+                        connectWebSocket().catch(console.error);
+                    }, CONFIG.reconnectDelay);
+                }
+            };
+
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+/**
+ * Handle incoming WebSocket messages
+ */
+function handleWebSocketMessage(event) {
+    try {
+        // Handle binary data (audio)
+        if (event.data instanceof Blob) {
+            playTranslatedAudio(event.data);
+            return;
+        }
+
+        // Handle JSON messages
+        const message = JSON.parse(event.data);
+        
+        switch (message.type) {
+            case 'connected':
+                sessionId = message.session_id;
+                elements.sessionIdDisplay.textContent = sessionId.substring(0, 12) + '...';
+                elements.translationMode.textContent = message.mode;
+                break;
+
+            case 'translation':
+                displayTranslation(message);
+                updateLatency(message.latency_ms);
+                segmentCount++;
+                elements.segmentCountDisplay.textContent = segmentCount;
+                elements.replayBtn.disabled = false;
+                break;
+
+            case 'replay_ready':
+                loadReplay(message);
+                break;
+
+            case 'language_updated':
+                showToast(`Languages updated: ${message.source_lang} → ${message.target_lang}`, 'success');
+                break;
+
+            case 'error':
+                showToast(`Error: ${message.message}`, 'error');
+                break;
+
+            case 'pong':
+                // Heartbeat response
+                console.log('Received pong from server');
+                break;
+
+            default:
+                console.warn('Unknown message type:', message.type);
+        }
+
+    } catch (error) {
+        console.error('Message handling error:', error);
+    }
+}
+
+/**
+ * Start capturing audio and streaming chunks
+ */
+function startAudioCapture() {
+    try {
+        // Create MediaRecorder with optimal settings
+        const options = {
+            mimeType: 'audio/webm;codecs=opus',
+            audioBitsPerSecond: 16000
+        };
+
+        mediaRecorder = new MediaRecorder(audioStream, options);
+        
+        // Handle audio chunks
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0 && websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log(`Sending audio chunk: ${event.data.size} bytes`);
+                
+                // Send audio chunk via WebSocket
+                event.data.arrayBuffer().then(buffer => {
+                    const timestamp = performance.now() / 1000;
+                    
+                    // Send as binary
+                    websocket.send(buffer);
+                    console.log(`Audio chunk sent: ${buffer.byteLength} bytes`);
+                    
+                    // Update mic level visualization
+                    updateMicLevel();
+                }).catch(error => {
+                    console.error('Error sending audio chunk:', error);
+                });
+            }
+        };
+
+        // Handle when recording stops (due to chunking)
+        mediaRecorder.onstop = () => {
+            // Don't disconnect - just restart recording for continuous capture
+            if (isRecording && websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log('Restarting audio capture for continuous recording');
+                mediaRecorder.start(CONFIG.chunkDurationMs);
+            }
+        };
+
+        // Handle errors
+        mediaRecorder.onerror = (event) => {
+            console.error('MediaRecorder error:', event.error);
+            showToast('Audio recording error', 'error');
+        };
+
+        // Start recording with chunking
+        mediaRecorder.start(CONFIG.chunkDurationMs);
+        isRecording = true;
+
+        console.log('Audio capture started');
+
+    } catch (error) {
+        console.error('Audio capture error:', error);
+        showToast('Failed to start audio capture', 'error');
+    }
+}
+
+/**
+ * Display translation in UI
+ */
+function displayTranslation(data) {
+    // Update original text
+    if (data.original) {
+        elements.originalText.textContent = data.original;
+        elements.originalText.classList.add('fade-in');
+        setTimeout(() => elements.originalText.classList.remove('fade-in'), 500);
+    }
+
+    // Update translated text
+    if (data.translated) {
+        elements.translatedText.textContent = data.translated;
+        elements.translatedText.classList.add('fade-in');
+        setTimeout(() => elements.translatedText.classList.remove('fade-in'), 500);
+    }
+
+    console.log(`Translation: "${data.original}" → "${data.translated}" (${data.latency_ms}ms)`);
+}
+
+/**
+ * Play translated audio through speakers
+ */
+async function playTranslatedAudio(audioBlob) {
+    try {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => URL.revokeObjectURL(audioUrl);
+        
+        await audio.play();
+        
+    } catch (error) {
+        console.error('Audio playback error:', error);
+    }
+}
+
+/**
+ * Update microphone level visualization
+ */
+function updateMicLevel() {
+    if (!audioContext || !audioStream) return;
+
+    try {
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(audioStream);
+        source.connect(analyser);
+        
+        analyser.fftSize = 256;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        const updateLevel = () => {
+            if (!isRecording) return;
+            
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+            const level = Math.min(100, (average / 255) * 100);
+            
+            elements.micLevel.style.width = `${level}%`;
+            
+            requestAnimationFrame(updateLevel);
+        };
+        
+        updateLevel();
+        
+    } catch (error) {
+        console.error('Mic level error:', error);
+    }
+}
+
+/**
+ * Update latency display
+ */
+function updateLatency(latencyMs) {
+    latencyStats.push(latencyMs);
+    if (latencyStats.length > 10) latencyStats.shift();
+    
+    const avgLatency = latencyStats.reduce((a, b) => a + b, 0) / latencyStats.length;
+    elements.latencyDisplay.textContent = `${avgLatency.toFixed(0)}ms avg`;
+    
+    // Color code by latency
+    if (avgLatency < 2000) {
+        elements.latencyDisplay.className = 'latency latency-good';
+    } else if (avgLatency < 4000) {
+        elements.latencyDisplay.className = 'latency latency-medium';
+    } else {
+        elements.latencyDisplay.className = 'latency latency-poor';
+    }
+}
+
+/**
+ * Trigger replay request
+ */
+function triggerReplay() {
+    if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+        showToast('Not connected', 'error');
+        return;
+    }
+
+    const duration = parseInt(elements.replayDuration.value);
+    
+    websocket.send(JSON.stringify({
+        action: 'replay',
+        duration: duration
+    }));
+
+    showToast(`Generating ${duration}s replay...`, 'info');
+}
+
+/**
+ * Load and display replay
+ */
+function loadReplay(data) {
+    try {
+        // Show replay player
+        elements.replayPlayer.classList.remove('hidden');
+        
+        // Note: Audio and VTT will arrive as separate binary messages
+        // For MVP, we'll handle them when they arrive
+        
+        showToast(`Replay ready: ${data.segments_count} segments`, 'success');
+        
+        // The audio blob will arrive next as binary data
+        // We'll set it up in the binary message handler
+        
+        // Load VTT subtitles
+        if (data.vtt) {
+            displayReplaySubtitles(data.vtt);
+        }
+        
+    } catch (error) {
+        console.error('Replay load error:', error);
+        showToast('Failed to load replay', 'error');
+    }
+}
+
+/**
+ * Display replay subtitles (WebVTT format)
+ */
+function displayReplaySubtitles(vttContent) {
+    // For MVP, display VTT as formatted text
+    // In production, you'd use <track> element with the audio player
+    
+    const subtitleDiv = elements.replaySubtitles;
+    subtitleDiv.textContent = vttContent;
+    subtitleDiv.style.whiteSpace = 'pre-wrap';
+    subtitleDiv.style.fontFamily = 'monospace';
+    subtitleDiv.style.fontSize = '0.9em';
+}
+
+/**
+ * Update language settings
+ */
+function updateLanguages() {
+    if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
+
+    const sourceLang = elements.sourceLang.value;
+    const targetLang = elements.targetLang.value;
+
+    websocket.send(JSON.stringify({
+        action: 'set_language',
+        source_lang: sourceLang,
+        target_lang: targetLang
+    }));
+}
+
+/**
+ * Update connection status
+ */
+function updateStatus(state, text) {
+    elements.statusDot.className = `status-dot status-${state}`;
+    elements.statusText.textContent = text;
+}
+
+/**
+ * Update UI state based on recording status
+ */
+function updateUIState(state) {
+    switch (state) {
+        case 'recording':
+            elements.startBtn.disabled = true;
+            elements.stopBtn.disabled = false;
+            elements.muteBtn.disabled = false;
+            updateStatus('recording', 'Recording');
+            break;
+
+        case 'stopped':
+            elements.startBtn.disabled = false;
+            elements.stopBtn.disabled = true;
+            elements.muteBtn.disabled = true;
+            updateStatus('disconnected', 'Disconnected');
+            elements.originalText.textContent = 'Waiting for speech...';
+            elements.translatedText.textContent = 'Ready to translate...';
+            break;
+    }
+}
+
+/**
+ * Show toast notification
+ */
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+
+    elements.toastContainer.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+/**
+ * Heartbeat to keep connection alive
+ */
+setInterval(() => {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.send(JSON.stringify({ action: 'ping' }));
+    }
+}, 30000); // Every 30 seconds
+
+// Initialize on load
+console.log('🐠 Babbelfish initialized');
+

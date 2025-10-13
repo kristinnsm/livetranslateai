@@ -1,0 +1,62 @@
+# Environment variables
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Audio files (privacy - don't commit recordings)
+*.wav
+*.mp3
+*.webm
+*.ogg
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if you add JS tooling later)
+node_modules/
+

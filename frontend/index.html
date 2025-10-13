@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babbelfish - Real-Time Voice Translator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">🐠 Babbelfish</h1>
+            <p class="subtitle">Real-Time AI Voice Translator</p>
+        </header>
+
+        <!-- Language Selection -->
+        <section class="controls">
+            <div class="language-selector">
+                <div class="selector-group">
+                    <label for="sourceLang">From</label>
+                    <select id="sourceLang" class="lang-select">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                        <option value="auto">Auto-detect</option>
+                    </select>
+                </div>
+                
+                <div class="arrow">→</div>
+                
+                <div class="selector-group">
+                    <label for="targetLang">To</label>
+                    <select id="targetLang" class="lang-select">
+                        <option value="es">Spanish</option>
+                        <option value="en">English</option>
+                        <option value="fr">French</option>
+                        <option value="de">German</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Connection Controls -->
+            <div class="action-buttons">
+                <button id="startBtn" class="btn btn-primary">
+                    <span class="btn-icon">🎤</span>
+                    Start Translation
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" disabled>
+                    <span class="btn-icon">⏹️</span>
+                    Stop
+                </button>
+                <button id="muteBtn" class="btn btn-secondary" disabled>
+                    <span class="btn-icon">🔇</span>
+                    Mute
+                </button>
+            </div>
+        </section>
+
+        <!-- Live Translation Display -->
+        <section class="translation-area">
+            <div class="status-indicator">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Disconnected</span>
+                <span id="latencyDisplay" class="latency"></span>
+            </div>
+
+            <!-- Mic Visualization -->
+            <div class="mic-indicator">
+                <div id="micLevel" class="mic-level"></div>
+            </div>
+
+            <!-- Live Subtitles -->
+            <div class="subtitles-container">
+                <div class="subtitle-box">
+                    <div class="subtitle-label">Original</div>
+                    <div id="originalText" class="subtitle-text">Waiting for speech...</div>
+                </div>
+                
+                <div class="subtitle-box">
+                    <div class="subtitle-label">Translation</div>
+                    <div id="translatedText" class="subtitle-text">Ready to translate...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Replay Section -->
+        <section class="replay-section">
+            <div class="replay-header">
+                <h2>Replay</h2>
+                <div class="replay-controls">
+                    <button id="replayBtn" class="btn btn-accent" disabled>
+                        <span class="btn-icon">⏮️</span>
+                        Replay Last Minute
+                    </button>
+                    <select id="replayDuration" class="replay-duration">
+                        <option value="30">30 seconds</option>
+                        <option value="60" selected>1 minute</option>
+                        <option value="120">2 minutes</option>
+                        <option value="300">5 minutes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Audio Player with Subtitles -->
+            <div id="replayPlayer" class="replay-player hidden">
+                <audio id="replayAudio" controls class="audio-player"></audio>
+                <div id="replaySubtitles" class="replay-subtitles"></div>
+            </div>
+        </section>
+
+        <!-- Connection Info -->
+        <footer class="footer">
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Session:</span>
+                    <span id="sessionId">Not connected</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Mode:</span>
+                    <span id="translationMode">Unknown</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Segments:</span>
+                    <span id="segmentCount">0</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
+

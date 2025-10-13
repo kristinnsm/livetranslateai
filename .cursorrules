@@ -1,0 +1,51 @@
+# Cursor Rules for Babbelfish Project
+
+## Project Context
+This is a real-time AI voice translator MVP using:
+- Backend: FastAPI + WebSockets (Python 3.9+)
+- Frontend: Vanilla JavaScript (no frameworks)
+- APIs: OpenAI (Whisper STT, GPT-4o-mini translation, TTS)
+- Audio: WebRTC, pydub, webrtcvad
+
+## Architecture
+- Dual-mode translator: Realtime API (low latency) OR Traditional pipeline (Whisper→GPT→TTS)
+- WebSocket streaming for real-time audio
+- In-memory buffers for privacy (no persistence)
+- WebVTT subtitle generation for replay
+
+## Code Style
+- Python: PEP 8, async/await for I/O operations
+- JavaScript: ES6+, clear variable names, async/await for network calls
+- Error handling: Always wrap external API calls with try-catch + retry logic (tenacity)
+- Logging: Use structured logging with context (timestamp, session ID, latency)
+
+## Key Files
+- `backend/main.py`: FastAPI WebSocket routes
+- `backend/services/translator_*.py`: Translation pipelines
+- `frontend/app.js`: WebSocket client + audio capture
+- `DEVELOPMENT.md`: Problem analysis and mitigation strategies
+
+## Common Patterns
+- All OpenAI calls: Use `@retry` decorator with exponential backoff
+- Audio processing: VAD filter → normalize → chunk with overlap
+- WebSocket messages: JSON for control, binary for audio
+- UI updates: Toast notifications for errors, real-time latency display
+
+## Testing Priorities
+1. Latency (<5s traditional, <1s realtime)
+2. Transcription accuracy (85%+ WER)
+3. WebSocket resilience (auto-reconnect)
+4. Cross-browser compatibility (Chrome primary)
+
+## MVP Scope Limits
+- Audio-only (no video yet)
+- 2-3 language pairs (EN↔ES focus)
+- 1:1 calls (no multi-user)
+- In-memory only (no database)
+
+## When Suggesting Changes
+- Prioritize latency reduction
+- Maintain privacy (no logging sensitive data)
+- Keep error messages user-friendly
+- Consider deployment constraints (Render free tier)
+
