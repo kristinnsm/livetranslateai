@@ -197,30 +197,18 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
         try:
             logger.info(f"[TRANSLATOR] Processing audio chunk: {len(audio_chunk)} bytes")
             
-            # Add to buffer for overlapping context
-            self.audio_buffer.extend(audio_chunk)
-            
-            # Keep buffer manageable (last 8 seconds at 16kHz)
-            max_buffer_size = 16000 * 2 * 8  # 8 seconds of 16-bit PCM
-            if len(self.audio_buffer) > max_buffer_size:
-                self.audio_buffer = self.audio_buffer[-max_buffer_size:]
-            
-            logger.info(f"Audio buffer size: {len(self.audio_buffer)} bytes")
-            
-            # Wait until we have at least 3 chunks (~6 seconds of audio)
-            # Note: We're receiving WebM audio, not raw PCM, so we can't use byte count directly
-            # Just check if we have a reasonable amount of data
-            min_buffer_size = 8000  # ~3 chunks of WebM audio
-            if len(self.audio_buffer) < min_buffer_size:
-                logger.info(f"Buffer too small ({len(self.audio_buffer)} bytes, need {min_buffer_size}), waiting for more audio...")
+            # Check if chunk is large enough (each WebM chunk should be complete)
+            min_chunk_size = 2000  # Minimum 2KB for valid audio
+            if len(audio_chunk) < min_chunk_size:
+                logger.info(f"Chunk too small ({len(audio_chunk)} bytes), waiting for larger chunk...")
                 return None
             
-            # Step 1: Transcribe
+            # Step 1: Transcribe (process each chunk directly - no buffering)
+            # Each WebM chunk from MediaRecorder is a complete, valid file
             logger.info("Starting transcription...")
             if heartbeat_callback:
                 await heartbeat_callback()
-            # Pass raw audio buffer (WebM format is supported by Whisper)
-            transcription = await self.transcribe_audio_webm(bytes(self.audio_buffer))
+            transcription = await self.transcribe_audio_webm(audio_chunk)
             if not transcription or not transcription["text"].strip():
                 logger.warning("No transcription result or empty text")
                 return None
