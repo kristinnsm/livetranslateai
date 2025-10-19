@@ -162,8 +162,8 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
         """
         try:
             response = await self.client.audio.speech.create(
-                model="tts-1",  # Use tts-1-hd for higher quality
-                voice="alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
+                model="tts-1-hd",  # High-quality TTS model
+                voice="nova",  # Clear, warm voice (Options: alloy, echo, fable, onyx, nova, shimmer)
                 input=text,
                 response_format="mp3",
                 speed=1.0
