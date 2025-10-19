@@ -84,11 +84,15 @@ async def health_check():
 
 @app.websocket("/ws/translate")
 async def websocket_translate(websocket: WebSocket):
+    logger.info("[WEBSOCKET] WebSocket endpoint /ws/translate accessed")
+    logger.info(f"[WEBSOCKET] Client: {websocket.client}")
     """
     Main WebSocket endpoint for real-time translation
     Handles audio streaming, translation, and buffer management
     """
     await websocket.accept()
+    logger.info("[WEBSOCKET] WebSocket connection accepted")
+    
     session_id = f"session_{datetime.utcnow().timestamp()}"
     
     # Initialize session
@@ -243,7 +247,7 @@ async def process_audio_chunk(
             logger.warning("No translation result - skipping")
             
     except Exception as e:
-        logger.error(f"Error processing audio chunk: {e}")
+        logger.error(f"Error processing audio chunk: {e}", exc_info=True)
         # Don't close the WebSocket - just log the error and continue
         try:
             await websocket.send_json({

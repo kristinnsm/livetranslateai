@@ -41,6 +41,41 @@ class TraditionalTranslator:
         logger.info(f"Languages set: {source_lang} → {target_lang}")
     
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def transcribe_audio_webm(self, audio_data: bytes) -> Optional[Dict]:
+        """
+        Transcribe WebM/Opus audio using Whisper API with retry logic
+        
+        Args:
+            audio_data: Raw WebM audio bytes
+        
+        Returns:
+            Transcription result with text and language
+        """
+        try:
+            # Create file-like object with WebM audio
+            audio_file = io.BytesIO(audio_data)
+            audio_file.name = "audio.webm"
+            
+            # Whisper transcription with context (WebM format is supported)
+            response = await self.client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file,
+                language=self.source_lang if self.source_lang != "auto" else None,
+                prompt=self.previous_transcript[-200:] if self.previous_transcript else None,
+                response_format="verbose_json"
+            )
+            
+            return {
+                "text": response.text,
+                "language": response.language if hasattr(response, 'language') else self.source_lang,
+                "confidence": getattr(response, 'confidence', 0.9)
+            }
+        
+        except Exception as e:
+            logger.error(f"Whisper transcription error: {e}")
+            raise
+    
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def transcribe_audio(self, audio_data: bytes) -> Optional[Dict]:
         """
         Transcribe audio using Whisper API with retry logic
@@ -181,7 +216,8 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
             
             # Step 1: Transcribe
             logger.info("Starting transcription...")
-            transcription = await self.transcribe_audio(bytes(self.audio_buffer))
+            # Pass raw audio buffer (WebM format is supported by Whisper)
+            transcription = await self.transcribe_audio_webm(bytes(self.audio_buffer))
             if not transcription or not transcription["text"].strip():
                 logger.warning("No transcription result or empty text")
                 return None

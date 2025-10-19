@@ -149,10 +149,11 @@ function toggleMute() {
 function connectWebSocket() {
     return new Promise((resolve, reject) => {
         try {
+            console.log('Attempting to connect to:', CONFIG.wsUrl);
             websocket = new WebSocket(CONFIG.wsUrl);
 
             websocket.onopen = () => {
-                console.log('WebSocket connected');
+                console.log('WebSocket connected successfully!');
                 updateStatus('connected', 'Connected');
                 
                 // Send a test message to verify communication
@@ -170,6 +171,8 @@ function connectWebSocket() {
 
             websocket.onerror = (error) => {
                 console.error('WebSocket error:', error);
+                console.error('WebSocket readyState:', websocket.readyState);
+                console.error('WebSocket URL:', CONFIG.wsUrl);
                 updateStatus('error', 'Connection error');
                 reject(error);
             };
