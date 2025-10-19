@@ -242,6 +242,11 @@ function handleWebSocketMessage(event) {
                 console.log('Received pong from server');
                 break;
 
+            case 'status':
+                // Processing status update (keeps connection alive)
+                console.log('Server status:', message.message);
+                break;
+
             default:
                 console.warn('Unknown message type:', message.type);
         }

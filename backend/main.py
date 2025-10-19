@@ -212,9 +212,20 @@ async def process_audio_chunk(
             return
         
         logger.info(f"Processing audio chunk: {len(audio_chunk)} bytes")
+        logger.info(f"[DEBUG] Translator type: {type(translator)}, has process_audio: {hasattr(translator, 'process_audio')}")
+        
+        # Send "processing" status to keep WebSocket alive
+        async def send_heartbeat():
+            try:
+                await websocket.send_json({"type": "status", "message": "processing"})
+                logger.debug("Sent heartbeat to keep connection alive")
+            except:
+                pass
         
         # Add to processing queue
-        result = await translator.process_audio(audio_chunk, timestamp)
+        logger.info("[DEBUG] About to call translator.process_audio")
+        result = await translator.process_audio(audio_chunk, timestamp, heartbeat_callback=send_heartbeat)
+        logger.info(f"[DEBUG] Translator returned: {result is not None}")
         
         if result:
             # Buffer for replay
@@ -226,6 +237,11 @@ async def process_audio_chunk(
                 source_lang=result.get("source_lang", ""),
                 target_lang=result.get("target_lang", "")
             )
+            
+            # Check if WebSocket is still open before sending
+            if websocket.client_state.name != "CONNECTED":
+                logger.warning("WebSocket closed - cannot send result")
+                return
             
             # Send to client
             await websocket.send_json({

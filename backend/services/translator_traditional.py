@@ -12,8 +12,9 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 import io
 
 from services.audio_processor import AudioProcessor
+from utils.logger import setup_logger
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class TraditionalTranslator:
@@ -180,7 +181,7 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
             logger.error(f"TTS error: {e}")
             raise
     
-    async def process_audio(self, audio_chunk: bytes, timestamp: float) -> Optional[Dict]:
+    async def process_audio(self, audio_chunk: bytes, timestamp: float, heartbeat_callback=None) -> Optional[Dict]:
         """
         Full pipeline: STT → Translation → TTS
         
@@ -194,7 +195,7 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
         start_time = datetime.utcnow()
         
         try:
-            logger.info(f"Processing audio chunk: {len(audio_chunk)} bytes")
+            logger.info(f"[TRANSLATOR] Processing audio chunk: {len(audio_chunk)} bytes")
             
             # Add to buffer for overlapping context
             self.audio_buffer.extend(audio_chunk)
@@ -216,6 +217,8 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
             
             # Step 1: Transcribe
             logger.info("Starting transcription...")
+            if heartbeat_callback:
+                await heartbeat_callback()
             # Pass raw audio buffer (WebM format is supported by Whisper)
             transcription = await self.transcribe_audio_webm(bytes(self.audio_buffer))
             if not transcription or not transcription["text"].strip():
@@ -228,11 +231,15 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
             
             # Step 2: Translate
             logger.info("Starting translation...")
+            if heartbeat_callback:
+                await heartbeat_callback()
             translated_text = await self.translate_text(original_text, detected_lang)
             logger.info(f"Translation: '{translated_text}'")
             
             # Step 3: Synthesize speech
             logger.info("Starting TTS...")
+            if heartbeat_callback:
+                await heartbeat_callback()
             audio_data = await self.synthesize_speech(translated_text)
             logger.info(f"TTS generated {len(audio_data)} bytes")
             
@@ -253,7 +260,7 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
                 "confidence": transcription.get("confidence", 0.0)
             }
             
-            logger.info(f"Pipeline completed in {latency_ms:.0f}ms: '{original_text[:50]}...' → '{translated_text[:50]}...'")
+            logger.info(f"Pipeline completed in {latency_ms:.0f}ms: '{original_text[:50]}...' -> '{translated_text[:50]}...'")
             return result
         
         except Exception as e:
