@@ -186,6 +186,17 @@ body {
     border-color: var(--error);
 }
 
+.btn-danger {
+    background: var(--error);
+    color: white;
+    border: 1px solid var(--error);
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c23228;
+    border-color: #c23228;
+}
+
 .btn-accent {
     background: var(--accent);
     color: white;

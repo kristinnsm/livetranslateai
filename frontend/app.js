@@ -17,7 +17,6 @@ let mediaRecorder = null;
 let audioContext = null;
 let audioStream = null;
 let isRecording = false;
-let isMuted = false;
 let sessionId = null;
 let segmentCount = 0;
 let latencyStats = [];
@@ -26,7 +25,7 @@ let latencyStats = [];
 const elements = {
     startBtn: document.getElementById('startBtn'),
     stopBtn: document.getElementById('stopBtn'),
-    muteBtn: document.getElementById('muteBtn'),
+    disconnectBtn: document.getElementById('disconnectBtn'),
     replayBtn: document.getElementById('replayBtn'),
     sourceLang: document.getElementById('sourceLang'),
     targetLang: document.getElementById('targetLang'),
@@ -49,7 +48,7 @@ const elements = {
 // Event Listeners
 elements.startBtn.addEventListener('click', startTranslation);
 elements.stopBtn.addEventListener('click', stopTranslation);
-elements.muteBtn.addEventListener('click', toggleMute);
+elements.disconnectBtn.addEventListener('click', disconnectSession);
 elements.replayBtn.addEventListener('click', triggerReplay);
 elements.sourceLang.addEventListener('change', updateLanguages);
 elements.targetLang.addEventListener('change', updateLanguages);
@@ -59,7 +58,22 @@ elements.targetLang.addEventListener('change', updateLanguages);
  */
 async function startTranslation() {
     try {
-        // Request microphone access
+        // If already recording, ignore (shouldn't happen with button states)
+        if (isRecording) {
+            console.log('Already recording');
+            return;
+        }
+        
+        // If WebSocket connected and mic active, just start new recording
+        if (websocket && websocket.readyState === WebSocket.OPEN && audioStream) {
+            console.log('🎤 Starting new recording in same session...');
+            startAudioCapture();
+            updateUIState('recording');
+            showToast('Recording...', 'info');
+            return;
+        }
+
+        // First time setup: Request microphone access
         audioStream = await navigator.mediaDevices.getUserMedia({ 
             audio: {
                 sampleRate: CONFIG.sampleRate,
@@ -78,12 +92,12 @@ async function startTranslation() {
         // Setup WebSocket connection
         await connectWebSocket();
 
-        // Start audio capture
+        // Start first recording
         startAudioCapture();
 
         // Update UI
         updateUIState('recording');
-        showToast('Translation started', 'success');
+        showToast('🎤 Recording... press Stop when done', 'success');
 
     } catch (error) {
         console.error('Start error:', error);
@@ -95,11 +109,39 @@ async function startTranslation() {
  * Stop translation session
  */
 function stopTranslation() {
-    // Stop audio capture
+    // Stop current recording (sends complete audio for translation)
     if (mediaRecorder && isRecording) {
+        console.log('🛑 Stopping recording - sending for translation...');
         mediaRecorder.stop();
         isRecording = false;
+        
+        // Update UI to show processing
+        elements.statusText.textContent = 'Processing...';
+        showToast('Processing your speech...', 'info');
+        
+        // Keep WebSocket open for next recording
+        // Keep mic stream active for quick restart
+        // User can click "Start" again to record next part
+        
+        updateUIState('connected'); // Ready for next recording
+    } else {
+        // If not recording, treat as full disconnect
+        disconnectSession();
     }
+}
+
+/**
+ * Completely disconnect session
+ */
+function disconnectSession() {
+    console.log('Disconnecting session completely');
+    
+    // Stop audio capture
+    if (mediaRecorder) {
+        if (isRecording) mediaRecorder.stop();
+        mediaRecorder = null;
+    }
+    isRecording = false;
 
     // Stop audio stream
     if (audioStream) {
@@ -121,26 +163,7 @@ function stopTranslation() {
 
     // Update UI
     updateUIState('stopped');
-    showToast('Translation stopped', 'info');
-}
-
-/**
- * Toggle microphone mute
- */
-function toggleMute() {
-    isMuted = !isMuted;
-    
-    if (audioStream) {
-        audioStream.getAudioTracks().forEach(track => {
-            track.enabled = !isMuted;
-        });
-    }
-
-    elements.muteBtn.innerHTML = isMuted 
-        ? '<span class="btn-icon">🔊</span> Unmute'
-        : '<span class="btn-icon">🔇</span> Mute';
-    
-    elements.muteBtn.classList.toggle('active', isMuted);
+    showToast('Session ended', 'info');
 }
 
 /**
@@ -290,13 +313,10 @@ function startAudioCapture() {
             }
         };
 
-        // Handle when recording stops (due to chunking)
+        // Handle when recording stops
         mediaRecorder.onstop = () => {
-            // Don't disconnect - just restart recording for continuous capture
-            if (isRecording && websocket && websocket.readyState === WebSocket.OPEN) {
-                console.log('Restarting audio capture for continuous recording');
-                mediaRecorder.start(CONFIG.chunkDurationMs);
-            }
+            console.log('Recording stopped - audio chunk ready');
+            updateMicLevel(0); // Reset mic visualization
         };
 
         // Handle errors
@@ -305,11 +325,11 @@ function startAudioCapture() {
             showToast('Audio recording error', 'error');
         };
 
-        // Start recording with chunking
-        mediaRecorder.start(CONFIG.chunkDurationMs);
+        // Start recording - will record until manually stopped
+        mediaRecorder.start();
         isRecording = true;
 
-        console.log('Audio capture started');
+        console.log('🎤 Push-to-talk recording started - speak now, press Stop when done');
 
     } catch (error) {
         console.error('Audio capture error:', error);
@@ -500,14 +520,21 @@ function updateUIState(state) {
         case 'recording':
             elements.startBtn.disabled = true;
             elements.stopBtn.disabled = false;
-            elements.muteBtn.disabled = false;
-            updateStatus('recording', 'Recording');
+            elements.disconnectBtn.disabled = false;
+            updateStatus('recording', '🎤 Recording...');
+            break;
+
+        case 'connected':
+            elements.startBtn.disabled = false;
+            elements.stopBtn.disabled = true;
+            elements.disconnectBtn.disabled = false;
+            updateStatus('connected', '✓ Ready for next recording');
             break;
 
         case 'stopped':
             elements.startBtn.disabled = false;
             elements.stopBtn.disabled = true;
-            elements.muteBtn.disabled = true;
+            elements.disconnectBtn.disabled = true;
             updateStatus('disconnected', 'Disconnected');
             elements.originalText.textContent = 'Waiting for speech...';
             elements.translatedText.textContent = 'Ready to translate...';

@@ -195,17 +195,16 @@ Previous context: {self.previous_transcript[-150:] if self.previous_transcript e
         start_time = datetime.utcnow()
         
         try:
-            logger.info(f"[TRANSLATOR] Processing audio chunk: {len(audio_chunk)} bytes")
+            logger.info(f"[TRANSLATOR] Processing complete WebM file: {len(audio_chunk)} bytes")
             
-            # Check if chunk is large enough (each WebM chunk should be complete)
-            min_chunk_size = 2000  # Minimum 2KB for valid audio
+            # Skip very small chunks (< 2KB) - likely incomplete
+            min_chunk_size = 2000
             if len(audio_chunk) < min_chunk_size:
-                logger.info(f"Chunk too small ({len(audio_chunk)} bytes), waiting for larger chunk...")
+                logger.info(f"Chunk too small ({len(audio_chunk)} bytes), skipping...")
                 return None
             
-            # Step 1: Transcribe (process each chunk directly - no buffering)
-            # Each WebM chunk from MediaRecorder is a complete, valid file
-            logger.info("Starting transcription...")
+            # Step 1: Transcribe complete WebM file directly (no buffering needed)
+            logger.info("Sending complete WebM to Whisper...")
             if heartbeat_callback:
                 await heartbeat_callback()
             transcription = await self.transcribe_audio_webm(audio_chunk)
