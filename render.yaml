@@ -1,22 +1,16 @@
 services:
-  # Babbelfish Backend API
   - type: web
-    name: babbelfish-api
+    name: livetranslateai-backend
     env: python
-    region: oregon
     plan: free
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: OPENAI_API_KEY
         sync: false
-      - key: USE_REALTIME_API
-        value: true
-      - key: MAX_BUFFER_DURATION
-        value: 300
+      - key: ENVIRONMENT
+        value: production
       - key: LOG_LEVEL
         value: INFO
-      - key: PYTHON_VERSION
-        value: 3.11.0
-    healthCheckPath: /health
-
+      - key: MAX_BUFFER_DURATION
+        value: 300

@@ -1,8 +1,3 @@
-# Environment variables
-.env
-*.env
-!.env.example
-
 # Python
 __pycache__/
 *.py[cod]
@@ -24,14 +19,21 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
-# Virtual environments
+# Virtual Environment
 venv/
 env/
 ENV/
-.venv
+env.bak/
+venv.bak/
 
-# IDEs
+# Environment variables
+.env
+.env.local
+.env.production
+
+# IDE
 .vscode/
 .idea/
 *.swp
@@ -40,23 +42,26 @@ ENV/
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # Logs
 *.log
 logs/
 
-# Audio files (privacy - don't commit recordings)
-*.wav
-*.mp3
-*.webm
-*.ogg
+# Cursor
+.cursor/
+
+# User data
+AppData/
+Documents/
+Desktop/
+Downloads/
 
 # Temporary files
-tmp/
-temp/
 *.tmp
-
-# Node modules (if you add JS tooling later)
-node_modules/
-
+*.temp

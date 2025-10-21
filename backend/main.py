@@ -32,12 +32,17 @@ MAX_BUFFER_DURATION = int(os.getenv("MAX_BUFFER_DURATION", "300"))  # 5 minutes
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
 logger = setup_logger(__name__)
 
-# CORS - adjust origins for production
+# CORS - production ready
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to specific origins in production
+    allow_origins=[
+        "https://livetranslateai.com",
+        "https://www.livetranslateai.com", 
+        "http://localhost:3000",  # For development
+        "http://127.0.0.1:3000"   # For development
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
