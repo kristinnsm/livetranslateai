@@ -7,6 +7,13 @@ try:
     VAD_AVAILABLE = True
 except ImportError:
     VAD_AVAILABLE = False
+    # Create a dummy webrtcvad module for compatibility
+    class DummyVAD:
+        def __init__(self, *args, **kwargs):
+            pass
+        def is_speech(self, *args, **kwargs):
+            return True  # Always return True when VAD is not available
+    webrtcvad = type('webrtcvad', (), {'Vad': DummyVAD})()
     
 import numpy as np
 from typing import Optional
