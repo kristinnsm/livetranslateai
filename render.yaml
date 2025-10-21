@@ -4,8 +4,9 @@ services:
     env: python
     plan: free
     pythonVersion: 3.11.9
-    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
-    startCommand: python start.py
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    rootDir: backend
+    startCommand: python ../start.py
     envVars:
       - key: OPENAI_API_KEY
         sync: false
