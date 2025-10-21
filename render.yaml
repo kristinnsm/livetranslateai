@@ -3,9 +3,9 @@ services:
     name: livetranslateai-backend
     env: python
     plan: free
-    pythonVersion: 3.11.9
+    pythonVersion: 3.9.18
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: python backend/minimal_main.py
+    startCommand: python start.py
     envVars:
       - key: OPENAI_API_KEY
         sync: false
