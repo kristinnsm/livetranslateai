@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-websockets
-openai
-pydub
-tenacity
-python-multipart
-numpy
-python-dotenv

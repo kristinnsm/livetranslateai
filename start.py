@@ -13,6 +13,9 @@ from pathlib import Path
 backend_dir = Path(__file__).parent / "backend"
 sys.path.insert(0, str(backend_dir))
 
+# Change to backend directory for imports
+os.chdir(backend_dir)
+
 # Set production environment
 os.environ.setdefault("ENVIRONMENT", "production")
 os.environ.setdefault("LOG_LEVEL", "INFO")
