@@ -1,5 +1,5 @@
 """
-Babbelfish Backend - Real-Time AI Voice Translator
+LiveTranslateAI Backend - Real-Time AI Voice Translator for Business
 FastAPI server with WebSocket support for audio streaming
 Supports both OpenAI Realtime API and traditional pipeline
 """
@@ -29,7 +29,7 @@ USE_REALTIME_API = os.getenv("USE_REALTIME_API", "true").lower() == "true"
 MAX_BUFFER_DURATION = int(os.getenv("MAX_BUFFER_DURATION", "300"))  # 5 minutes
 
 # Setup
-app = FastAPI(title="Babbelfish API", version="1.0.0")
+app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
 logger = setup_logger(__name__)
 
 # CORS - adjust origins for production
@@ -53,7 +53,7 @@ async def startup_event():
         raise RuntimeError("Missing OpenAI API key")
     
     mode = "Realtime API" if USE_REALTIME_API else "Traditional Pipeline"
-    logger.info(f"[STARTUP] Babbelfish starting in {mode} mode")
+    logger.info(f"[STARTUP] LiveTranslateAI starting in {mode} mode")
     logger.info(f"[CONFIG] Max buffer duration: {MAX_BUFFER_DURATION}s")
 
 
@@ -61,7 +61,7 @@ async def startup_event():
 async def root():
     """Health check endpoint"""
     return {
-        "service": "Babbelfish Translator",
+        "service": "LiveTranslateAI",
         "status": "running",
         "mode": "realtime" if USE_REALTIME_API else "traditional",
         "timestamp": datetime.utcnow().isoformat()

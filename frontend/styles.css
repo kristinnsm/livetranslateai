@@ -1,12 +1,12 @@
 /**
- * Babbelfish Styles - Modern Dark Theme
+ * LiveTranslateAI - Modern Professional Theme
  */
 
 :root {
-    /* Colors */
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --secondary: #6366f1;
+    /* Brand Colors */
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --secondary: #06b6d4;
     --accent: #8b5cf6;
     --success: #10b981;
     --warning: #f59e0b;
@@ -61,19 +61,31 @@ body {
     margin-bottom: var(--spacing-xl);
 }
 
+.logo {
+    display: inline-block;
+}
+
 .title {
-    font-size: 3rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    font-size: 3.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.title .ai {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: var(--spacing-xs);
+    font-weight: 900;
 }
 
-.subtitle {
+.tagline {
     color: var(--text-secondary);
     font-size: 1.125rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
 }
 
 /* Controls Section */

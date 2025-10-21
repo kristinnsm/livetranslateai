@@ -572,5 +572,5 @@ setInterval(() => {
 }, 30000); // Every 30 seconds
 
 // Initialize on load
-console.log('🐠 Babbelfish initialized');
+console.log('🚀 LiveTranslateAI initialized');
 
