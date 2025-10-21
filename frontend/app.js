@@ -7,7 +7,7 @@
 const CONFIG = {
     wsUrl: window.location.hostname === 'localhost' 
         ? 'ws://localhost:8000/ws/translate'
-        : 'wss://livetranslateai.vercel.app/ws/translate', // Now pointing to Vercel
+        : 'wss://livetranslateai.onrender.com/ws/translate', // Back to Render with Python 3.9.18
     sampleRate: 16000,
     chunkDurationMs: 2000,
     reconnectDelay: 3000
