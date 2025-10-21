@@ -23,7 +23,7 @@ if __name__ == "__main__":
     
     # Start the server
     uvicorn.run(
-        "main:app",
+        "simple_main:app",
         host="0.0.0.0",
         port=port,
         log_level="info",
