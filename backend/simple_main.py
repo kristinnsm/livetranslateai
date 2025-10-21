@@ -115,6 +115,8 @@ async def websocket_translate(websocket: WebSocket):
                         from openai import AsyncOpenAI
                         client = AsyncOpenAI(api_key=OPENAI_API_KEY)
                         
+                        logger.info("Attempting OpenAI translation...")
+                        
                         # For now, send a simple text response
                         # TODO: Add real audio processing
                         response = await client.chat.completions.create(
@@ -127,6 +129,7 @@ async def websocket_translate(websocket: WebSocket):
                         )
                         
                         translated_text = response.choices[0].message.content
+                        logger.info(f"OpenAI translation successful: {translated_text}")
                         
                         await websocket.send_json({
                             "type": "translation",
@@ -139,13 +142,13 @@ async def websocket_translate(websocket: WebSocket):
                         })
                         
                     except Exception as e:
-                        logger.error(f"Translation error: {e}")
+                        logger.error(f"Translation error: {e}", exc_info=True)
                         # Fallback to mock response
                         await websocket.send_json({
                             "type": "translation",
                             "timestamp": datetime.utcnow().timestamp(),
-                            "original": "Audio received (translation error)",
-                            "translated": "Audio recibido (error de traducción)",
+                            "original": f"Audio received (OpenAI error: {str(e)[:50]})",
+                            "translated": f"Audio recibido (error OpenAI: {str(e)[:50]})",
                             "source_lang": "en",
                             "target_lang": "es",
                             "latency_ms": 100
