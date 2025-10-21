@@ -46,6 +46,7 @@ async def websocket_translate(websocket: WebSocket):
     try:
         await websocket.send_json({
             "type": "connected",
+            "session_id": "minimal-session-001",
             "mode": "minimal",
             "timestamp": datetime.utcnow().isoformat()
         })
@@ -92,7 +93,8 @@ async def websocket_translate(websocket: WebSocket):
                                 "translated": translated,
                                 "source_lang": "en",
                                 "target_lang": "es",
-                                "latency_ms": 100
+                                "latency_ms": 100,
+                                "audio_url": None  # TODO: Add TTS audio generation
                             })
                         else:
                             raise Exception(f"OpenAI API error: {response.status_code}")
