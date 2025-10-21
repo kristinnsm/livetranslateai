@@ -37,7 +37,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://livetranslateai.com",
-        "https://www.livetranslateai.com", 
+        "https://www.livetranslateai.com",
+        "https://app.livetranslateai.com",
+        "https://api.livetranslateai.com",
         "http://localhost:3000",  # For development
         "http://127.0.0.1:3000"   # For development
     ],

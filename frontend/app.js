@@ -7,7 +7,7 @@
 const CONFIG = {
     wsUrl: window.location.hostname === 'localhost' 
         ? 'ws://localhost:8000/ws/translate'
-        : 'wss://livetranslateai-backend.onrender.com/ws/translate',
+        : 'wss://api.livetranslateai.com/ws/translate',
     sampleRate: 16000,
     chunkDurationMs: 2000,
     reconnectDelay: 3000
