@@ -113,9 +113,14 @@ async def websocket_translate(websocket: WebSocket):
                     # Process with real OpenAI translation
                     try:
                         from openai import AsyncOpenAI
-                        client = AsyncOpenAI(api_key=OPENAI_API_KEY)
                         
                         logger.info("Attempting OpenAI translation...")
+                        
+                        # Create client with proper API version
+                        client = AsyncOpenAI(
+                            api_key=OPENAI_API_KEY,
+                            timeout=30.0
+                        )
                         
                         # For now, send a simple text response
                         # TODO: Add real audio processing
@@ -125,7 +130,8 @@ async def websocket_translate(websocket: WebSocket):
                                 {"role": "system", "content": "You are a professional translator. Translate the following text from English to Spanish. Only return the translation, nothing else."},
                                 {"role": "user", "content": "Hello, how are you today?"}
                             ],
-                            max_tokens=100
+                            max_tokens=100,
+                            temperature=0.1
                         )
                         
                         translated_text = response.choices[0].message.content
