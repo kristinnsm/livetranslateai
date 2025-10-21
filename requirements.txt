@@ -1,0 +1,28 @@
+# Core Framework
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+python-dotenv==1.0.1
+
+# WebSocket & Async
+websockets==13.1
+python-socketio==5.11.4
+
+# OpenAI APIs
+openai==1.54.0
+
+# Audio Processing
+pydub==0.25.1
+# webrtcvad - Optional, requires C++ compiler (install manually if needed)
+# For now, we'll process all audio without VAD
+numpy==2.1.3
+
+# Subtitles
+webvtt-py==0.5.1
+
+# Error Handling & Retries
+tenacity==9.0.0
+
+# Utilities
+aiofiles==24.1.0
+python-multipart==0.0.12
+
