@@ -5,7 +5,7 @@ services:
     plan: free
     pythonVersion: 3.11.9
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: python start.py
+    startCommand: python backend/minimal_main.py
     envVars:
       - key: OPENAI_API_KEY
         sync: false
