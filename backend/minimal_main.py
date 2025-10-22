@@ -2,7 +2,7 @@
 Minimal LiveTranslateAI Backend - Ultra-simple version for deployment
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import json
@@ -73,13 +73,17 @@ async def get_room(room_id: str):
     return room
 
 @app.post("/api/rooms/{room_id}/join")
-async def join_room(room_id: str, participant_name: str):
+async def join_room(room_id: str, request: Request):
     """Join an existing room"""
     if room_id not in rooms:
         return {"error": "Room not found"}, 404
     
     if not rooms[room_id]["active"]:
         return {"error": "Room is not active"}, 400
+    
+    # Parse request body
+    body = await request.json()
+    participant_name = body.get("participant_name", "Anonymous")
     
     # Add participant to room
     participant_id = str(uuid.uuid4())[:8]
