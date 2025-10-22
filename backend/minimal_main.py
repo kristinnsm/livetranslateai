@@ -7,7 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import json
 import logging
+import uuid
 from datetime import datetime
+from typing import Dict, List
 import os
 
 # Configuration
@@ -16,6 +18,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
 logger = logging.getLogger(__name__)
+
+# Room management
+rooms: Dict[str, Dict] = {}
+active_connections: Dict[str, List[WebSocket]] = {}
 
 # CORS
 app.add_middleware(
@@ -37,6 +43,70 @@ async def health_check():
         "api_key_configured": bool(OPENAI_API_KEY),
         "mode": "minimal"
     }
+
+# Room management endpoints
+@app.post("/api/rooms/create")
+async def create_room():
+    """Create a new translation room"""
+    room_id = str(uuid.uuid4())[:8].upper()  # Short room code
+    rooms[room_id] = {
+        "id": room_id,
+        "created_at": datetime.utcnow().isoformat(),
+        "participants": [],
+        "active": True
+    }
+    active_connections[room_id] = []
+    logger.info(f"🏠 Created room: {room_id}")
+    return {"room_id": room_id, "status": "created"}
+
+@app.get("/api/rooms/{room_id}")
+async def get_room(room_id: str):
+    """Get room information"""
+    if room_id not in rooms:
+        return {"error": "Room not found"}, 404
+    
+    room = rooms[room_id].copy()
+    room["participant_count"] = len(active_connections.get(room_id, []))
+    return room
+
+@app.post("/api/rooms/{room_id}/join")
+async def join_room(room_id: str, participant_name: str):
+    """Join an existing room"""
+    if room_id not in rooms:
+        return {"error": "Room not found"}, 404
+    
+    if not rooms[room_id]["active"]:
+        return {"error": "Room is not active"}, 400
+    
+    # Add participant to room
+    participant_id = str(uuid.uuid4())[:8]
+    participant = {
+        "id": participant_id,
+        "name": participant_name,
+        "joined_at": datetime.utcnow().isoformat(),
+        "source_lang": "en",
+        "target_lang": "es"
+    }
+    
+    rooms[room_id]["participants"].append(participant)
+    logger.info(f"👤 {participant_name} joined room {room_id}")
+    
+    return {"participant_id": participant_id, "status": "joined"}
+
+@app.post("/api/rooms/{room_id}/leave")
+async def leave_room(room_id: str, participant_id: str):
+    """Leave a room"""
+    if room_id not in rooms:
+        return {"error": "Room not found"}, 404
+    
+    # Remove participant
+    rooms[room_id]["participants"] = [
+        p for p in rooms[room_id]["participants"] 
+        if p["id"] != participant_id
+    ]
+    
+    logger.info(f"👋 Participant {participant_id} left room {room_id}")
+    return {"status": "left"}
 
 @app.websocket("/ws/translate/realtime")
 async def websocket_translate_realtime(websocket: WebSocket):
@@ -218,6 +288,96 @@ async def websocket_translate(websocket: WebSocket):
                 
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
+
+@app.websocket("/ws/room/{room_id}")
+async def websocket_room(websocket: WebSocket, room_id: str):
+    """Multi-user room WebSocket for translation"""
+    await websocket.accept()
+    
+    if room_id not in rooms:
+        await websocket.close(code=1000, reason="Room not found")
+        return
+    
+    # Add connection to room
+    if room_id not in active_connections:
+        active_connections[room_id] = []
+    active_connections[room_id].append(websocket)
+    
+    logger.info(f"🏠 User joined room {room_id} (total: {len(active_connections[room_id])})")
+    
+    try:
+        # Send room info to all participants
+        await broadcast_to_room(room_id, {
+            "type": "room_update",
+            "room_id": room_id,
+            "participant_count": len(active_connections[room_id]),
+            "participants": rooms[room_id]["participants"]
+        })
+        
+        while True:
+            try:
+                data = await websocket.receive()
+                
+                if "bytes" in data:
+                    # Handle audio data
+                    audio_chunk = data["bytes"]
+                    logger.info(f"🎤 Received audio in room {room_id}: {len(audio_chunk)} bytes")
+                    
+                    # Process translation (same as single-user)
+                    # ... (translation logic here)
+                    
+                elif "text" in data:
+                    message = json.loads(data["text"])
+                    
+                    if message.get("action") == "ping":
+                        await websocket.send_json({"type": "pong"})
+                    elif message.get("action") == "set_language":
+                        # Update participant language
+                        participant_id = message.get("participant_id")
+                        source_lang = message.get("source_lang", "en")
+                        target_lang = message.get("target_lang", "es")
+                        
+                        # Update participant in room
+                        for participant in rooms[room_id]["participants"]:
+                            if participant["id"] == participant_id:
+                                participant["source_lang"] = source_lang
+                                participant["target_lang"] = target_lang
+                                break
+                        
+                        logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
+                        
+                        # Broadcast language update
+                        await broadcast_to_room(room_id, {
+                            "type": "language_update",
+                            "participant_id": participant_id,
+                            "source_lang": source_lang,
+                            "target_lang": target_lang
+                        })
+                        
+            except WebSocketDisconnect:
+                break
+            except Exception as e:
+                logger.error(f"Room WebSocket error: {e}")
+                break
+                
+    except Exception as e:
+        logger.error(f"Room WebSocket error: {e}")
+    finally:
+        # Remove connection from room
+        if room_id in active_connections:
+            active_connections[room_id] = [conn for conn in active_connections[room_id] if conn != websocket]
+            logger.info(f"👋 User left room {room_id} (remaining: {len(active_connections[room_id])})")
+
+async def broadcast_to_room(room_id: str, message: dict):
+    """Broadcast message to all participants in a room"""
+    if room_id not in active_connections:
+        return
+    
+    for connection in active_connections[room_id]:
+        try:
+            await connection.send_json(message)
+        except Exception as e:
+            logger.error(f"Failed to send to room participant: {e}")
 
 if __name__ == "__main__":
     import uvicorn
