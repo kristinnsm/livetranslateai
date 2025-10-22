@@ -8,6 +8,10 @@ import asyncio
 import json
 import logging
 import uuid
+import time
+import base64
+import io
+import requests
 from datetime import datetime
 from typing import Dict, List
 import os
@@ -330,8 +334,8 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                     audio_chunk = data["bytes"]
                     logger.info(f"🎤 Received audio in room {room_id}: {len(audio_chunk)} bytes")
                     
-                    # Process translation (same as single-user)
-                    # ... (translation logic here)
+                    # Process translation and broadcast to all participants
+                    await process_room_translation(room_id, audio_chunk)
                     
                 elif "text" in data:
                     message = json.loads(data["text"])
@@ -374,6 +378,117 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         if room_id in active_connections:
             active_connections[room_id] = [conn for conn in active_connections[room_id] if conn != websocket]
             logger.info(f"👋 User left room {room_id} (remaining: {len(active_connections[room_id])})")
+
+async def process_room_translation(room_id: str, audio_chunk: bytes):
+    """Process translation for room and broadcast to all participants"""
+    try:
+        start_time = time.time()
+        
+        # Step 1: Transcribe audio with Whisper
+        logger.info("📝 Starting Whisper transcription for room...")
+        whisper_response = requests.post(
+            "https://api.openai.com/v1/audio/transcriptions",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}"
+            },
+            files={
+                "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
+            },
+            data={
+                "model": "whisper-1",
+                "language": "en",  # Default to English for now
+                "response_format": "json"
+            },
+            timeout=10
+        )
+        
+        if whisper_response.status_code != 200:
+            logger.error(f"Whisper failed: {whisper_response.status_code}")
+            return
+        
+        transcription = whisper_response.json().get("text", "").strip()
+        whisper_time = int((time.time() - start_time) * 1000)
+        logger.info(f"✅ Room transcription: '{transcription}' ({whisper_time}ms)")
+        
+        if not transcription:
+            logger.warning("Empty transcription - no speech detected")
+            return
+        
+        # Step 2: Translate with GPT-3.5-turbo
+        translation_start = time.time()
+        logger.info("🌍 Starting room translation...")
+        
+        translation_response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "user", "content": f"Translate from English to Spanish:\n{transcription}"}
+                ],
+                "max_tokens": 200,
+                "temperature": 0,
+            },
+            timeout=4
+        )
+        
+        if translation_response.status_code != 200:
+            logger.error(f"Translation failed: {translation_response.status_code}")
+            return
+        
+        translated = translation_response.json()["choices"][0]["message"]["content"].strip()
+        translation_time = int((time.time() - translation_start) * 1000)
+        logger.info(f"✅ Room translation: '{translated}' ({translation_time}ms)")
+        
+        # Step 3: Generate TTS audio
+        tts_start = time.time()
+        logger.info("🔊 Starting TTS for room...")
+        tts_response = requests.post(
+            "https://api.openai.com/v1/audio/speech",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "tts-1",
+                "voice": "alloy",
+                "input": translated[:500],
+                "response_format": "opus",
+                "speed": 1.05
+            },
+            timeout=10
+        )
+        
+        audio_base64 = None
+        if tts_response.status_code == 200:
+            audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
+            tts_time = int((time.time() - tts_start) * 1000)
+            logger.info(f"✅ Room TTS generated: {len(tts_response.content)} bytes ({tts_time}ms)")
+        
+        latency_ms = int((time.time() - start_time) * 1000)
+        logger.info(f"⏱️ Room total latency: {latency_ms}ms")
+        
+        # Broadcast translation to all room participants
+        await broadcast_to_room(room_id, {
+            "type": "translation",
+            "timestamp": datetime.utcnow().timestamp(),
+            "original": transcription,
+            "translated": translated,
+            "source_lang": "en",
+            "target_lang": "es",
+            "latency_ms": latency_ms,
+            "audio_base64": audio_base64
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Room translation error: {e}")
+        await broadcast_to_room(room_id, {
+            "type": "error",
+            "message": f"Translation failed: {str(e)}"
+        })
 
 async def broadcast_to_room(room_id: str, message: dict):
     """Broadcast message to all participants in a room"""
