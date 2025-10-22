@@ -38,6 +38,27 @@ async def health_check():
         "mode": "minimal"
     }
 
+@app.websocket("/ws/translate/realtime")
+async def websocket_translate_realtime(websocket: WebSocket):
+    """
+    Realtime translation using OpenAI Realtime API
+    Ultra-low latency (300-1000ms)
+    """
+    await websocket.accept()
+    logger.info("🔥 Realtime WebSocket connected")
+    
+    try:
+        from services.translator_realtime import handle_realtime_translation
+        await handle_realtime_translation(websocket)
+    except Exception as e:
+        logger.error(f"❌ Realtime translation error: {e}")
+        await websocket.send_json({
+            "type": "error",
+            "message": f"Realtime API failed: {str(e)}"
+        })
+    finally:
+        logger.info("🔌 Realtime WebSocket closed")
+
 @app.websocket("/ws/translate")
 async def websocket_translate(websocket: WebSocket):
     await websocket.accept()
@@ -140,7 +161,7 @@ async def websocket_translate(websocket: WebSocket):
                                 "voice": "nova",   # Fast, natural Spanish voice
                                 "input": translated,
                                 "response_format": "opus",  # Smaller, faster than mp3
-                                "speed": 1.1  # Slightly faster playback (saves ~0.5s)
+                                "speed": 1.0  # Normal speed for natural sound
                             },
                             timeout=20  # Reduced timeout
                         )
