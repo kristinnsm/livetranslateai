@@ -105,7 +105,7 @@ async def websocket_translate(websocket: WebSocket):
                                 "language": "en",  # Hint language for faster processing
                                 "response_format": "json"  # Explicit format
                             },
-                            timeout=12  # Whisper is usually done in 2-4s
+                            timeout=10  # Whisper is usually done in 2-4s
                         )
                         
                         if whisper_response.status_code != 200:
@@ -147,7 +147,7 @@ async def websocket_translate(websocket: WebSocket):
                         translation_time = int((time.time() - translation_start) * 1000)
                         logger.info(f"✅ Translation: '{translated}' ({translation_time}ms)")
                         
-                        # Step 3: Generate TTS audio (optimized)
+                        # Step 3: Generate TTS audio (ultra-optimized)
                         tts_start = time.time()
                         logger.info("🔊 Starting TTS audio generation...")
                         tts_response = requests.post(
@@ -157,13 +157,13 @@ async def websocket_translate(websocket: WebSocket):
                                 "Content-Type": "application/json"
                             },
                             json={
-                                "model": "tts-1",  # Fast model (not tts-1-hd)
-                                "voice": "nova",   # Fast, natural Spanish voice
-                                "input": translated,
-                                "response_format": "opus",  # Smaller, faster than mp3
-                                "speed": 1.0  # Normal speed for natural sound
+                                "model": "tts-1",
+                                "voice": "alloy",  # Fastest voice
+                                "input": translated[:500],  # Limit to 500 chars for speed
+                                "response_format": "opus",
+                                "speed": 1.05  # Slightly faster (barely noticeable)
                             },
-                            timeout=15  # TTS-1 is fast
+                            timeout=10
                         )
                         
                         if tts_response.status_code != 200:
