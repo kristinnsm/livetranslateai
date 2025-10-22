@@ -75,24 +75,19 @@ class RealtimeTranslator:
             "session": {
                 "modalities": ["text", "audio"],
                 "instructions": (
-                    "You are a professional real-time translator for business calls. "
-                    "When you receive English speech, immediately translate it to Spanish. "
-                    "Maintain the tone, formality, and meaning of the original. "
-                    "Be concise and natural. Only respond with the translation."
+                    "You are a Spanish translator. "
+                    "Listen to the English audio and speak the Spanish translation. "
+                    "Do not add any other words. "
+                    "Only speak the direct Spanish translation of what you hear."
                 ),
-                "voice": "alloy",  # Nova not available yet, using alloy
+                "voice": "alloy",
                 "input_audio_format": "pcm16",
                 "output_audio_format": "pcm16",
                 "input_audio_transcription": {
                     "model": "whisper-1"
                 },
-                "turn_detection": {
-                    "type": "server_vad",  # Voice Activity Detection
-                    "threshold": 0.5,
-                    "prefix_padding_ms": 300,
-                    "silence_duration_ms": 500
-                },
-                "temperature": 0.6,
+                "turn_detection": None,  # Disable auto turn detection (we handle it manually)
+                "temperature": 0.3,
                 "max_response_output_tokens": 4096
             }
         }
@@ -104,8 +99,24 @@ class RealtimeTranslator:
         """Send audio chunk to Realtime API"""
         try:
             # Convert WebM to PCM16 (required by Realtime API)
-            # For now, we'll send the raw audio - TODO: Add proper conversion
-            audio_base64 = base64.b64encode(audio_chunk).decode('utf-8')
+            import io
+            from pydub import AudioSegment
+            
+            # Load WebM audio
+            audio = AudioSegment.from_file(io.BytesIO(audio_chunk), format="webm")
+            
+            # Convert to PCM16: 24kHz, mono, 16-bit
+            audio = audio.set_frame_rate(24000)
+            audio = audio.set_channels(1)
+            audio = audio.set_sample_width(2)  # 16-bit = 2 bytes
+            
+            # Export as raw PCM
+            pcm_data = audio.raw_data
+            
+            # Encode to base64
+            audio_base64 = base64.b64encode(pcm_data).decode('utf-8')
+            
+            logger.info(f"🔄 Converted WebM ({len(audio_chunk)} bytes) to PCM16 ({len(pcm_data)} bytes)")
             
             message = {
                 "type": "input_audio_buffer.append",
@@ -113,10 +124,10 @@ class RealtimeTranslator:
             }
             
             await self.openai_ws.send(json.dumps(message))
-            logger.info(f"📤 Sent audio chunk: {len(audio_chunk)} bytes")
+            logger.info(f"📤 Sent PCM16 audio: {len(pcm_data)} bytes")
             
         except Exception as e:
-            logger.error(f"❌ Error sending audio: {e}")
+            logger.error(f"❌ Error sending audio: {e}", exc_info=True)
     
     async def commit_audio(self):
         """Commit the audio buffer and trigger response"""
