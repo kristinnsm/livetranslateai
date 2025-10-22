@@ -118,9 +118,11 @@ async def websocket_translate(websocket: WebSocket):
                         if not transcription:
                             raise Exception("Empty transcription - no speech detected")
                         
-                        # Step 2: Translate with GPT-4o-mini (optimized)
+                        # Step 2: Translate with GPT-4o (ultra-fast)
                         translation_start = time.time()
                         logger.info("🌍 Starting translation...")
+                        
+                        # Use minimal system message for fastest response
                         translation_response = requests.post(
                             "https://api.openai.com/v1/chat/completions",
                             headers={
@@ -128,15 +130,14 @@ async def websocket_translate(websocket: WebSocket):
                                 "Content-Type": "application/json"
                             },
                             json={
-                                "model": "gpt-4o",  # Faster than gpt-4o-mini for translations
+                                "model": "gpt-4o",
                                 "messages": [
-                                    {"role": "system", "content": "Translate to Spanish."},
-                                    {"role": "user", "content": transcription}
+                                    {"role": "user", "content": f"Translate to Spanish:\n{transcription}"}
                                 ],
-                                "max_tokens": 250,
-                                "temperature": 0.1,  # Very low for fastest deterministic results
+                                "max_tokens": 200,
+                                "temperature": 0,  # Zero for maximum speed
                             },
-                            timeout=8  # GPT-4o is very fast for translations
+                            timeout=6
                         )
                         
                         if translation_response.status_code != 200:
