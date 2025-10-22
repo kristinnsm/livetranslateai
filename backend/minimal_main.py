@@ -120,6 +120,32 @@ async def websocket_translate(websocket: WebSocket):
                         translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                         logger.info(f"✅ Translation: '{translated}'")
                         
+                        # Step 3: Generate TTS audio
+                        logger.info("🔊 Starting TTS audio generation...")
+                        tts_response = requests.post(
+                            "https://api.openai.com/v1/audio/speech",
+                            headers={
+                                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                                "Content-Type": "application/json"
+                            },
+                            json={
+                                "model": "tts-1",
+                                "voice": "nova",
+                                "input": translated,
+                                "response_format": "mp3"
+                            },
+                            timeout=30
+                        )
+                        
+                        if tts_response.status_code != 200:
+                            logger.warning(f"TTS failed: {tts_response.status_code}")
+                            audio_base64 = None
+                        else:
+                            # Convert audio to base64 for sending via WebSocket
+                            import base64
+                            audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
+                            logger.info(f"✅ TTS audio generated: {len(tts_response.content)} bytes")
+                        
                         latency_ms = int((time.time() - start_time) * 1000)
                         logger.info(f"⏱️ Total latency: {latency_ms}ms")
                         
@@ -131,7 +157,7 @@ async def websocket_translate(websocket: WebSocket):
                             "source_lang": "en",
                             "target_lang": "es",
                             "latency_ms": latency_ms,
-                            "audio_url": None  # TODO: Add TTS audio generation
+                            "audio_base64": audio_base64
                         })
                             
                     except Exception as e:

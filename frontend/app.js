@@ -358,6 +358,12 @@ function displayTranslation(data) {
     }
 
     console.log(`Translation: "${data.original}" → "${data.translated}" (${data.latency_ms}ms)`);
+    
+    // Play TTS audio if available
+    if (data.audio_base64) {
+        console.log('🔊 Playing translated audio...');
+        playAudioFromBase64(data.audio_base64);
+    }
 }
 
 /**
@@ -374,6 +380,42 @@ async function playTranslatedAudio(audioBlob) {
         
     } catch (error) {
         console.error('Audio playback error:', error);
+    }
+}
+
+/**
+ * Play audio from base64 encoded string
+ */
+async function playAudioFromBase64(base64Audio) {
+    try {
+        // Convert base64 to blob
+        const byteCharacters = atob(base64Audio);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const audioBlob = new Blob([byteArray], { type: 'audio/mpeg' });
+        
+        // Create audio element and play
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            console.log('✅ Audio playback finished');
+        };
+        
+        audio.onerror = (error) => {
+            console.error('❌ Audio playback error:', error);
+            URL.revokeObjectURL(audioUrl);
+        };
+        
+        await audio.play();
+        console.log('🔊 Playing TTS audio');
+        
+    } catch (error) {
+        console.error('❌ Failed to play audio from base64:', error);
     }
 }
 
