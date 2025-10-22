@@ -461,21 +461,76 @@ async function playStreamingAudio() {
 }
 
 /**
+ * Convert PCM16 base64 to WAV blob for playback
+ */
+function pcm16ToWav(base64Pcm16) {
+    // Decode base64
+    const pcmData = atob(base64Pcm16);
+    const pcmBytes = new Uint8Array(pcmData.length);
+    for (let i = 0; i < pcmData.length; i++) {
+        pcmBytes[i] = pcmData.charCodeAt(i);
+    }
+    
+    // WAV header configuration for PCM16
+    const sampleRate = 24000; // Realtime API uses 24kHz
+    const numChannels = 1; // Mono
+    const bitsPerSample = 16;
+    const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+    const blockAlign = numChannels * (bitsPerSample / 8);
+    const dataSize = pcmBytes.length;
+    
+    // Create WAV header (44 bytes)
+    const header = new ArrayBuffer(44);
+    const view = new DataView(header);
+    
+    // "RIFF" chunk descriptor
+    view.setUint32(0, 0x52494646, false); // "RIFF"
+    view.setUint32(4, 36 + dataSize, true); // File size - 8
+    view.setUint32(8, 0x57415645, false); // "WAVE"
+    
+    // "fmt " sub-chunk
+    view.setUint32(12, 0x666d7420, false); // "fmt "
+    view.setUint32(16, 16, true); // Subchunk1Size (16 for PCM)
+    view.setUint16(20, 1, true); // AudioFormat (1 = PCM)
+    view.setUint16(22, numChannels, true); // NumChannels
+    view.setUint32(24, sampleRate, true); // SampleRate
+    view.setUint32(28, byteRate, true); // ByteRate
+    view.setUint16(32, blockAlign, true); // BlockAlign
+    view.setUint16(34, bitsPerSample, true); // BitsPerSample
+    
+    // "data" sub-chunk
+    view.setUint32(36, 0x64617461, false); // "data"
+    view.setUint32(40, dataSize, true); // Subchunk2Size
+    
+    // Combine header + PCM data
+    const wavBytes = new Uint8Array(44 + dataSize);
+    wavBytes.set(new Uint8Array(header), 0);
+    wavBytes.set(pcmBytes, 44);
+    
+    return new Blob([wavBytes], { type: 'audio/wav' });
+}
+
+/**
  * Play audio from base64 encoded string
  */
 async function playAudioFromBase64(base64Audio) {
     try {
-        // Convert base64 to blob
-        const byteCharacters = atob(base64Audio);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        // Try PCM16 -> WAV conversion first (for Realtime API)
+        let audioBlob;
+        try {
+            audioBlob = pcm16ToWav(base64Audio);
+            console.log('🔊 Converted PCM16 to WAV for playback');
+        } catch (pcmError) {
+            // Fallback: Assume it's Opus (for traditional mode)
+            const byteCharacters = atob(base64Audio);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
+            console.log('🔊 Using Opus format for playback');
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        
-        // Detect audio format (Opus for traditional, PCM16 for realtime)
-        // For now, try Opus first, fallback to raw audio
-        const audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
         
         // Create audio element and play
         const audioUrl = URL.createObjectURL(audioBlob);
