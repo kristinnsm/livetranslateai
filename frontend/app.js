@@ -506,21 +506,24 @@ function pcm16ToWav(base64Pcm16) {
  */
 async function playAudioFromBase64(base64Audio) {
     try {
-        // Try PCM16 -> WAV conversion first (for Realtime API)
+        // Decode base64 to bytes
+        const byteCharacters = atob(base64Audio);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        
+        // Detect format by checking magic bytes
         let audioBlob;
-        try {
+        if (byteArray[0] === 0x4F && byteArray[1] === 0x67 && byteArray[2] === 0x67 && byteArray[3] === 0x53) {
+            // "OggS" magic bytes - it's Opus
+            audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
+            console.log('🔊 Detected Opus audio format');
+        } else {
+            // Assume raw PCM16, convert to WAV
             audioBlob = pcm16ToWav(base64Audio);
             console.log('🔊 Converted PCM16 to WAV for playback');
-        } catch (pcmError) {
-            // Fallback: Assume it's Opus (for traditional mode)
-            const byteCharacters = atob(base64Audio);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
-            console.log('🔊 Using Opus format for playback');
         }
         
         // Create audio element and play
