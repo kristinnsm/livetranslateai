@@ -10,6 +10,7 @@ import os
 import base64
 from datetime import datetime
 import websockets
+from fastapi import WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ class RealtimeTranslator:
         """Connect to OpenAI Realtime API"""
         try:
             logger.info("🔌 Connecting to OpenAI Realtime API...")
+            logger.info(f"URL: {REALTIME_API_URL}")
+            logger.info(f"API Key configured: {bool(OPENAI_API_KEY)}")
             
             # Connect with API key in header
             self.openai_ws = await websockets.connect(
@@ -48,8 +51,19 @@ class RealtimeTranslator:
             
             self.is_running = True
             
+            # Notify client of successful connection
+            await self.client_ws.send_json({
+                "type": "status",
+                "message": "Connected to Realtime API"
+            })
+            
         except Exception as e:
-            logger.error(f"❌ Failed to connect to Realtime API: {e}")
+            logger.error(f"❌ Failed to connect to Realtime API: {e}", exc_info=True)
+            # Send error to client
+            await self.client_ws.send_json({
+                "type": "error",
+                "message": f"Failed to connect to Realtime API: {str(e)}"
+            })
             raise
     
     async def configure_session(self):
@@ -242,27 +256,39 @@ async def handle_realtime_translation(client_ws):
         # Start listening to OpenAI events
         event_task = asyncio.create_task(translator.handle_realtime_events())
         
-        # Listen for client audio
-        async for message in client_ws.iter_json():
-            if message.get("action") == "audio":
-                # Client sent audio
-                audio_data = message.get("data")
-                if audio_data:
-                    audio_bytes = base64.b64decode(audio_data)
-                    await translator.send_audio(audio_bytes)
-            
-            elif message.get("action") == "commit":
-                # Client finished speaking
-                await translator.commit_audio()
-            
-            elif message.get("action") == "disconnect":
+        # Listen for client messages (audio bytes or JSON)
+        while True:
+            try:
+                data = await client_ws.receive()
+                
+                if "bytes" in data:
+                    # Binary audio chunk received
+                    audio_chunk = data["bytes"]
+                    logger.info(f"📥 Received audio chunk: {len(audio_chunk)} bytes")
+                    await translator.send_audio(audio_chunk)
+                    
+                    # Auto-commit after receiving audio (for push-to-talk)
+                    await translator.commit_audio()
+                
+                elif "text" in data:
+                    # JSON message received
+                    message = json.loads(data["text"])
+                    
+                    if message.get("action") == "ping":
+                        await client_ws.send_json({"type": "pong"})
+                    
+                    elif message.get("action") == "disconnect":
+                        break
+                        
+            except Exception as e:
+                logger.error(f"❌ Error receiving data: {e}")
                 break
         
         # Wait for event task to finish
         event_task.cancel()
         
     except Exception as e:
-        logger.error(f"❌ Realtime translation error: {e}")
+        logger.error(f"❌ Realtime translation error: {e}", exc_info=True)
         await client_ws.send_json({
             "type": "error",
             "message": str(e)
