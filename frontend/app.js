@@ -777,7 +777,11 @@ setInterval(() => {
 
 async function createRoom() {
     try {
-        const response = await fetch('/api/rooms/create', {
+        const backendUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://livetranslateai.onrender.com';
+            
+        const response = await fetch(`${backendUrl}/api/rooms/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
@@ -818,7 +822,11 @@ async function joinRoom() {
     if (!participantName) return;
     
     try {
-        const response = await fetch(`/api/rooms/${roomCode}/join`, {
+        const backendUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://livetranslateai.onrender.com';
+            
+        const response = await fetch(`${backendUrl}/api/rooms/${roomCode}/join`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ participant_name: participantName })
