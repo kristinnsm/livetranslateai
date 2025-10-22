@@ -130,14 +130,14 @@ async def websocket_translate(websocket: WebSocket):
                                 "Content-Type": "application/json"
                             },
                             json={
-                                "model": "gpt-4o",
+                                "model": "gpt-3.5-turbo",  # 5x faster than GPT-4o for simple translations
                                 "messages": [
                                     {"role": "user", "content": f"Translate to Spanish:\n{transcription}"}
                                 ],
                                 "max_tokens": 200,
-                                "temperature": 0,  # Zero for maximum speed
+                                "temperature": 0,
                             },
-                            timeout=6
+                            timeout=4  # Much faster model
                         )
                         
                         if translation_response.status_code != 200:
