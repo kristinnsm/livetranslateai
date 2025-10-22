@@ -27,6 +27,8 @@ class RealtimeTranslator:
         self.openai_ws = None
         self.session_id = None
         self.is_running = False
+        self.original_transcript = ""
+        self.translated_text = ""
         
     async def connect(self):
         """Connect to OpenAI Realtime API"""
@@ -183,10 +185,17 @@ class RealtimeTranslator:
                     delta = event.get("delta", "")
                     logger.info(f"📝 Transcript delta: {delta}")
                 
-                elif event_type == "response.audio_transcript.done":
-                    # Complete transcription
+                elif event_type == "conversation.item.input_audio_transcription.completed":
+                    # Original audio transcription completed
                     transcript = event.get("transcript", "")
-                    logger.info(f"✅ Complete transcript: {transcript}")
+                    self.original_transcript = transcript
+                    logger.info(f"📝 Original transcript: {transcript}")
+                
+                elif event_type == "response.audio_transcript.done":
+                    # Complete translated transcription
+                    transcript = event.get("transcript", "")
+                    self.translated_text = transcript
+                    logger.info(f"✅ Translation transcript: {transcript}")
                 
                 elif event_type == "response.audio.delta":
                     # Streaming audio output
@@ -203,23 +212,22 @@ class RealtimeTranslator:
                 
                 elif event_type == "response.done":
                     # Full response complete
-                    response = event.get("response", {})
-                    output = response.get("output", [])
+                    logger.info("✅ Response complete")
                     
-                    if output:
-                        # Extract translation
-                        for item in output:
-                            if item.get("type") == "message":
-                                content = item.get("content", [])
-                                for c in content:
-                                    if c.get("type") == "text":
-                                        translated_text = c.get("text", "")
-                                        logger.info(f"🌍 Translation: {translated_text}")
-                                        
-                                        await self.client_ws.send_json({
-                                            "type": "translation_complete",
-                                            "translated": translated_text
-                                        })
+                    # Send final translation with both original and translated text
+                    await self.client_ws.send_json({
+                        "type": "translation",
+                        "timestamp": datetime.utcnow().timestamp(),
+                        "original": self.original_transcript or "Realtime transcription",
+                        "translated": self.translated_text or "Translation in progress...",
+                        "source_lang": "en",
+                        "target_lang": "es",
+                        "latency_ms": 0  # Real-time, no need to track
+                    })
+                    
+                    # Reset for next translation
+                    self.original_transcript = ""
+                    self.translated_text = ""
                 
                 elif event_type == "error":
                     error = event.get("error", {})
