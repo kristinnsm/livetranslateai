@@ -64,6 +64,10 @@ async def websocket_translate(websocket: WebSocket):
     await websocket.accept()
     logger.info("WebSocket connected")
     
+    # Default language settings
+    source_lang = "en"
+    target_lang = "es"
+    
     try:
         await websocket.send_json({
             "type": "connected",
@@ -102,7 +106,7 @@ async def websocket_translate(websocket: WebSocket):
                             },
                             data={
                                 "model": "whisper-1",
-                                "language": "en",  # Hint language for faster processing
+                                "language": source_lang,  # Use selected source language
                                 "response_format": "json"  # Explicit format
                             },
                             timeout=10  # Whisper is usually done in 2-4s
@@ -132,7 +136,7 @@ async def websocket_translate(websocket: WebSocket):
                             json={
                                 "model": "gpt-3.5-turbo",  # 5x faster than GPT-4o for simple translations
                                 "messages": [
-                                    {"role": "user", "content": f"Translate to Spanish:\n{transcription}"}
+                                    {"role": "user", "content": f"Translate from {source_lang} to {target_lang}:\n{transcription}"}
                                 ],
                                 "max_tokens": 200,
                                 "temperature": 0,
@@ -184,8 +188,8 @@ async def websocket_translate(websocket: WebSocket):
                             "timestamp": datetime.utcnow().timestamp(),
                             "original": transcription,
                             "translated": translated,
-                            "source_lang": "en",
-                            "target_lang": "es",
+                            "source_lang": source_lang,
+                            "target_lang": target_lang,
                             "latency_ms": latency_ms,
                             "audio_base64": audio_base64
                         })
@@ -201,6 +205,10 @@ async def websocket_translate(websocket: WebSocket):
                     message = json.loads(data["text"])
                     if message.get("action") == "ping":
                         await websocket.send_json({"type": "pong"})
+                    elif message.get("action") == "set_language":
+                        source_lang = message.get("source_lang", "en")
+                        target_lang = message.get("target_lang", "es")
+                        logger.info(f"Language settings updated: {source_lang} → {target_lang}")
                         
             except WebSocketDisconnect:
                 break
