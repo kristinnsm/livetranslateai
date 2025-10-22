@@ -5,14 +5,9 @@
 
 // Configuration
 const CONFIG = {
-    wsUrl: {
-        traditional: window.location.hostname === 'localhost' 
-            ? 'ws://localhost:8000/ws/translate'
-            : 'wss://livetranslateai.onrender.com/ws/translate',
-        realtime: window.location.hostname === 'localhost'
-            ? 'ws://localhost:8000/ws/translate/realtime'
-            : 'wss://livetranslateai.onrender.com/ws/translate/realtime'
-    },
+    wsUrl: window.location.hostname === 'localhost' 
+        ? 'ws://localhost:8000/ws/translate'
+        : 'wss://livetranslateai.onrender.com/ws/translate',
     sampleRate: 16000,
     chunkDurationMs: 2000,
     reconnectDelay: 3000
@@ -179,12 +174,8 @@ function disconnectSession() {
 function connectWebSocket() {
     return new Promise((resolve, reject) => {
         try {
-            // Get selected mode
-            const mode = document.getElementById('modeSelect').value;
-            const wsUrl = CONFIG.wsUrl[mode];
-            
-            console.log(`Attempting to connect to ${mode} mode:`, wsUrl);
-            websocket = new WebSocket(wsUrl);
+            console.log('Attempting to connect to:', CONFIG.wsUrl);
+            websocket = new WebSocket(CONFIG.wsUrl);
 
             websocket.onopen = () => {
                 console.log('WebSocket connected successfully!');
