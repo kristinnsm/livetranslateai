@@ -48,6 +48,7 @@ async def health_check():
 @app.post("/api/rooms/create")
 async def create_room():
     """Create a new translation room"""
+    logger.info("🏠 POST /api/rooms/create - Creating new room")
     room_id = str(uuid.uuid4())[:8].upper()  # Short room code
     rooms[room_id] = {
         "id": room_id,
@@ -62,7 +63,9 @@ async def create_room():
 @app.get("/api/rooms/{room_id}")
 async def get_room(room_id: str):
     """Get room information"""
+    logger.info(f"🔍 GET /api/rooms/{room_id} - room_id: {room_id}")
     if room_id not in rooms:
+        logger.warning(f"❌ Room {room_id} not found")
         return {"error": "Room not found"}, 404
     
     room = rooms[room_id].copy()
