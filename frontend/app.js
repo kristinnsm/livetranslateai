@@ -23,6 +23,11 @@ let sessionId = null;
 let segmentCount = 0;
 let latencyStats = [];
 
+// Room state
+let currentRoom = null;
+let participantId = null;
+let isHost = false;
+
 // DOM elements
 const elements = {
     startBtn: document.getElementById('startBtn'),
@@ -44,7 +49,14 @@ const elements = {
     replayPlayer: document.getElementById('replayPlayer'),
     replayAudio: document.getElementById('replayAudio'),
     replaySubtitles: document.getElementById('replaySubtitles'),
-    toastContainer: document.getElementById('toastContainer')
+    toastContainer: document.getElementById('toastContainer'),
+    // Room elements
+    createRoomBtn: document.getElementById('createRoomBtn'),
+    joinRoomBtn: document.getElementById('joinRoomBtn'),
+    roomInfo: document.getElementById('roomInfo'),
+    roomCode: document.getElementById('roomCode'),
+    copyRoomCode: document.getElementById('copyRoomCode'),
+    participantCount: document.getElementById('participantCount')
 };
 
 // Event Listeners
@@ -54,6 +66,11 @@ elements.disconnectBtn.addEventListener('click', disconnectSession);
 elements.replayBtn.addEventListener('click', triggerReplay);
 elements.sourceLang.addEventListener('change', updateLanguages);
 elements.targetLang.addEventListener('change', updateLanguages);
+
+// Room event listeners
+elements.createRoomBtn.addEventListener('click', createRoom);
+elements.joinRoomBtn.addEventListener('click', joinRoom);
+elements.copyRoomCode.addEventListener('click', copyRoomCode);
 
 /**
  * Start translation session
@@ -753,6 +770,168 @@ setInterval(() => {
         websocket.send(JSON.stringify({ action: 'ping' }));
     }
 }, 30000); // Every 30 seconds
+
+/**
+ * Room Management Functions
+ */
+
+async function createRoom() {
+    try {
+        const response = await fetch('/api/rooms/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create room');
+        }
+        
+        const data = await response.json();
+        currentRoom = data.room_id;
+        isHost = true;
+        
+        // Show room info
+        elements.roomCode.textContent = currentRoom;
+        elements.participantCount.textContent = '1';
+        elements.roomInfo.style.display = 'flex';
+        
+        // Hide room creation buttons
+        elements.createRoomBtn.style.display = 'none';
+        elements.joinRoomBtn.style.display = 'none';
+        
+        showToast(`Room created: ${currentRoom}`, 'success');
+        
+        // Connect to room WebSocket
+        await connectToRoom();
+        
+    } catch (error) {
+        console.error('❌ Failed to create room:', error);
+        showToast('Failed to create room', 'error');
+    }
+}
+
+async function joinRoom() {
+    const roomCode = prompt('Enter room code:');
+    if (!roomCode) return;
+    
+    const participantName = prompt('Enter your name:');
+    if (!participantName) return;
+    
+    try {
+        const response = await fetch(`/api/rooms/${roomCode}/join`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ participant_name: participantName })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to join room');
+        }
+        
+        const data = await response.json();
+        currentRoom = roomCode;
+        participantId = data.participant_id;
+        isHost = false;
+        
+        // Show room info
+        elements.roomCode.textContent = currentRoom;
+        elements.participantCount.textContent = '2'; // Will be updated by WebSocket
+        elements.roomInfo.style.display = 'flex';
+        
+        // Hide room creation buttons
+        elements.createRoomBtn.style.display = 'none';
+        elements.joinRoomBtn.style.display = 'none';
+        
+        showToast(`Joined room: ${currentRoom}`, 'success');
+        
+        // Connect to room WebSocket
+        await connectToRoom();
+        
+    } catch (error) {
+        console.error('❌ Failed to join room:', error);
+        showToast(error.message, 'error');
+    }
+}
+
+async function connectToRoom() {
+    if (!currentRoom) return;
+    
+    const wsUrl = window.location.hostname === 'localhost' 
+        ? `ws://localhost:8000/ws/room/${currentRoom}`
+        : `wss://livetranslateai.onrender.com/ws/room/${currentRoom}`;
+    
+    try {
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = () => {
+            console.log(`🏠 Connected to room: ${currentRoom}`);
+            showToast('Connected to room', 'success');
+        };
+        
+        websocket.onmessage = handleRoomMessage;
+        websocket.onclose = () => {
+            console.log('🏠 Room connection closed');
+            showToast('Room connection lost', 'warning');
+        };
+        
+        websocket.onerror = (error) => {
+            console.error('🏠 Room WebSocket error:', error);
+            showToast('Room connection error', 'error');
+        };
+        
+    } catch (error) {
+        console.error('❌ Failed to connect to room:', error);
+        showToast('Failed to connect to room', 'error');
+    }
+}
+
+function handleRoomMessage(event) {
+    try {
+        const message = JSON.parse(event.data);
+        
+        switch (message.type) {
+            case 'room_update':
+                elements.participantCount.textContent = message.participant_count;
+                console.log(`🏠 Room update: ${message.participant_count} participants`);
+                break;
+                
+            case 'language_update':
+                console.log(`🌍 Language update: ${message.participant_id} set ${message.source_lang} → ${message.target_lang}`);
+                break;
+                
+            case 'translation':
+                // Handle shared translation
+                elements.originalText.textContent = message.original;
+                elements.translatedText.textContent = message.translated;
+                elements.latencyDisplay.textContent = `${message.latency_ms}ms`;
+                
+                // Play audio if available
+                if (message.audio_base64) {
+                    playAudioFromBase64(message.audio_base64);
+                }
+                break;
+                
+            case 'pong':
+                console.log('🏠 Received pong from room');
+                break;
+                
+            default:
+                console.log('🏠 Unknown room message:', message);
+        }
+        
+    } catch (error) {
+        console.error('❌ Failed to parse room message:', error);
+    }
+}
+
+function copyRoomCode() {
+    navigator.clipboard.writeText(currentRoom).then(() => {
+        showToast('Room code copied!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy room code', 'error');
+    });
+}
 
 // Initialize on load
 console.log('🚀 LiveTranslateAI initialized');
