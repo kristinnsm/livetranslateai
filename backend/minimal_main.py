@@ -60,11 +60,43 @@ async def websocket_translate(websocket: WebSocket):
                     audio_chunk = data["bytes"]
                     logger.info(f"Received audio: {len(audio_chunk)} bytes")
                     
-                    # Simple translation using requests (no async issues)
+                    # Real translation pipeline: Whisper STT → GPT Translation
                     try:
                         import requests
+                        import io
+                        import time
                         
-                        response = requests.post(
+                        start_time = time.time()
+                        
+                        # Step 1: Transcribe audio with Whisper
+                        logger.info("📝 Starting Whisper transcription...")
+                        whisper_response = requests.post(
+                            "https://api.openai.com/v1/audio/transcriptions",
+                            headers={
+                                "Authorization": f"Bearer {OPENAI_API_KEY}"
+                            },
+                            files={
+                                "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
+                            },
+                            data={
+                                "model": "whisper-1",
+                                "language": "en"
+                            },
+                            timeout=30
+                        )
+                        
+                        if whisper_response.status_code != 200:
+                            raise Exception(f"Whisper failed: {whisper_response.status_code} - {whisper_response.text}")
+                        
+                        transcription = whisper_response.json().get("text", "").strip()
+                        logger.info(f"✅ Transcription: '{transcription}'")
+                        
+                        if not transcription:
+                            raise Exception("Empty transcription - no speech detected")
+                        
+                        # Step 2: Translate with GPT-4o-mini
+                        logger.info("🌍 Starting translation...")
+                        translation_response = requests.post(
                             "https://api.openai.com/v1/chat/completions",
                             headers={
                                 "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -73,42 +105,40 @@ async def websocket_translate(websocket: WebSocket):
                             json={
                                 "model": "gpt-4o-mini",
                                 "messages": [
-                                    {"role": "system", "content": "Translate to Spanish. Only return the translation."},
-                                    {"role": "user", "content": "Hello, how are you today?"}
+                                    {"role": "system", "content": "You are a professional translator. Translate the following text from English to Spanish. Only return the translation, nothing else."},
+                                    {"role": "user", "content": transcription}
                                 ],
-                                "max_tokens": 100,
-                                "temperature": 0.1
+                                "max_tokens": 200,
+                                "temperature": 0.3
                             },
-                            timeout=10
+                            timeout=15
                         )
                         
-                        if response.status_code == 200:
-                            result = response.json()
-                            translated = result["choices"][0]["message"]["content"]
-                            
-                            await websocket.send_json({
-                                "type": "translation",
-                                "timestamp": datetime.utcnow().timestamp(),
-                                "original": "Hello, how are you today?",
-                                "translated": translated,
-                                "source_lang": "en",
-                                "target_lang": "es",
-                                "latency_ms": 100,
-                                "audio_url": None  # TODO: Add TTS audio generation
-                            })
-                        else:
-                            raise Exception(f"OpenAI API error: {response.status_code}")
-                            
-                    except Exception as e:
-                        logger.error(f"Translation error: {e}")
+                        if translation_response.status_code != 200:
+                            raise Exception(f"Translation failed: {translation_response.status_code}")
+                        
+                        translated = translation_response.json()["choices"][0]["message"]["content"].strip()
+                        logger.info(f"✅ Translation: '{translated}'")
+                        
+                        latency_ms = int((time.time() - start_time) * 1000)
+                        logger.info(f"⏱️ Total latency: {latency_ms}ms")
+                        
                         await websocket.send_json({
                             "type": "translation",
                             "timestamp": datetime.utcnow().timestamp(),
-                            "original": f"Audio received (error: {str(e)[:30]})",
-                            "translated": f"Audio recibido (error: {str(e)[:30]})",
+                            "original": transcription,
+                            "translated": translated,
                             "source_lang": "en",
                             "target_lang": "es",
-                            "latency_ms": 100
+                            "latency_ms": latency_ms,
+                            "audio_url": None  # TODO: Add TTS audio generation
+                        })
+                            
+                    except Exception as e:
+                        logger.error(f"❌ Translation error: {e}")
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": f"Translation failed: {str(e)}"
                         })
                 
                 elif "text" in data:
