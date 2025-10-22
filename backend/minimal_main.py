@@ -67,8 +67,9 @@ async def websocket_translate(websocket: WebSocket):
                         import time
                         
                         start_time = time.time()
+                        whisper_start = time.time()
                         
-                        # Step 1: Transcribe audio with Whisper
+                        # Step 1: Transcribe audio with Whisper (optimized)
                         logger.info("📝 Starting Whisper transcription...")
                         whisper_response = requests.post(
                             "https://api.openai.com/v1/audio/transcriptions",
@@ -80,21 +81,24 @@ async def websocket_translate(websocket: WebSocket):
                             },
                             data={
                                 "model": "whisper-1",
-                                "language": "en"
+                                "language": "en",  # Hint language for faster processing
+                                "response_format": "json"  # Explicit format
                             },
-                            timeout=30
+                            timeout=15  # Reduced timeout for faster failure
                         )
                         
                         if whisper_response.status_code != 200:
                             raise Exception(f"Whisper failed: {whisper_response.status_code} - {whisper_response.text}")
                         
                         transcription = whisper_response.json().get("text", "").strip()
-                        logger.info(f"✅ Transcription: '{transcription}'")
+                        whisper_time = int((time.time() - whisper_start) * 1000)
+                        logger.info(f"✅ Transcription: '{transcription}' ({whisper_time}ms)")
                         
                         if not transcription:
                             raise Exception("Empty transcription - no speech detected")
                         
-                        # Step 2: Translate with GPT-4o-mini
+                        # Step 2: Translate with GPT-4o-mini (optimized)
+                        translation_start = time.time()
                         logger.info("🌍 Starting translation...")
                         translation_response = requests.post(
                             "https://api.openai.com/v1/chat/completions",
@@ -105,22 +109,25 @@ async def websocket_translate(websocket: WebSocket):
                             json={
                                 "model": "gpt-4o-mini",
                                 "messages": [
-                                    {"role": "system", "content": "You are a professional translator. Translate the following text from English to Spanish. Only return the translation, nothing else."},
+                                    {"role": "system", "content": "Translate to Spanish. Only return the translation."},
                                     {"role": "user", "content": transcription}
                                 ],
-                                "max_tokens": 200,
-                                "temperature": 0.3
+                                "max_tokens": 300,  # Slightly higher for longer texts
+                                "temperature": 0.2,  # Lower for faster, more deterministic results
+                                "stream": False  # Explicit no streaming
                             },
-                            timeout=15
+                            timeout=10  # Reduced timeout - GPT-4o-mini is fast
                         )
                         
                         if translation_response.status_code != 200:
                             raise Exception(f"Translation failed: {translation_response.status_code}")
                         
                         translated = translation_response.json()["choices"][0]["message"]["content"].strip()
-                        logger.info(f"✅ Translation: '{translated}'")
+                        translation_time = int((time.time() - translation_start) * 1000)
+                        logger.info(f"✅ Translation: '{translated}' ({translation_time}ms)")
                         
-                        # Step 3: Generate TTS audio
+                        # Step 3: Generate TTS audio (optimized)
+                        tts_start = time.time()
                         logger.info("🔊 Starting TTS audio generation...")
                         tts_response = requests.post(
                             "https://api.openai.com/v1/audio/speech",
@@ -129,12 +136,13 @@ async def websocket_translate(websocket: WebSocket):
                                 "Content-Type": "application/json"
                             },
                             json={
-                                "model": "tts-1",
-                                "voice": "nova",
+                                "model": "tts-1",  # Fast model (not tts-1-hd)
+                                "voice": "nova",   # Fast, natural Spanish voice
                                 "input": translated,
-                                "response_format": "mp3"
+                                "response_format": "opus",  # Smaller, faster than mp3
+                                "speed": 1.1  # Slightly faster playback (saves ~0.5s)
                             },
-                            timeout=30
+                            timeout=20  # Reduced timeout
                         )
                         
                         if tts_response.status_code != 200:
@@ -144,10 +152,11 @@ async def websocket_translate(websocket: WebSocket):
                             # Convert audio to base64 for sending via WebSocket
                             import base64
                             audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
-                            logger.info(f"✅ TTS audio generated: {len(tts_response.content)} bytes")
+                            tts_time = int((time.time() - tts_start) * 1000)
+                            logger.info(f"✅ TTS audio generated: {len(tts_response.content)} bytes ({tts_time}ms)")
                         
                         latency_ms = int((time.time() - start_time) * 1000)
-                        logger.info(f"⏱️ Total latency: {latency_ms}ms")
+                        logger.info(f"⏱️ Total latency: {latency_ms}ms (Whisper: {whisper_time}ms | Translation: {translation_time}ms | TTS: {tts_time if tts_response.status_code == 200 else 0}ms)")
                         
                         await websocket.send_json({
                             "type": "translation",

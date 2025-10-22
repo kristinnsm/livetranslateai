@@ -395,7 +395,7 @@ async function playAudioFromBase64(base64Audio) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const audioBlob = new Blob([byteArray], { type: 'audio/mpeg' });
+        const audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
         
         // Create audio element and play
         const audioUrl = URL.createObjectURL(audioBlob);
