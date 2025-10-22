@@ -414,13 +414,6 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
             logger.warning("Empty transcription - no speech detected")
             return
         
-        # Detect source language (simple heuristic)
-        detected_lang = "en"  # Default to English
-        if any(word in transcription.lower() for word in ["hola", "gracias", "por favor", "sí", "no", "buenos", "tardes", "noche"]):
-            detected_lang = "es"
-        
-        logger.info(f"🌍 Detected source language: {detected_lang}")
-        
         # Get room participants and their language settings
         if room_id not in rooms:
             logger.error(f"Room {room_id} not found")
@@ -429,16 +422,11 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
         participants = rooms[room_id]["participants"]
         logger.info(f"👥 Processing translations for {len(participants)} participants")
         
-        # Process translation for each participant
+        # Process translation for each participant (simplified - no language detection for now)
         for participant in participants:
             try:
                 source_lang = participant.get("source_lang", "en")
                 target_lang = participant.get("target_lang", "es")
-                
-                # Skip if source language doesn't match detected language
-                if source_lang != detected_lang:
-                    logger.info(f"⏭️ Skipping {participant['name']} - source lang {source_lang} != detected {detected_lang}")
-                    continue
                 
                 logger.info(f"🌍 Translating for {participant['name']}: {source_lang} → {target_lang}")
                 
