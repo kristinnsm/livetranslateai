@@ -109,17 +109,31 @@ async function startTranslation() {
         });
 
         // Setup WebSocket connection
-        await connectWebSocket();
-        
-        // Send current language settings
-        const sourceLang = elements.sourceLang.value;
-        const targetLang = elements.targetLang.value;
-        websocket.send(JSON.stringify({
-            action: 'set_language',
-            source_lang: sourceLang,
-            target_lang: targetLang
-        }));
-        console.log(`🌍 Language settings sent: ${sourceLang} → ${targetLang}`);
+        if (currentRoom) {
+            // Already connected to room WebSocket, just send language settings
+            const sourceLang = elements.sourceLang.value;
+            const targetLang = elements.targetLang.value;
+            websocket.send(JSON.stringify({
+                action: 'set_language',
+                participant_id: participantId,
+                source_lang: sourceLang,
+                target_lang: targetLang
+            }));
+            console.log(`🌍 Room language settings sent: ${sourceLang} → ${targetLang}`);
+        } else {
+            // Connect to single-user WebSocket
+            await connectWebSocket();
+            
+            // Send current language settings
+            const sourceLang = elements.sourceLang.value;
+            const targetLang = elements.targetLang.value;
+            websocket.send(JSON.stringify({
+                action: 'set_language',
+                source_lang: sourceLang,
+                target_lang: targetLang
+            }));
+            console.log(`🌍 Language settings sent: ${sourceLang} → ${targetLang}`);
+        }
 
         // Start first recording
         startAudioCapture();
