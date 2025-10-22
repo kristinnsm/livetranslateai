@@ -105,7 +105,7 @@ async def websocket_translate(websocket: WebSocket):
                                 "language": "en",  # Hint language for faster processing
                                 "response_format": "json"  # Explicit format
                             },
-                            timeout=15  # Reduced timeout for faster failure
+                            timeout=12  # Whisper is usually done in 2-4s
                         )
                         
                         if whisper_response.status_code != 200:
@@ -128,16 +128,15 @@ async def websocket_translate(websocket: WebSocket):
                                 "Content-Type": "application/json"
                             },
                             json={
-                                "model": "gpt-4o-mini",
+                                "model": "gpt-4o",  # Faster than gpt-4o-mini for translations
                                 "messages": [
-                                    {"role": "system", "content": "Translate to Spanish. Only return the translation."},
+                                    {"role": "system", "content": "Translate to Spanish."},
                                     {"role": "user", "content": transcription}
                                 ],
-                                "max_tokens": 300,  # Slightly higher for longer texts
-                                "temperature": 0.2,  # Lower for faster, more deterministic results
-                                "stream": False  # Explicit no streaming
+                                "max_tokens": 250,
+                                "temperature": 0.1,  # Very low for fastest deterministic results
                             },
-                            timeout=10  # Reduced timeout - GPT-4o-mini is fast
+                            timeout=8  # GPT-4o is very fast for translations
                         )
                         
                         if translation_response.status_code != 200:
@@ -163,7 +162,7 @@ async def websocket_translate(websocket: WebSocket):
                                 "response_format": "opus",  # Smaller, faster than mp3
                                 "speed": 1.0  # Normal speed for natural sound
                             },
-                            timeout=20  # Reduced timeout
+                            timeout=15  # TTS-1 is fast
                         )
                         
                         if tts_response.status_code != 200:
