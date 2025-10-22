@@ -280,6 +280,23 @@ function handleWebSocketMessage(event) {
                 // Processing status update (keeps connection alive)
                 console.log('Server status:', message.message);
                 break;
+            
+            case 'audio_delta':
+                // Streaming audio from Realtime API
+                if (message.audio) {
+                    handleAudioDelta(message.audio);
+                }
+                break;
+            
+            case 'translation_complete':
+                // Final translation text from Realtime API
+                console.log('✅ Realtime translation complete:', message.translated);
+                updateTranslationDisplay({
+                    original: "Realtime transcription",
+                    translated: message.translated,
+                    latency_ms: 0
+                });
+                break;
 
             default:
                 console.warn('Unknown message type:', message.type);
@@ -393,6 +410,57 @@ async function playTranslatedAudio(audioBlob) {
 }
 
 /**
+ * Buffer for streaming audio deltas from Realtime API
+ */
+let audioStreamBuffer = [];
+let audioStreamElement = null;
+
+/**
+ * Handle streaming audio delta from Realtime API
+ */
+function handleAudioDelta(audioBase64) {
+    try {
+        // Add to buffer
+        audioStreamBuffer.push(audioBase64);
+        
+        console.log(`🔊 Received audio delta (${audioStreamBuffer.length} chunks)`);
+        
+        // If first chunk, start playback
+        if (audioStreamBuffer.length === 1) {
+            playStreamingAudio();
+        }
+        
+    } catch (error) {
+        console.error('❌ Error handling audio delta:', error);
+    }
+}
+
+/**
+ * Play streaming audio from buffer
+ */
+async function playStreamingAudio() {
+    try {
+        // For now, we'll collect all chunks and play them together
+        // TODO: Implement true streaming playback
+        
+        // Wait a bit to collect chunks
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Combine all audio chunks
+        const combinedBase64 = audioStreamBuffer.join('');
+        audioStreamBuffer = []; // Clear buffer
+        
+        if (combinedBase64) {
+            console.log('🔊 Playing combined realtime audio...');
+            await playAudioFromBase64(combinedBase64);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error playing streaming audio:', error);
+    }
+}
+
+/**
  * Play audio from base64 encoded string
  */
 async function playAudioFromBase64(base64Audio) {
@@ -404,6 +472,9 @@ async function playAudioFromBase64(base64Audio) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
+        
+        // Detect audio format (Opus for traditional, PCM16 for realtime)
+        // For now, try Opus first, fallback to raw audio
         const audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
         
         // Create audio element and play
