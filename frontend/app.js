@@ -93,6 +93,16 @@ async function startTranslation() {
 
         // Setup WebSocket connection
         await connectWebSocket();
+        
+        // Send current language settings
+        const sourceLang = elements.sourceLang.value;
+        const targetLang = elements.targetLang.value;
+        websocket.send(JSON.stringify({
+            action: 'set_language',
+            source_lang: sourceLang,
+            target_lang: targetLang
+        }));
+        console.log(`🌍 Language settings sent: ${sourceLang} → ${targetLang}`);
 
         // Start first recording
         startAudioCapture();
