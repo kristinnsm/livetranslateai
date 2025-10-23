@@ -328,11 +328,13 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         while True:
             try:
                 data = await websocket.receive()
+                logger.info(f"🔍 Received data type: {type(data)}, keys: {list(data.keys()) if isinstance(data, dict) else 'not dict'}")
                 
                 if "bytes" in data:
                     # Handle audio data
                     audio_chunk = data["bytes"]
                     logger.info(f"🎤 Received audio in room {room_id}: {len(audio_chunk)} bytes")
+                    logger.info(f"🎤 Audio chunk type: {type(audio_chunk)}, first 10 bytes: {audio_chunk[:10]}")
                     
                     # Process translation and broadcast to all participants
                     await process_room_translation(room_id, audio_chunk)
