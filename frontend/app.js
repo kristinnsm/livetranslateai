@@ -825,6 +825,7 @@ async function createRoom() {
         
         const data = await response.json();
         currentRoom = data.room_id;
+        participantId = data.participant_id;  // Set participant ID from backend
         isHost = true;
         
         // Show room info

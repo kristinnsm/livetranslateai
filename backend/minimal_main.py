@@ -61,15 +61,29 @@ async def create_room():
     """Create a new translation room"""
     logger.info("🏠 POST /api/rooms/create - Creating new room")
     room_id = str(uuid.uuid4())[:8].upper()  # Short room code
+    
+    # Create host participant
+    host_participant_id = str(uuid.uuid4())[:8]
+    host_participant = {
+        "id": host_participant_id,
+        "name": "Host",
+        "source_lang": "en",
+        "target_lang": "es"
+    }
+    
     rooms[room_id] = {
         "id": room_id,
         "created_at": datetime.utcnow().isoformat(),
-        "participants": [],
+        "participants": [host_participant],
         "active": True
     }
     active_connections[room_id] = []
-    logger.info(f"🏠 Created room: {room_id}")
-    return {"room_id": room_id, "status": "created"}
+    logger.info(f"🏠 Created room: {room_id} with host participant: {host_participant_id}")
+    return {
+        "room_id": room_id,
+        "participant_id": host_participant_id,
+        "status": "created"
+    }
 
 @app.get("/api/rooms/{room_id}")
 async def get_room(room_id: str):
