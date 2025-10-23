@@ -379,6 +379,7 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                     current_participant_id = participant_id
                     logger.info(f"🔗 Tracked participant {participant_id} connection")
                     logger.info(f"🔗 Total tracked participants: {len(participant_connections)}")
+                    logger.info(f"🔗 All participant IDs: {list(participant_connections.keys())}")
                 else:
                     logger.warning("⚠️ No participant_id in set_language message")
                 
