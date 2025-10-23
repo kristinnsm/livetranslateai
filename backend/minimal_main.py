@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Room management
 rooms: Dict[str, Dict] = {}
 active_connections: Dict[str, List[WebSocket]] = {}
+participant_connections: Dict[str, WebSocket] = {}  # participant_id -> websocket
 
 # CORS
 app.add_middleware(
@@ -320,6 +321,8 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         active_connections[room_id] = []
     active_connections[room_id].append(websocket)
     
+    current_participant_id = None  # Will be set when participant sends their ID
+    
     logger.info(f"🏠 User joined room {room_id} (total: {len(active_connections[room_id])})")
     
     try:
@@ -355,6 +358,12 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         participant_id = message.get("participant_id")
                         source_lang = message.get("source_lang", "en")
                         target_lang = message.get("target_lang", "es")
+                        
+                        # Track participant connection
+                        if participant_id:
+                            participant_connections[participant_id] = websocket
+                            current_participant_id = participant_id
+                            logger.info(f"🔗 Tracked participant {participant_id} connection")
                         
                         # Update participant in room
                         for participant in rooms[room_id]["participants"]:
@@ -521,15 +530,20 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
 
 async def send_to_participant(room_id: str, participant_id: str, message: dict):
     """Send message to a specific participant in a room"""
-    if room_id not in active_connections:
+    if participant_id not in participant_connections:
+        logger.warning(f"Participant {participant_id} not found in connections")
         return
     
-    # For now, send to all participants (we'll need to track participant IDs properly later)
-    for connection in active_connections[room_id]:
-        try:
-            await connection.send_json(message)
-        except Exception as e:
-            logger.error(f"Failed to send to participant {participant_id}: {e}")
+    try:
+        # Add participant ID to message for frontend filtering
+        message["target_participant"] = participant_id
+        await participant_connections[participant_id].send_json(message)
+        logger.info(f"📤 Sent message to participant {participant_id}")
+    except Exception as e:
+        logger.error(f"Failed to send to participant {participant_id}: {e}")
+        # Remove dead connection
+        if participant_id in participant_connections:
+            del participant_connections[participant_id]
 
 async def broadcast_to_room(room_id: str, message: dict):
     """Broadcast message to all participants in a room"""

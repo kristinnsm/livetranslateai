@@ -931,7 +931,13 @@ function handleRoomMessage(event) {
                 break;
                 
             case 'translation':
-                // Handle shared translation
+                // Only handle translation if it's intended for this participant
+                if (message.target_participant && message.target_participant !== participantId) {
+                    console.log(`🔇 Ignoring translation for participant ${message.target_participant} (not for me)`);
+                    break;
+                }
+                
+                // Handle translation
                 elements.originalText.textContent = message.original;
                 elements.translatedText.textContent = message.translated;
                 elements.latencyDisplay.textContent = `${message.latency_ms}ms`;
