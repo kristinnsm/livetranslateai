@@ -359,28 +359,31 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         source_lang = message.get("source_lang", "en")
                         target_lang = message.get("target_lang", "es")
                         
-                        # Track participant connection
-                        if participant_id:
-                            participant_connections[participant_id] = websocket
-                            current_participant_id = participant_id
-                            logger.info(f"🔗 Tracked participant {participant_id} connection")
-                        
-                        # Update participant in room
-                        for participant in rooms[room_id]["participants"]:
-                            if participant["id"] == participant_id:
-                                participant["source_lang"] = source_lang
-                                participant["target_lang"] = target_lang
-                                break
-                        
-                        logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
-                        
-                        # Broadcast language update
-                        await broadcast_to_room(room_id, {
-                            "type": "language_update",
-                            "participant_id": participant_id,
-                            "source_lang": source_lang,
-                            "target_lang": target_lang
-                        })
+                # Track participant connection
+                if participant_id:
+                    participant_connections[participant_id] = websocket
+                    current_participant_id = participant_id
+                    logger.info(f"🔗 Tracked participant {participant_id} connection")
+                    logger.info(f"🔗 Total tracked participants: {len(participant_connections)}")
+                else:
+                    logger.warning("⚠️ No participant_id in set_language message")
+                
+                # Update participant in room
+                for participant in rooms[room_id]["participants"]:
+                    if participant["id"] == participant_id:
+                        participant["source_lang"] = source_lang
+                        participant["target_lang"] = target_lang
+                        break
+                
+                logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
+                
+                # Broadcast language update
+                await broadcast_to_room(room_id, {
+                    "type": "language_update",
+                    "participant_id": participant_id,
+                    "source_lang": source_lang,
+                    "target_lang": target_lang
+                })
                         
             except WebSocketDisconnect:
                 break
