@@ -30,9 +30,15 @@ active_connections: Dict[str, List[WebSocket]] = {}
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8000", 
+        "https://livetranslateai.netlify.app",
+        "https://app.livetranslateai.com",
+        "https://livetranslateai.com"
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
