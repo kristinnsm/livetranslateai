@@ -386,36 +386,6 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
     try:
         start_time = time.time()
         
-        # Step 1: Transcribe audio with Whisper (auto-detect language)
-        logger.info("📝 Starting Whisper transcription for room...")
-        whisper_response = requests.post(
-            "https://api.openai.com/v1/audio/transcriptions",
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}"
-            },
-            files={
-                "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
-            },
-            data={
-                "model": "whisper-1",
-                "language": "auto",  # Auto-detect language
-                "response_format": "json"
-            },
-            timeout=10
-        )
-        
-        if whisper_response.status_code != 200:
-            logger.error(f"Whisper failed: {whisper_response.status_code}")
-            return
-        
-        transcription = whisper_response.json().get("text", "").strip()
-        whisper_time = int((time.time() - start_time) * 1000)
-        logger.info(f"✅ Room transcription: '{transcription}' ({whisper_time}ms)")
-        
-        if not transcription:
-            logger.warning("Empty transcription - no speech detected")
-            return
-        
         # Get room participants and their language settings
         if room_id not in rooms:
             logger.error(f"Room {room_id} not found")
@@ -424,13 +394,49 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
         participants = rooms[room_id]["participants"]
         logger.info(f"👥 Processing translations for {len(participants)} participants")
         
-        # Process translation for each participant (simplified - no language detection for now)
+        # Process translation for each participant
         for participant in participants:
             try:
                 source_lang = participant.get("source_lang", "en")
                 target_lang = participant.get("target_lang", "es")
                 
                 logger.info(f"🌍 Translating for {participant['name']}: {source_lang} → {target_lang}")
+                
+                # Skip if source and target are the same (no translation needed)
+                if source_lang == target_lang:
+                    logger.info(f"⏭️ Skipping {participant['name']} - same source and target language")
+                    continue
+                
+                # Step 1: Transcribe audio with Whisper (using participant's source language)
+                whisper_start = time.time()
+                logger.info(f"📝 Starting Whisper transcription in {source_lang} for {participant['name']}...")
+                whisper_response = requests.post(
+                    "https://api.openai.com/v1/audio/transcriptions",
+                    headers={
+                        "Authorization": f"Bearer {OPENAI_API_KEY}"
+                    },
+                    files={
+                        "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
+                    },
+                    data={
+                        "model": "whisper-1",
+                        "language": source_lang,  # Use participant's source language
+                        "response_format": "json"
+                    },
+                    timeout=10
+                )
+                
+                if whisper_response.status_code != 200:
+                    logger.error(f"Whisper failed for {participant['name']}: {whisper_response.status_code}")
+                    continue
+                
+                transcription = whisper_response.json().get("text", "").strip()
+                whisper_time = int((time.time() - whisper_start) * 1000)
+                logger.info(f"✅ Transcription for {participant['name']}: '{transcription}' ({whisper_time}ms)")
+                
+                if not transcription:
+                    logger.warning(f"Empty transcription for {participant['name']} - no speech detected")
+                    continue
                 
                 # Step 2: Translate with GPT-3.5-turbo
                 translation_start = time.time()
