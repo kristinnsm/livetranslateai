@@ -116,6 +116,7 @@ async function startTranslation() {
             // Already connected to room WebSocket, just send language settings
             const sourceLang = elements.sourceLang.value;
             const targetLang = elements.targetLang.value;
+            console.log(`🌍 Sending language settings with participant_id: ${participantId}`);
             websocket.send(JSON.stringify({
                 action: 'set_language',
                 participant_id: participantId,
