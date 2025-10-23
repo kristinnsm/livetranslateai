@@ -68,7 +68,10 @@ elements.sourceLang.addEventListener('change', updateLanguages);
 elements.targetLang.addEventListener('change', updateLanguages);
 
 // Room event listeners
-elements.createRoomBtn.addEventListener('click', createRoom);
+elements.createRoomBtn.addEventListener('click', () => {
+    console.log('🏠 Create Room button clicked!');
+    createRoom();
+});
 elements.joinRoomBtn.addEventListener('click', joinRoom);
 elements.copyRoomCode.addEventListener('click', copyRoomCode);
 
@@ -791,17 +794,22 @@ setInterval(() => {
 
 async function createRoom() {
     try {
+        console.log('🏠 Creating room...');
         const backendUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000'
             : 'https://livetranslateai.onrender.com';
             
+        console.log(`🏠 Backend URL: ${backendUrl}`);
         const response = await fetch(`${backendUrl}/api/rooms/create`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
         
+        console.log(`🏠 Response status: ${response.status}`);
         if (!response.ok) {
-            throw new Error('Failed to create room');
+            const errorText = await response.text();
+            console.error(`🏠 API Error: ${response.status} - ${errorText}`);
+            throw new Error(`Failed to create room: ${response.status} - ${errorText}`);
         }
         
         const data = await response.json();
