@@ -793,7 +793,17 @@ setInterval(() => {
  */
 
 async function createRoom() {
+    // Prevent multiple clicks
+    if (elements.createRoomBtn.disabled) {
+        console.log('🏠 Create room already in progress...');
+        return;
+    }
+    
     try {
+        // Disable button to prevent multiple clicks
+        elements.createRoomBtn.disabled = true;
+        elements.createRoomBtn.textContent = 'Creating...';
+        
         console.log('🏠 Creating room...');
         const backendUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000'
@@ -833,10 +843,20 @@ async function createRoom() {
     } catch (error) {
         console.error('❌ Failed to create room:', error);
         showToast('Failed to create room', 'error');
+        
+        // Re-enable button on error
+        elements.createRoomBtn.disabled = false;
+        elements.createRoomBtn.textContent = 'Create Room';
     }
 }
 
 async function joinRoom() {
+    // Prevent multiple clicks
+    if (elements.joinRoomBtn.disabled) {
+        console.log('🏠 Join room already in progress...');
+        return;
+    }
+    
     const roomCode = prompt('Enter room code:');
     if (!roomCode) return;
     
@@ -844,6 +864,9 @@ async function joinRoom() {
     if (!participantName) return;
     
     try {
+        // Disable button to prevent multiple clicks
+        elements.joinRoomBtn.disabled = true;
+        elements.joinRoomBtn.textContent = 'Joining...';
         const backendUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000'
             : 'https://livetranslateai.onrender.com';
@@ -881,6 +904,10 @@ async function joinRoom() {
     } catch (error) {
         console.error('❌ Failed to join room:', error);
         showToast(error.message, 'error');
+        
+        // Re-enable button on error
+        elements.joinRoomBtn.disabled = false;
+        elements.joinRoomBtn.textContent = 'Join Room';
     }
 }
 
