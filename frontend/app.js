@@ -933,6 +933,19 @@ async function connectToRoom() {
         websocket.onopen = () => {
             console.log(`🏠 Connected to room: ${currentRoom}`);
             showToast('Connected to room', 'success');
+            
+            // Send language settings immediately after connection
+            if (participantId) {
+                const sourceLang = elements.sourceLang.value;
+                const targetLang = elements.targetLang.value;
+                console.log(`🌍 Auto-sending language settings after connection: ${participantId}`);
+                websocket.send(JSON.stringify({
+                    action: 'set_language',
+                    participant_id: participantId,
+                    source_lang: sourceLang,
+                    target_lang: targetLang
+                }));
+            }
         };
         
         websocket.onmessage = handleRoomMessage;
