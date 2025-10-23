@@ -117,6 +117,13 @@ async function startTranslation() {
             const sourceLang = elements.sourceLang.value;
             const targetLang = elements.targetLang.value;
             console.log(`🌍 Sending language settings with participant_id: ${participantId}`);
+            console.log(`🌍 participantId type: ${typeof participantId}, value: ${JSON.stringify(participantId)}`);
+            
+            if (!participantId) {
+                console.error('🚨 participantId is null/undefined! Cannot send language settings.');
+                return;
+            }
+            
             websocket.send(JSON.stringify({
                 action: 'set_language',
                 participant_id: participantId,

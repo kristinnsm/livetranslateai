@@ -382,22 +382,23 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                 else:
                     logger.warning("⚠️ No participant_id in set_language message")
                 
-                # Update participant in room
-                for participant in rooms[room_id]["participants"]:
-                    if participant["id"] == participant_id:
-                        participant["source_lang"] = source_lang
-                        participant["target_lang"] = target_lang
-                        break
-                
-                logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
-                
-                # Broadcast language update
-                await broadcast_to_room(room_id, {
-                    "type": "language_update",
-                    "participant_id": participant_id,
-                    "source_lang": source_lang,
-                    "target_lang": target_lang
-                })
+                # Update participant in room (only if we have a participant_id)
+                if participant_id:
+                    for participant in rooms[room_id]["participants"]:
+                        if participant["id"] == participant_id:
+                            participant["source_lang"] = source_lang
+                            participant["target_lang"] = target_lang
+                            break
+                    
+                    logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
+                    
+                    # Broadcast language update
+                    await broadcast_to_room(room_id, {
+                        "type": "language_update",
+                        "participant_id": participant_id,
+                        "source_lang": source_lang,
+                        "target_lang": target_lang
+                    })
                         
             except WebSocketDisconnect:
                 break
