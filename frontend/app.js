@@ -960,11 +960,16 @@ function handleRoomMessage(event) {
                 break;
                 
             case 'translation':
+                console.log(`🔍 Received translation message:`, message);
+                console.log(`🔍 My participant ID: ${participantId}, Target: ${message.target_participant}`);
+                
                 // Only handle translation if it's intended for this participant
                 if (message.target_participant && message.target_participant !== participantId) {
                     console.log(`🔇 Ignoring translation for participant ${message.target_participant} (not for me)`);
                     break;
                 }
+                
+                console.log(`✅ Processing translation for me!`);
                 
                 // Handle translation
                 elements.originalText.textContent = message.original;
