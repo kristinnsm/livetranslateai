@@ -722,11 +722,19 @@ function updateLanguages() {
     const sourceLang = elements.sourceLang.value;
     const targetLang = elements.targetLang.value;
 
-    websocket.send(JSON.stringify({
+    // In room mode, always include participant_id
+    const message = {
         action: 'set_language',
         source_lang: sourceLang,
         target_lang: targetLang
-    }));
+    };
+    
+    if (currentRoom && participantId) {
+        message.participant_id = participantId;
+        console.log(`🌍 Updating language settings with participant_id: ${participantId}`);
+    }
+
+    websocket.send(JSON.stringify(message));
 }
 
 /**

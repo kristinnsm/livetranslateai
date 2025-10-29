@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 rooms: Dict[str, Dict] = {}
 active_connections: Dict[str, List[WebSocket]] = {}
 participant_connections: Dict[str, WebSocket] = {}  # participant_id -> websocket
-websocket_to_participant: Dict[WebSocket, str] = {}  # websocket -> participant_id (reverse lookup)
+websocket_to_participant: Dict[int, str] = {}  # websocket_id (id(websocket)) -> participant_id (reverse lookup)
 
 # CORS
 app.add_middleware(
@@ -358,19 +358,30 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                     # Handle audio data
                     audio_chunk = data["bytes"]
                     
-                    # Identify speaker from WebSocket connection
-                    speaker_id = websocket_to_participant.get(websocket)
+                    # Identify speaker from WebSocket connection using id() as key
+                    websocket_id = id(websocket)
+                    speaker_id = websocket_to_participant.get(websocket_id)
+                    logger.info(f"🔍 Looking up speaker for WebSocket {websocket_id} in room {room_id}")
+                    logger.info(f"🔍 Total tracked WebSockets: {len(websocket_to_participant)}")
+                    logger.info(f"🔍 Tracked participant IDs: {list(participant_connections.keys())}")
+                    
                     if not speaker_id:
-                        logger.warning(f"⚠️ Received audio from untracked participant in room {room_id}")
+                        logger.warning(f"⚠️ Received audio from untracked participant in room {room_id} (WebSocket id: {websocket_id})")
                         # Try to use current_participant_id as fallback
                         speaker_id = current_participant_id
+                        if speaker_id:
+                            logger.warning(f"⚠️ Using fallback current_participant_id: {speaker_id}")
+                        else:
+                            logger.error(f"❌ No current_participant_id available either!")
                     
                     if speaker_id:
                         logger.info(f"🎤 Received audio from participant {speaker_id} in room {room_id}: {len(audio_chunk)} bytes")
                         # Process translation for OTHER participants only (exclude speaker)
                         await process_room_translation(room_id, audio_chunk, speaker_id)
                     else:
-                        logger.warning(f"⚠️ Cannot process audio - no participant_id associated with WebSocket")
+                        logger.error(f"❌ Cannot process audio - no participant_id associated with WebSocket {websocket_id} in room {room_id}")
+                        logger.error(f"❌ Current participant_id: {current_participant_id}")
+                        logger.error(f"❌ WebSocket id {websocket_id} not found in websocket_to_participant mapping")
                     
                 elif "text" in data:
                     message = json.loads(data["text"])
@@ -386,9 +397,9 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         # Track participant connection (bidirectional mapping)
                         if participant_id:
                             participant_connections[participant_id] = websocket
-                            websocket_to_participant[websocket] = participant_id  # Reverse lookup
+                            websocket_to_participant[id(websocket)] = participant_id  # Reverse lookup using id()
                             current_participant_id = participant_id
-                            logger.info(f"🔗 Tracked participant {participant_id} connection")
+                            logger.info(f"🔗 Tracked participant {participant_id} connection (WebSocket id: {id(websocket)})")
                             logger.info(f"🔗 Total tracked participants: {len(participant_connections)}")
                             logger.info(f"🔗 All participant IDs: {list(participant_connections.keys())}")
                         else:
@@ -422,11 +433,12 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         logger.error(f"Room WebSocket error: {e}")
     finally:
         # Clean up participant tracking
-        if websocket in websocket_to_participant:
-            participant_id = websocket_to_participant[websocket]
+        websocket_id = id(websocket)
+        if websocket_id in websocket_to_participant:
+            participant_id = websocket_to_participant[websocket_id]
             if participant_id in participant_connections:
                 del participant_connections[participant_id]
-            del websocket_to_participant[websocket]
+            del websocket_to_participant[websocket_id]
             logger.info(f"🧹 Cleaned up tracking for participant {participant_id}")
         
         # Remove connection from room
