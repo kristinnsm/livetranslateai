@@ -21,7 +21,14 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
+
+# Configure logging properly
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Room management
 rooms: Dict[str, Dict] = {}
