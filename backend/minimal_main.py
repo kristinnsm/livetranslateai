@@ -571,7 +571,9 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             logger.info(f"👂 Speaker is speaking: {speaker_source_lang}, Listener wants to hear: {target_lang_listener}")
             
             try:
-                target_lang = target_lang_listener
+                # FIXED: Translate to listener's SOURCE language (native), not target_lang
+                # In bidirectional rooms: source = what they want to HEAR, target = what they SPEAK
+                translate_to_lang = source_lang_listener
                 
                 # IMPORTANT: In bidirectional translation:
                 # - listener's target_lang = what language they want to HEAR translations in
@@ -596,13 +598,13 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 # not their target language. Target is what they want to speak TO others.
                 # Let's change the logic: translate TO listener's source_lang (their native/comfortable language)
                 
-                # For now, keep the old logic but add clearer explanation
-                if target_lang == speaker_source_lang:
-                    logger.info(f"⏭️ Skipping {listener_name} - listener wants to hear {target_lang} and speaker is already speaking {speaker_source_lang} (no translation needed)")
+                # Skip if speaker is already speaking listener's native language
+                if translate_to_lang == speaker_source_lang:
+                    logger.info(f"⏭️ Skipping {listener_name} - speaker is already speaking {speaker_source_lang} which matches listener's native language {translate_to_lang}")
                     continue
                 
-                # Log the translation direction clearly
-                logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {target_lang} (speaker speaks {speaker_source_lang}, listener wants {target_lang})")
+                # Translate to listener's native language (source), not target
+                logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {translate_to_lang} (speaker speaks {speaker_source_lang}, listener wants {translate_to_lang})")
                 
                 # Step 2a: Translate with GPT-3.5-turbo
                 translation_start = time.time()
