@@ -653,14 +653,21 @@ async def send_to_participant(room_id: str, participant_id: str, message: dict):
 
 async def broadcast_to_room(room_id: str, message: dict):
     """Broadcast message to all participants in a room"""
+    logger.info(f"📢 broadcast_to_room called for room {room_id}")
     if room_id not in active_connections:
+        logger.warning(f"⚠️ Room {room_id} not in active_connections")
         return
     
-    for connection in active_connections[room_id]:
+    connections = active_connections[room_id]
+    logger.info(f"📢 Broadcasting to {len(connections)} connections in room {room_id}")
+    
+    for i, connection in enumerate(connections):
         try:
+            logger.info(f"📢 Sending message to connection {i+1}/{len(connections)}")
             await connection.send_json(message)
+            logger.info(f"✅ Successfully sent message to connection {i+1}")
         except Exception as e:
-            logger.error(f"Failed to send to room participant: {e}")
+            logger.error(f"❌ Failed to send to room participant {i+1}: {e}", exc_info=True)
 
 if __name__ == "__main__":
     import uvicorn
