@@ -351,8 +351,9 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         
         while True:
             try:
+                logger.debug(f"🔍 Waiting for message in room {room_id}...")
                 data = await websocket.receive()
-                logger.info(f"🔍 Received data type: {type(data)}, keys: {list(data.keys()) if isinstance(data, dict) else 'not dict'}")
+                logger.info(f"🔍 Received data in room {room_id}, type: {type(data)}, keys: {list(data.keys()) if isinstance(data, dict) else 'not dict'}")
                 
                 if "bytes" in data:
                     # Handle audio data
@@ -384,7 +385,13 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         logger.error(f"❌ WebSocket id {websocket_id} not found in websocket_to_participant mapping")
                     
                 elif "text" in data:
-                    message = json.loads(data["text"])
+                    try:
+                        message = json.loads(data["text"])
+                        logger.info(f"📨 Received text message in room {room_id}: {message.get('action', 'unknown')}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"❌ Failed to parse JSON message in room {room_id}: {e}")
+                        logger.error(f"❌ Raw message: {data['text'][:100]}")
+                        continue
                     
                     if message.get("action") == "ping":
                         await websocket.send_json({"type": "pong"})
@@ -424,9 +431,14 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                             })
                         
             except WebSocketDisconnect:
+                logger.info(f"👋 WebSocket disconnected in room {room_id}")
                 break
             except Exception as e:
-                logger.error(f"Room WebSocket error: {e}")
+                logger.error(f"❌ Room WebSocket error in room {room_id}: {e}", exc_info=True)
+                try:
+                    await websocket.close()
+                except:
+                    pass
                 break
                 
     except Exception as e:
