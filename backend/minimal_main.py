@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 rooms: Dict[str, Dict] = {}
 active_connections: Dict[str, List[WebSocket]] = {}
 participant_connections: Dict[str, WebSocket] = {}  # participant_id -> websocket
+websocket_to_participant: Dict[WebSocket, str] = {}  # websocket -> participant_id (reverse lookup)
 
 # CORS
 app.add_middleware(
@@ -356,11 +357,20 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                 if "bytes" in data:
                     # Handle audio data
                     audio_chunk = data["bytes"]
-                    logger.info(f"🎤 Received audio in room {room_id}: {len(audio_chunk)} bytes")
-                    logger.info(f"🎤 Audio chunk type: {type(audio_chunk)}, first 10 bytes: {audio_chunk[:10]}")
                     
-                    # Process translation and broadcast to all participants
-                    await process_room_translation(room_id, audio_chunk)
+                    # Identify speaker from WebSocket connection
+                    speaker_id = websocket_to_participant.get(websocket)
+                    if not speaker_id:
+                        logger.warning(f"⚠️ Received audio from untracked participant in room {room_id}")
+                        # Try to use current_participant_id as fallback
+                        speaker_id = current_participant_id
+                    
+                    if speaker_id:
+                        logger.info(f"🎤 Received audio from participant {speaker_id} in room {room_id}: {len(audio_chunk)} bytes")
+                        # Process translation for OTHER participants only (exclude speaker)
+                        await process_room_translation(room_id, audio_chunk, speaker_id)
+                    else:
+                        logger.warning(f"⚠️ Cannot process audio - no participant_id associated with WebSocket")
                     
                 elif "text" in data:
                     message = json.loads(data["text"])
@@ -373,9 +383,10 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         source_lang = message.get("source_lang", "en")
                         target_lang = message.get("target_lang", "es")
                         
-                        # Track participant connection
+                        # Track participant connection (bidirectional mapping)
                         if participant_id:
                             participant_connections[participant_id] = websocket
+                            websocket_to_participant[websocket] = participant_id  # Reverse lookup
                             current_participant_id = participant_id
                             logger.info(f"🔗 Tracked participant {participant_id} connection")
                             logger.info(f"🔗 Total tracked participants: {len(participant_connections)}")
@@ -410,13 +421,21 @@ async def websocket_room(websocket: WebSocket, room_id: str):
     except Exception as e:
         logger.error(f"Room WebSocket error: {e}")
     finally:
+        # Clean up participant tracking
+        if websocket in websocket_to_participant:
+            participant_id = websocket_to_participant[websocket]
+            if participant_id in participant_connections:
+                del participant_connections[participant_id]
+            del websocket_to_participant[websocket]
+            logger.info(f"🧹 Cleaned up tracking for participant {participant_id}")
+        
         # Remove connection from room
         if room_id in active_connections:
             active_connections[room_id] = [conn for conn in active_connections[room_id] if conn != websocket]
             logger.info(f"👋 User left room {room_id} (remaining: {len(active_connections[room_id])})")
 
-async def process_room_translation(room_id: str, audio_chunk: bytes):
-    """Process translation for room and broadcast to all participants"""
+async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id: str):
+    """Process translation for room and send to listeners (exclude speaker)"""
     try:
         start_time = time.time()
         
@@ -426,53 +445,69 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
             return
         
         participants = rooms[room_id]["participants"]
-        logger.info(f"👥 Processing translations for {len(participants)} participants")
+        logger.info(f"👥 Processing translations for room {room_id} (speaker: {speaker_id}, {len(participants)} total participants)")
         
-        # Process translation for each participant
-        for participant in participants:
+        # Find speaker participant to get their source language
+        speaker_participant = None
+        for p in participants:
+            if p["id"] == speaker_id:
+                speaker_participant = p
+                break
+        
+        if not speaker_participant:
+            logger.error(f"Speaker {speaker_id} not found in room participants")
+            return
+        
+        speaker_source_lang = speaker_participant.get("source_lang", "en")
+        logger.info(f"🎤 Speaker {speaker_id} is speaking in {speaker_source_lang}")
+        
+        # Step 1: Transcribe audio ONCE in the speaker's language
+        whisper_start = time.time()
+        logger.info(f"📝 Transcribing audio in {speaker_source_lang} (speaker's language)...")
+        whisper_response = requests.post(
+            "https://api.openai.com/v1/audio/transcriptions",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}"
+            },
+            files={
+                "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
+            },
+            data={
+                "model": "whisper-1",
+                "language": speaker_source_lang,  # Use speaker's source language
+                "response_format": "json"
+            },
+            timeout=10
+        )
+        
+        if whisper_response.status_code != 200:
+            logger.error(f"Whisper failed: {whisper_response.status_code} - {whisper_response.text}")
+            return
+        
+        transcription = whisper_response.json().get("text", "").strip()
+        whisper_time = int((time.time() - whisper_start) * 1000)
+        logger.info(f"✅ Transcription: '{transcription}' ({whisper_time}ms)")
+        
+        if not transcription:
+            logger.warning(f"Empty transcription - no speech detected")
+            return
+        
+        # Step 2: Process translation for each listener (EXCLUDE the speaker)
+        listeners = [p for p in participants if p["id"] != speaker_id]
+        logger.info(f"👂 Translating for {len(listeners)} listeners...")
+        
+        for listener in listeners:
             try:
-                source_lang = participant.get("source_lang", "en")
-                target_lang = participant.get("target_lang", "es")
+                target_lang = listener.get("target_lang", "es")
                 
-                logger.info(f"🌍 Translating for {participant['name']}: {source_lang} → {target_lang}")
-                
-                # Skip if source and target are the same (no translation needed)
-                if source_lang == target_lang:
-                    logger.info(f"⏭️ Skipping {participant['name']} - same source and target language")
+                # Skip if target language is same as speaker's source (no translation needed)
+                if target_lang == speaker_source_lang:
+                    logger.info(f"⏭️ Skipping {listener['name']} - target matches speaker's language")
                     continue
                 
-                # Step 1: Transcribe audio with Whisper (using participant's source language)
-                whisper_start = time.time()
-                logger.info(f"📝 Starting Whisper transcription in {source_lang} for {participant['name']}...")
-                whisper_response = requests.post(
-                    "https://api.openai.com/v1/audio/transcriptions",
-                    headers={
-                        "Authorization": f"Bearer {OPENAI_API_KEY}"
-                    },
-                    files={
-                        "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
-                    },
-                    data={
-                        "model": "whisper-1",
-                        "language": source_lang,  # Use participant's source language
-                        "response_format": "json"
-                    },
-                    timeout=10
-                )
+                logger.info(f"🌍 Translating for {listener['name']}: {speaker_source_lang} → {target_lang}")
                 
-                if whisper_response.status_code != 200:
-                    logger.error(f"Whisper failed for {participant['name']}: {whisper_response.status_code}")
-                    continue
-                
-                transcription = whisper_response.json().get("text", "").strip()
-                whisper_time = int((time.time() - whisper_start) * 1000)
-                logger.info(f"✅ Transcription for {participant['name']}: '{transcription}' ({whisper_time}ms)")
-                
-                if not transcription:
-                    logger.warning(f"Empty transcription for {participant['name']} - no speech detected")
-                    continue
-                
-                # Step 2: Translate with GPT-3.5-turbo
+                # Step 2a: Translate with GPT-3.5-turbo
                 translation_start = time.time()
                 translation_response = requests.post(
                     "https://api.openai.com/v1/chat/completions",
@@ -483,7 +518,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
                     json={
                         "model": "gpt-3.5-turbo",
                         "messages": [
-                            {"role": "user", "content": f"Translate from {source_lang} to {target_lang}:\n{transcription}"}
+                            {"role": "user", "content": f"Translate from {speaker_source_lang} to {target_lang}:\n{transcription}"}
                         ],
                         "max_tokens": 200,
                         "temperature": 0,
@@ -492,14 +527,14 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
                 )
                 
                 if translation_response.status_code != 200:
-                    logger.error(f"Translation failed for {participant['name']}: {translation_response.status_code}")
+                    logger.error(f"Translation failed for {listener['name']}: {translation_response.status_code}")
                     continue
                 
                 translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                 translation_time = int((time.time() - translation_start) * 1000)
-                logger.info(f"✅ Translation for {participant['name']}: '{translated}' ({translation_time}ms)")
+                logger.info(f"✅ Translation for {listener['name']}: '{translated}' ({translation_time}ms)")
                 
-                # Step 3: Generate TTS audio
+                # Step 2b: Generate TTS audio
                 tts_start = time.time()
                 tts_response = requests.post(
                     "https://api.openai.com/v1/audio/speech",
@@ -521,24 +556,24 @@ async def process_room_translation(room_id: str, audio_chunk: bytes):
                 if tts_response.status_code == 200:
                     audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
                     tts_time = int((time.time() - tts_start) * 1000)
-                    logger.info(f"✅ TTS for {participant['name']}: {len(tts_response.content)} bytes ({tts_time}ms)")
+                    logger.info(f"✅ TTS for {listener['name']}: {len(tts_response.content)} bytes ({tts_time}ms)")
                 
                 latency_ms = int((time.time() - start_time) * 1000)
                 
-                # Send translation to this specific participant
-                await send_to_participant(room_id, participant["id"], {
+                # Send translation to this specific listener
+                await send_to_participant(room_id, listener["id"], {
                     "type": "translation",
                     "timestamp": datetime.utcnow().timestamp(),
                     "original": transcription,
                     "translated": translated,
-                    "source_lang": source_lang,
+                    "source_lang": speaker_source_lang,
                     "target_lang": target_lang,
                     "latency_ms": latency_ms,
                     "audio_base64": audio_base64
                 })
                 
             except Exception as e:
-                logger.error(f"❌ Translation error for {participant['name']}: {e}")
+                logger.error(f"❌ Translation error for {listener['name']}: {e}")
         
     except Exception as e:
         logger.error(f"❌ Room translation error: {e}")
