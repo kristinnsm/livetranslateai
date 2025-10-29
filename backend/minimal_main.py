@@ -520,7 +520,12 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
         listeners = [p for p in participants if p["id"] != speaker_id]
         logger.info(f"👂 Translating for {len(listeners)} listeners...")
         
+        if len(listeners) == 0:
+            logger.warning(f"⚠️ No listeners found for room {room_id} (all participants might be the speaker)")
+            return
+        
         for listener in listeners:
+            logger.info(f"👂 Processing listener: {listener.get('name', listener['id'])} (id: {listener['id']})")
             try:
                 target_lang = listener.get("target_lang", "es")
                 
@@ -608,20 +613,33 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
 
 async def send_to_participant(room_id: str, participant_id: str, message: dict):
     """Send message to a specific participant in a room"""
+    logger.info(f"📤 Attempting to send translation to participant {participant_id} in room {room_id}")
+    logger.info(f"📤 Available participant connections: {list(participant_connections.keys())}")
+    
     if participant_id not in participant_connections:
-        logger.warning(f"Participant {participant_id} not found in connections")
+        logger.warning(f"⚠️ Participant {participant_id} not found in connections (available: {list(participant_connections.keys())})")
         return
     
     try:
         # Add participant ID to message for frontend filtering
         message["target_participant"] = participant_id
-        await participant_connections[participant_id].send_json(message)
-        logger.info(f"📤 Sent message to participant {participant_id}")
+        websocket = participant_connections[participant_id]
+        logger.info(f"📤 Sending translation to participant {participant_id}: {message.get('original', '')[:50]}... → {message.get('translated', '')[:50]}...")
+        await websocket.send_json(message)
+        logger.info(f"✅ Successfully sent translation message to participant {participant_id}")
     except Exception as e:
-        logger.error(f"Failed to send to participant {participant_id}: {e}")
+        logger.error(f"❌ Failed to send to participant {participant_id}: {e}", exc_info=True)
         # Remove dead connection
         if participant_id in participant_connections:
             del participant_connections[participant_id]
+            # Also remove from reverse mapping
+            websocket_id_to_remove = None
+            for ws_id, pid in websocket_to_participant.items():
+                if pid == participant_id:
+                    websocket_id_to_remove = ws_id
+                    break
+            if websocket_id_to_remove:
+                del websocket_to_participant[websocket_id_to_remove]
 
 async def broadcast_to_room(room_id: str, message: dict):
     """Broadcast message to all participants in a room"""
