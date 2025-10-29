@@ -567,8 +567,8 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             target_lang_listener = listener.get("target_lang", "es")
             
             logger.info(f"👂 Processing listener: {listener_name} (id: {listener_id})")
-            logger.info(f"👂 Listener language settings: source={source_lang_listener}, target={target_lang_listener}")
-            logger.info(f"👂 Speaker is speaking: {speaker_source_lang}, Listener wants to hear: {target_lang_listener}")
+            logger.info(f"👂 Listener language settings: source={source_lang_listener} (native), target={target_lang_listener} (speaks to others)")
+            logger.info(f"👂 Speaker is speaking: {speaker_source_lang}, Listener will receive translations in: {source_lang_listener}")
             
             try:
                 # FIXED: Translate to listener's SOURCE language (native), not target_lang
