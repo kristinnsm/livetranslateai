@@ -325,9 +325,16 @@ async def websocket_translate(websocket: WebSocket):
 @app.websocket("/ws/room/{room_id}")
 async def websocket_room(websocket: WebSocket, room_id: str):
     """Multi-user room WebSocket for translation"""
-    await websocket.accept()
+    logger.info(f"🔌 WebSocket connection request for room {room_id}")
+    try:
+        await websocket.accept()
+        logger.info(f"✅ WebSocket accepted for room {room_id}")
+    except Exception as e:
+        logger.error(f"❌ Failed to accept WebSocket for room {room_id}: {e}", exc_info=True)
+        return
     
     if room_id not in rooms:
+        logger.error(f"❌ Room {room_id} not found in rooms dict")
         await websocket.close(code=1000, reason="Room not found")
         return
     
