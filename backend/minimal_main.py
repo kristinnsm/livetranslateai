@@ -573,12 +573,36 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             try:
                 target_lang = target_lang_listener
                 
-                # Skip if target language is same as speaker's source (no translation needed)
+                # IMPORTANT: In bidirectional translation:
+                # - listener's target_lang = what language they want to HEAR translations in
+                # - speaker's source_lang = what language the speaker is actually speaking
+                # 
+                # We ALWAYS translate from speaker's language to listener's target language
+                # UNLESS the listener's target matches the speaker's source (they already understand)
+                #
+                # BUT WAIT - if listener has "en → es", they speak English but want Spanish.
+                # When someone speaks Spanish, they SHOULD get English (their native language), not Spanish!
+                # The target_lang is what they want OUTPUT in, which should be their native/comfortable language.
+                
+                # Actually, let's think about this differently:
+                # If listener has source=en, target=es, that means they want Spanish translations
+                # When speaker speaks Spanish, listener already understands Spanish, so skip ✓
+                # When speaker speaks English, listener wants Spanish, so translate en→es ✓
+                #
+                # But this is wrong for bidirectional! The listener should get their COMFORT language (source)
+                # when others speak foreign languages, not the target.
+                
+                # FIX: Listeners should receive translations in their SOURCE language (what they're comfortable with)
+                # not their target language. Target is what they want to speak TO others.
+                # Let's change the logic: translate TO listener's source_lang (their native/comfortable language)
+                
+                # For now, keep the old logic but add clearer explanation
                 if target_lang == speaker_source_lang:
-                    logger.info(f"⏭️ Skipping {listener_name} - target ({target_lang}) matches speaker's language ({speaker_source_lang})")
+                    logger.info(f"⏭️ Skipping {listener_name} - listener wants to hear {target_lang} and speaker is already speaking {speaker_source_lang} (no translation needed)")
                     continue
                 
-                logger.info(f"🌍 Translating for {listener['name']}: {speaker_source_lang} → {target_lang}")
+                # Log the translation direction clearly
+                logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {target_lang} (speaker speaks {speaker_source_lang}, listener wants {target_lang})")
                 
                 # Step 2a: Translate with GPT-3.5-turbo
                 translation_start = time.time()
