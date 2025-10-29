@@ -351,8 +351,14 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         
         while True:
             try:
-                logger.debug(f"🔍 Waiting for message in room {room_id}...")
+                logger.info(f"🔍 Waiting for message in room {room_id}...")
                 data = await websocket.receive()
+                
+                # Check for disconnect message
+                if data.get("type") == "websocket.disconnect":
+                    logger.info(f"👋 WebSocket disconnect message received in room {room_id}")
+                    break
+                
                 logger.info(f"🔍 Received data in room {room_id}, type: {type(data)}, keys: {list(data.keys()) if isinstance(data, dict) else 'not dict'}")
                 
                 if "bytes" in data:
