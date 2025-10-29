@@ -342,12 +342,16 @@ async def websocket_room(websocket: WebSocket, room_id: str):
     
     try:
         # Send room info to all participants
-        await broadcast_to_room(room_id, {
+        logger.info(f"📢 Preparing to broadcast room update...")
+        room_update_msg = {
             "type": "room_update",
             "room_id": room_id,
             "participant_count": len(active_connections[room_id]),
             "participants": rooms[room_id]["participants"]
-        })
+        }
+        logger.info(f"📢 Room update message: {room_update_msg}")
+        await broadcast_to_room(room_id, room_update_msg)
+        logger.info(f"✅ Room update broadcast complete, entering message receive loop...")
         
         while True:
             try:
