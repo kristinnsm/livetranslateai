@@ -442,13 +442,21 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                         
                         # Update participant in room (only if we have a participant_id)
                         if participant_id:
+                            updated = False
                             for participant in rooms[room_id]["participants"]:
                                 if participant["id"] == participant_id:
+                                    old_source = participant.get("source_lang", "en")
+                                    old_target = participant.get("target_lang", "es")
                                     participant["source_lang"] = source_lang
                                     participant["target_lang"] = target_lang
+                                    updated = True
+                                    logger.info(f"🌍 Room {room_id}: Participant {participant_id} updated language from {old_source} → {old_target} to {source_lang} → {target_lang}")
                                     break
                             
-                            logger.info(f"🌍 Room {room_id}: Participant {participant_id} set language {source_lang} → {target_lang}")
+                            if not updated:
+                                logger.warning(f"⚠️ Participant {participant_id} not found in room {room_id} participants list")
+                            else:
+                                logger.info(f"✅ Room {room_id}: Participant {participant_id} language now set to {source_lang} → {target_lang}")
                             
                             # Broadcast language update
                             await broadcast_to_room(room_id, {
@@ -553,13 +561,21 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             return
         
         for listener in listeners:
-            logger.info(f"👂 Processing listener: {listener.get('name', listener['id'])} (id: {listener['id']})")
+            listener_id = listener['id']
+            listener_name = listener.get('name', listener_id)
+            source_lang_listener = listener.get("source_lang", "en")
+            target_lang_listener = listener.get("target_lang", "es")
+            
+            logger.info(f"👂 Processing listener: {listener_name} (id: {listener_id})")
+            logger.info(f"👂 Listener language settings: source={source_lang_listener}, target={target_lang_listener}")
+            logger.info(f"👂 Speaker is speaking: {speaker_source_lang}, Listener wants to hear: {target_lang_listener}")
+            
             try:
-                target_lang = listener.get("target_lang", "es")
+                target_lang = target_lang_listener
                 
                 # Skip if target language is same as speaker's source (no translation needed)
                 if target_lang == speaker_source_lang:
-                    logger.info(f"⏭️ Skipping {listener['name']} - target matches speaker's language")
+                    logger.info(f"⏭️ Skipping {listener_name} - target ({target_lang}) matches speaker's language ({speaker_source_lang})")
                     continue
                 
                 logger.info(f"🌍 Translating for {listener['name']}: {speaker_source_lang} → {target_lang}")
