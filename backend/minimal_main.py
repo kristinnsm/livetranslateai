@@ -615,7 +615,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     json={
                         "model": "gpt-3.5-turbo",
                         "messages": [
-                            {"role": "user", "content": f"Translate from {speaker_source_lang} to {target_lang}:\n{transcription}"}
+                            {"role": "user", "content": f"Translate from {speaker_source_lang} to {translate_to_lang}:\n{transcription}"}
                         ],
                         "max_tokens": 200,
                         "temperature": 0,
@@ -664,7 +664,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     "original": transcription,
                     "translated": translated,
                     "source_lang": speaker_source_lang,
-                    "target_lang": target_lang,
+                    "target_lang": translate_to_lang,
                     "latency_ms": latency_ms,
                     "audio_base64": audio_base64
                 })
