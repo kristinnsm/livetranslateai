@@ -22,13 +22,17 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
 
-# Configure logging properly
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Get logger - uvicorn handles basic config, we just ensure our logs show
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+# Ensure handler exists to output logs
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.propagate = True  # Let uvicorn see our logs too
 
 # Room management
 rooms: Dict[str, Dict] = {}
