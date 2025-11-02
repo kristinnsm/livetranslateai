@@ -35,7 +35,6 @@ let lastTranslation = null; // Store last translation for replay
 const elements = {
     startBtn: document.getElementById('startBtn'),
     stopBtn: document.getElementById('stopBtn'),
-    disconnectBtn: document.getElementById('disconnectBtn'),
     replayBtn: document.getElementById('replayBtn'),
     sourceLang: document.getElementById('sourceLang'),
     targetLang: document.getElementById('targetLang'),
@@ -65,7 +64,6 @@ const elements = {
 // Event Listeners
 elements.startBtn.addEventListener('click', startTranslation);
 elements.stopBtn.addEventListener('click', stopTranslation);
-elements.disconnectBtn.addEventListener('click', disconnectSession);
 elements.replayBtn.addEventListener('click', triggerReplay);
 elements.sourceLang.addEventListener('change', updateLanguages);
 elements.targetLang.addEventListener('change', updateLanguages);
@@ -794,21 +792,18 @@ function updateUIState(state) {
         case 'recording':
             elements.startBtn.disabled = true;
             elements.stopBtn.disabled = false;
-            elements.disconnectBtn.disabled = false;
             updateStatus('recording', '🎤 Recording...');
             break;
 
         case 'connected':
             elements.startBtn.disabled = false;
             elements.stopBtn.disabled = true;
-            elements.disconnectBtn.disabled = false;
             updateStatus('connected', '✓ Ready for next recording');
             break;
 
         case 'stopped':
             elements.startBtn.disabled = false;
             elements.stopBtn.disabled = true;
-            elements.disconnectBtn.disabled = true;
             updateStatus('disconnected', 'Disconnected');
             elements.originalText.textContent = 'Waiting for speech...';
             elements.translatedText.textContent = 'Ready to translate...';
