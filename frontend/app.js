@@ -28,6 +28,9 @@ let currentRoom = null;
 let participantId = null;
 let isHost = false;
 
+// Replay state
+let lastTranslation = null; // Store last translation for replay
+
 // DOM elements
 const elements = {
     startBtn: document.getElementById('startBtn'),
@@ -299,6 +302,8 @@ function handleWebSocketMessage(event) {
                 updateLatency(message.latency_ms);
                 segmentCount++;
                 elements.segmentCountDisplay.textContent = segmentCount;
+                // Store for replay
+                lastTranslation = message;
                 elements.replayBtn.disabled = false;
                 break;
 
@@ -654,22 +659,58 @@ function updateLatency(latencyMs) {
 }
 
 /**
- * Trigger replay request
+ * Trigger replay request - plays last translation
  */
 function triggerReplay() {
-    if (!websocket || websocket.readyState !== WebSocket.OPEN) {
-        showToast('Not connected', 'error');
+    if (!lastTranslation) {
+        showToast('No translation to replay', 'error');
         return;
     }
 
-    const duration = parseInt(elements.replayDuration.value);
+    // Show replay UI
+    elements.replayPlayer.classList.remove('hidden');
     
-    websocket.send(JSON.stringify({
-        action: 'replay',
-        duration: duration
-    }));
-
-    showToast(`Generating ${duration}s replay...`, 'info');
+    // Display the last translation text
+    elements.replaySubtitles.innerHTML = `
+        <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 10px;">
+            <div style="margin-bottom: 10px;">
+                <strong style="color: #64B5F6;">Original:</strong><br>
+                <span style="font-size: 1.1em;">${lastTranslation.original}</span>
+            </div>
+            <div>
+                <strong style="color: #81C784;">Translation:</strong><br>
+                <span style="font-size: 1.1em;">${lastTranslation.translated}</span>
+            </div>
+        </div>
+    `;
+    
+    // Play the audio if available
+    if (lastTranslation.audio_base64) {
+        try {
+            // Decode base64 to blob
+            const byteCharacters = atob(lastTranslation.audio_base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            
+            // Create blob and URL
+            const audioBlob = new Blob([byteArray], { type: 'audio/ogg; codecs=opus' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            // Set audio source and play
+            elements.replayAudio.src = audioUrl;
+            elements.replayAudio.play();
+            
+            showToast('Replaying last translation', 'success');
+        } catch (error) {
+            console.error('Failed to replay audio:', error);
+            showToast('Failed to replay audio', 'error');
+        }
+    } else {
+        showToast('No audio available for replay', 'warning');
+    }
 }
 
 /**
@@ -1003,6 +1044,10 @@ function handleRoomMessage(event) {
                 elements.originalText.textContent = message.original;
                 elements.translatedText.textContent = message.translated;
                 elements.latencyDisplay.textContent = `${message.latency_ms}ms`;
+                
+                // Store for replay
+                lastTranslation = message;
+                elements.replayBtn.disabled = false;
                 
                 // Play audio if available
                 if (message.audio_base64) {
