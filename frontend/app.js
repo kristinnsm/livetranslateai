@@ -27,6 +27,7 @@ let latencyStats = [];
 let currentRoom = null;
 let participantId = null;
 let isHost = false;
+let roomParticipants = []; // Track participants in the room
 
 // Replay state
 let lastTranslation = null; // Store last translation for replay
@@ -1041,11 +1042,19 @@ function handleRoomMessage(event) {
         switch (message.type) {
             case 'room_update':
                 elements.participantCount.textContent = message.participant_count;
-                updateParticipantList(message.participants);
+                roomParticipants = message.participants; // Store participants
+                updateParticipantList(roomParticipants);
                 console.log(`🏠 Room update: ${message.participant_count} participants`);
                 break;
                 
             case 'language_update':
+                // Update the specific participant's language settings
+                const participant = roomParticipants.find(p => p.id === message.participant_id);
+                if (participant) {
+                    participant.source_lang = message.source_lang;
+                    participant.target_lang = message.target_lang;
+                    updateParticipantList(roomParticipants); // Refresh the display
+                }
                 console.log(`🌍 Language update: ${message.participant_id} set ${message.source_lang} → ${message.target_lang}`);
                 break;
                 
