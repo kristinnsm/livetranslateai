@@ -144,8 +144,27 @@ function updateUILanguage(lang) {
     // Update all elements with data-i18n attribute
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
-        element.textContent = t(key, lang);
+        const translatedText = t(key, lang);
+        
+        // Check if element has children (like buttons with icons)
+        if (element.children.length > 0) {
+            // Find text nodes and update them
+            Array.from(element.childNodes).forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                    node.textContent = translatedText;
+                }
+            });
+        } else {
+            element.textContent = translatedText;
+        }
     });
+    
+    // Update document direction for RTL languages
+    if (lang === 'ar') {
+        document.documentElement.setAttribute('dir', 'rtl');
+    } else {
+        document.documentElement.setAttribute('dir', 'ltr');
+    }
     
     console.log(`🌍 UI language changed to: ${lang}`);
 }

@@ -808,6 +808,9 @@ function updateLanguages() {
 function updateStatus(state, text) {
     elements.statusDot.className = `status-dot status-${state}`;
     elements.statusText.textContent = text;
+    
+    // Store status for i18n if needed
+    elements.statusText.setAttribute('data-current-status', state);
 }
 
 /**
