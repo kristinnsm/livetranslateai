@@ -1119,7 +1119,15 @@ function updateParticipantList(participants) {
         'en': 'English',
         'es': 'Spanish',
         'fr': 'French',
-        'de': 'German'
+        'de': 'German',
+        'zh': 'Chinese',
+        'ar': 'Arabic',
+        'ru': 'Russian',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'pt': 'Portuguese',
+        'it': 'Italian',
+        'nl': 'Dutch'
     };
     
     elements.participantList.innerHTML = participants.map((p, index) => {
@@ -1136,6 +1144,22 @@ function updateParticipantList(participants) {
             </div>
         `;
     }).join('');
+}
+
+// UI Language selector
+const uiLanguageSelect = document.getElementById('uiLanguage');
+if (uiLanguageSelect) {
+    // Set saved language on load
+    const savedLang = localStorage.getItem('uiLanguage') || 'en';
+    uiLanguageSelect.value = savedLang;
+    
+    // Handle language change
+    uiLanguageSelect.addEventListener('change', (e) => {
+        if (typeof updateUILanguage === 'function') {
+            updateUILanguage(e.target.value);
+            showToast(`Interface language: ${e.target.value.toUpperCase()}`, 'success');
+        }
+    });
 }
 
 // Initialize on load

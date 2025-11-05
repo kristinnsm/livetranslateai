@@ -12,7 +12,17 @@
         <header class="header">
             <div class="logo">
                 <h1 class="title">LiveTranslate<span class="ai">AI</span></h1>
-                <div class="tagline">Real-Time Voice Translation for Business Calls</div>
+                <div class="tagline" data-i18n="tagline">Real-Time Voice Translation for Business Calls</div>
+            </div>
+            <div class="ui-language-selector">
+                <select id="uiLanguage" class="ui-lang-select" title="Interface Language">
+                    <option value="en">🇺🇸 EN</option>
+                    <option value="es">🇪🇸 ES</option>
+                    <option value="fr">🇫🇷 FR</option>
+                    <option value="de">🇩🇪 DE</option>
+                    <option value="zh">🇨🇳 ZH</option>
+                    <option value="ar">🇸🇦 AR</option>
+                </select>
             </div>
         </header>
 
@@ -50,11 +60,19 @@
                 <div class="selector-group">
                     <label for="sourceLang">From</label>
                     <select id="sourceLang" class="lang-select">
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="auto">Auto-detect</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="es">🇪🇸 Spanish</option>
+                        <option value="fr">🇫🇷 French</option>
+                        <option value="de">🇩🇪 German</option>
+                        <option value="zh">🇨🇳 Chinese</option>
+                        <option value="ar">🇸🇦 Arabic</option>
+                        <option value="ru">🇷🇺 Russian</option>
+                        <option value="ja">🇯🇵 Japanese</option>
+                        <option value="ko">🇰🇷 Korean</option>
+                        <option value="pt">🇵🇹 Portuguese</option>
+                        <option value="it">🇮🇹 Italian</option>
+                        <option value="nl">🇳🇱 Dutch</option>
+                        <option value="auto">🌍 Auto-detect</option>
                     </select>
                 </div>
                 
@@ -63,10 +81,18 @@
                 <div class="selector-group">
                     <label for="targetLang">To</label>
                     <select id="targetLang" class="lang-select">
-                        <option value="es">Spanish</option>
-                        <option value="en">English</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
+                        <option value="es">🇪🇸 Spanish</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="fr">🇫🇷 French</option>
+                        <option value="de">🇩🇪 German</option>
+                        <option value="zh">🇨🇳 Chinese</option>
+                        <option value="ar">🇸🇦 Arabic</option>
+                        <option value="ru">🇷🇺 Russian</option>
+                        <option value="ja">🇯🇵 Japanese</option>
+                        <option value="ko">🇰🇷 Korean</option>
+                        <option value="pt">🇵🇹 Portuguese</option>
+                        <option value="it">🇮🇹 Italian</option>
+                        <option value="nl">🇳🇱 Dutch</option>
                     </select>
                 </div>
             </div>
@@ -153,6 +179,7 @@
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Scripts -->
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
