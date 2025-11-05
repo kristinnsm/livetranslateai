@@ -1130,7 +1130,10 @@ function updateParticipantList(participants) {
         'ko': 'Korean',
         'pt': 'Portuguese',
         'it': 'Italian',
-        'nl': 'Dutch'
+        'nl': 'Dutch',
+        'hi': 'Hindi',
+        'tr': 'Turkish',
+        'vi': 'Vietnamese'
     };
     
     elements.participantList.innerHTML = participants.map((p, index) => {
