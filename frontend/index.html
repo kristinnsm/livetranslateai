@@ -32,22 +32,22 @@
                 <div class="room-actions">
                     <button id="createRoomBtn" class="btn btn-secondary">
                         <span class="btn-icon">🏠</span>
-                        Create Room
+                        <span data-i18n="createRoom">Create Room</span>
                     </button>
                     <button id="joinRoomBtn" class="btn btn-outline">
                         <span class="btn-icon">🚪</span>
-                        Join Room
+                        <span data-i18n="joinRoom">Join Room</span>
                     </button>
                 </div>
                 
                 <div class="room-info" id="roomInfo" style="display: none;">
                     <div class="room-code">
-                        <label>Room Code:</label>
+                        <label data-i18n="roomCode">Room Code:</label>
                         <span id="roomCode" class="code-display">ABC123</span>
                         <button id="copyRoomCode" class="btn btn-small">📋</button>
                     </div>
                     <div class="participants">
-                        <label>Participants (<span id="participantCount">1</span>):</label>
+                        <label><span data-i18n="participants">Participants</span> (<span id="participantCount">1</span>):</label>
                         <div id="participantList" class="participant-list"></div>
                     </div>
                 </div>
@@ -58,7 +58,7 @@
         <section class="controls">
             <div class="language-selector">
                 <div class="selector-group">
-                    <label for="sourceLang">From</label>
+                    <label for="sourceLang" data-i18n="from">From</label>
                     <select id="sourceLang" class="lang-select">
                         <option value="en">🇺🇸 English</option>
                         <option value="es">🇪🇸 Spanish</option>
@@ -79,7 +79,7 @@
                 <div class="arrow">→</div>
                 
                 <div class="selector-group">
-                    <label for="targetLang">To</label>
+                    <label for="targetLang" data-i18n="to">To</label>
                     <select id="targetLang" class="lang-select">
                         <option value="es">🇪🇸 Spanish</option>
                         <option value="en">🇺🇸 English</option>
@@ -101,11 +101,11 @@
             <div class="action-buttons">
                 <button id="startBtn" class="btn btn-primary">
                     <span class="btn-icon">🎤</span>
-                    Start Speaking
+                    <span data-i18n="startSpeaking">Start Speaking</span>
                 </button>
                 <button id="stopBtn" class="btn btn-secondary" disabled>
                     <span class="btn-icon">⏹️</span>
-                    Stop & Translate
+                    <span data-i18n="stopTranslate">Stop & Translate</span>
                 </button>
             </div>
         </section>
@@ -126,13 +126,13 @@
             <!-- Live Subtitles -->
             <div class="subtitles-container">
                 <div class="subtitle-box">
-                    <div class="subtitle-label">Original</div>
-                    <div id="originalText" class="subtitle-text">Waiting for speech...</div>
+                    <div class="subtitle-label" data-i18n="original">Original</div>
+                    <div id="originalText" class="subtitle-text" data-i18n="waitingForSpeech">Waiting for speech...</div>
                 </div>
                 
                 <div class="subtitle-box">
-                    <div class="subtitle-label">Translation</div>
-                    <div id="translatedText" class="subtitle-text">Ready to translate...</div>
+                    <div class="subtitle-label" data-i18n="translation">Translation</div>
+                    <div id="translatedText" class="subtitle-text" data-i18n="readyToTranslate">Ready to translate...</div>
                 </div>
             </div>
         </section>
@@ -140,11 +140,11 @@
         <!-- Replay Section -->
         <section class="replay-section">
             <div class="replay-header">
-                <h2>Replay</h2>
+                <h2 data-i18n="replay">Replay</h2>
                 <div class="replay-controls">
                     <button id="replayBtn" class="btn btn-accent" disabled>
                         <span class="btn-icon">⏮️</span>
-                        Replay Last Translation
+                        <span data-i18n="replayLast">Replay Last Translation</span>
                     </button>
                 </div>
             </div>

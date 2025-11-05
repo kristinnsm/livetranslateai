@@ -1153,6 +1153,11 @@ if (uiLanguageSelect) {
     const savedLang = localStorage.getItem('uiLanguage') || 'en';
     uiLanguageSelect.value = savedLang;
     
+    // Apply saved language immediately
+    if (typeof updateUILanguage === 'function') {
+        updateUILanguage(savedLang);
+    }
+    
     // Handle language change
     uiLanguageSelect.addEventListener('change', (e) => {
         if (typeof updateUILanguage === 'function') {
