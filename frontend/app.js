@@ -58,7 +58,8 @@ const elements = {
     roomInfo: document.getElementById('roomInfo'),
     roomCode: document.getElementById('roomCode'),
     copyRoomCode: document.getElementById('copyRoomCode'),
-    participantCount: document.getElementById('participantCount')
+    participantCount: document.getElementById('participantCount'),
+    participantList: document.getElementById('participantList')
 };
 
 // Event Listeners
@@ -1040,6 +1041,7 @@ function handleRoomMessage(event) {
         switch (message.type) {
             case 'room_update':
                 elements.participantCount.textContent = message.participant_count;
+                updateParticipantList(message.participants);
                 console.log(`🏠 Room update: ${message.participant_count} participants`);
                 break;
                 
@@ -1093,6 +1095,38 @@ function copyRoomCode() {
     }).catch(() => {
         showToast('Failed to copy room code', 'error');
     });
+}
+
+/**
+ * Update participant list display
+ */
+function updateParticipantList(participants) {
+    if (!participants || participants.length === 0) {
+        elements.participantList.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9em;">No participants</div>';
+        return;
+    }
+    
+    const languageNames = {
+        'en': 'English',
+        'es': 'Spanish',
+        'fr': 'French',
+        'de': 'German'
+    };
+    
+    elements.participantList.innerHTML = participants.map((p, index) => {
+        const isHost = index === 0;
+        const isMe = p.id === participantId;
+        const sourceLang = languageNames[p.source_lang] || p.source_lang;
+        const targetLang = languageNames[p.target_lang] || p.target_lang;
+        
+        return `
+            <div class="participant-item ${isHost ? 'host' : ''}">
+                <span class="participant-name">${p.name}${isMe ? ' (You)' : ''}</span>
+                ${isHost ? '<span class="participant-badge">Host</span>' : ''}
+                <span class="participant-lang">${sourceLang} → ${targetLang}</span>
+            </div>
+        `;
+    }).join('');
 }
 
 // Initialize on load
