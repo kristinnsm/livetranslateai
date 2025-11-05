@@ -65,8 +65,8 @@ const elements = {
 elements.startBtn.addEventListener('click', startTranslation);
 elements.stopBtn.addEventListener('click', stopTranslation);
 elements.replayBtn.addEventListener('click', triggerReplay);
-elements.sourceLang.addEventListener('change', updateLanguages);
-elements.targetLang.addEventListener('change', updateLanguages);
+elements.sourceLang.addEventListener('change', handleLanguageChange);
+elements.targetLang.addEventListener('change', handleLanguageChange);
 
 // Room event listeners
 elements.createRoomBtn.addEventListener('click', () => {
@@ -753,6 +753,29 @@ function displayReplaySubtitles(vttContent) {
 }
 
 /**
+ * Handle language change from dropdown
+ */
+function handleLanguageChange() {
+    // In room mode, warn that language changes aren't recommended mid-session
+    if (currentRoom) {
+        const confirmed = confirm(
+            "⚠️ Changing languages mid-session can cause translation errors.\n\n" +
+            "For best results, set your language before speaking.\n\n" +
+            "Continue with language change?"
+        );
+        
+        if (!confirmed) {
+            // Revert to previous values (read from room data)
+            // For now, just warn
+            showToast('Language change cancelled', 'info');
+            return;
+        }
+    }
+    
+    updateLanguages();
+}
+
+/**
  * Update language settings
  */
 function updateLanguages() {
@@ -771,6 +794,7 @@ function updateLanguages() {
     if (currentRoom && participantId) {
         message.participant_id = participantId;
         console.log(`🌍 Updating language settings with participant_id: ${participantId}`);
+        showToast(`Language updated: ${sourceLang} → ${targetLang}`, 'success');
     }
 
     websocket.send(JSON.stringify(message));
