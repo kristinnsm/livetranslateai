@@ -113,6 +113,18 @@ async function startTranslation() {
         audioContext = new (window.AudioContext || window.webkitAudioContext)({
             sampleRate: CONFIG.sampleRate
         });
+        
+        // Unlock audio playback on mobile by playing silent audio
+        // This must be done during user interaction (button click)
+        try {
+            const silentAudio = new Audio();
+            silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+            silentAudio.volume = 0.01; // Very quiet
+            await silentAudio.play();
+            console.log('✅ Audio playback unlocked for mobile');
+        } catch (e) {
+            console.log('⚠️ Could not unlock audio (might be desktop, that\'s fine)');
+        }
 
         // Setup WebSocket connection
         if (currentRoom) {
