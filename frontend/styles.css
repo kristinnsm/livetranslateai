@@ -623,6 +623,12 @@ body {
         justify-content: center;
     }
     
+    /* Fix long text in replay button */
+    #replayBtn {
+        font-size: 0.85rem;
+        padding: 0.7rem 0.9rem;
+    }
+    
     .replay-header {
         flex-direction: column;
         align-items: flex-start;
