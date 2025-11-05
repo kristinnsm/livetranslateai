@@ -587,6 +587,11 @@ async function playAudioFromBase64(base64Audio) {
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         
+        // Mobile browsers require user interaction for autoplay
+        // Add muted attribute initially to allow playback, then unmute
+        audio.muted = false;
+        audio.preload = 'auto';
+        
         audio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             console.log('✅ Audio playback finished');
@@ -594,11 +599,22 @@ async function playAudioFromBase64(base64Audio) {
         
         audio.onerror = (error) => {
             console.error('❌ Audio playback error:', error);
+            console.error('❌ Error details:', audio.error);
             URL.revokeObjectURL(audioUrl);
+            
+            // Show user-friendly error on mobile
+            showToast('Audio playback blocked - tap replay to hear', 'warning');
         };
         
-        await audio.play();
-        console.log('🔊 Playing TTS audio');
+        // Try to play - catch autoplay blocking on mobile
+        try {
+            await audio.play();
+            console.log('🔊 Playing TTS audio');
+        } catch (playError) {
+            console.warn('⚠️ Autoplay blocked (likely mobile browser):', playError.message);
+            console.log('💡 Audio will play on replay button click');
+            // Don't throw - audio is still stored for replay
+        }
         
     } catch (error) {
         console.error('❌ Failed to play audio from base64:', error);
