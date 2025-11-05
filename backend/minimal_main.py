@@ -277,7 +277,7 @@ async def websocket_translate(websocket: WebSocket):
                             json={
                                 "model": "tts-1",
                                 "voice": "alloy",  # Fastest voice
-                                "input": translated[:500],  # Limit to 500 chars for speed
+                                "input": translated[:4096],  # OpenAI TTS max is 4096 chars
                                 "response_format": "opus",
                                 "speed": 1.05  # Slightly faster (barely noticeable)
                             },
@@ -619,7 +619,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                         "messages": [
                             {"role": "user", "content": f"Translate from {speaker_source_lang} to {translate_to_lang}:\n{transcription}"}
                         ],
-                        "max_tokens": 200,
+                        "max_tokens": 1000,  # Increased to handle longer translations
                         "temperature": 0,
                     },
                     timeout=4
@@ -644,7 +644,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     json={
                         "model": "tts-1",
                         "voice": "alloy",
-                        "input": translated[:500],
+                        "input": translated[:4096],  # OpenAI TTS max is 4096 chars
                         "response_format": "opus",
                         "speed": 1.05
                     },
