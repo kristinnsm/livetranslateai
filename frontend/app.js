@@ -33,6 +33,12 @@ let roomParticipants = []; // Track participants in the room
 // Replay state
 let lastTranslation = null; // Store last translation for replay
 
+// Daily.co video call state
+let dailyCallFrame = null;
+let dailyCallActive = false;
+let isCameraOn = true;
+let isMicOn = true;
+
 // DOM elements
 const elements = {
     startBtn: document.getElementById('startBtn'),
@@ -70,6 +76,11 @@ elements.stopBtn.addEventListener('click', stopTranslation);
 elements.replayBtn.addEventListener('click', triggerReplay);
 elements.sourceLang.addEventListener('change', handleLanguageChange);
 elements.targetLang.addEventListener('change', handleLanguageChange);
+
+// Video call controls
+document.getElementById('toggleCamera')?.addEventListener('click', toggleCamera);
+document.getElementById('toggleMic')?.addEventListener('click', toggleMicrophone);
+document.getElementById('leaveCall')?.addEventListener('click', leaveVideoCall);
 
 // Room event listeners
 elements.createRoomBtn.addEventListener('click', () => {
@@ -109,6 +120,11 @@ async function startTranslation() {
                 autoGainControl: true
             } 
         });
+        
+        // Start video call if in a room and not already active (user interaction unlocks mobile)
+        if (currentRoom && !dailyCallActive && window.DailyIframe) {
+            await initializeVideoCall();
+        }
 
         // Initialize audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)({
@@ -1223,6 +1239,136 @@ if (uiLanguageSelect) {
             showToast(`Interface language: ${e.target.value.toUpperCase()}`, 'success');
         }
     });
+}
+
+// ===================================
+// Daily.co Video Call Functions
+// ===================================
+
+async function initializeVideoCall() {
+    try {
+        console.log('📹 Initializing Daily.co video call...');
+        
+        // Create Daily call frame
+        dailyCallFrame = window.DailyIframe.createFrame(
+            document.getElementById('dailyCallContainer'),
+            {
+                showLeaveButton: false,
+                showFullscreenButton: true,
+                iframeStyle: {
+                    width: '100%',
+                    height: '100%',
+                    border: '0',
+                    borderRadius: '8px'
+                }
+            }
+        );
+
+        // Set up Daily event listeners
+        dailyCallFrame
+            .on('joined-meeting', handleJoinedMeeting)
+            .on('participant-joined', handleParticipantJoined)
+            .on('participant-left', handleParticipantLeft)
+            .on('track-started', handleTrackStarted)
+            .on('left-meeting', handleLeftMeeting)
+            .on('error', handleDailyError);
+
+        // Join the Daily room
+        const dailyRoomUrl = `https://livetranslateai.daily.co/${currentRoom}`;
+        await dailyCallFrame.join({ 
+            url: dailyRoomUrl,
+            userName: participantId || 'Guest'
+        });
+
+        dailyCallActive = true;
+        document.getElementById('videoSection').style.display = 'block';
+        
+        console.log('✅ Successfully joined Daily video call:', dailyRoomUrl);
+        showToast('Video call connected!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Failed to initialize video call:', error);
+        showToast('Failed to start video call: ' + error.message, 'error');
+    }
+}
+
+function handleJoinedMeeting(event) {
+    console.log('✅ Joined Daily meeting:', event);
+}
+
+function handleParticipantJoined(event) {
+    console.log('👋 Participant joined:', event.participant.user_name);
+    showToast(`${event.participant.user_name} joined the call`, 'info');
+}
+
+function handleParticipantLeft(event) {
+    console.log('👋 Participant left:', event.participant.user_name);
+    showToast(`${event.participant.user_name} left the call`, 'info');
+}
+
+function handleTrackStarted(event) {
+    console.log('🎬 Track started:', event.track.kind, 'from', event.participant?.user_name);
+    
+    // Note: We're using push-to-talk for translation, not continuous audio from Daily
+    // Future enhancement: Could implement continuous translation from Daily audio streams
+    if (event.track.kind === 'audio' && !event.participant.local) {
+        console.log('🎤 Remote audio track available (not used for translation yet)');
+    }
+}
+
+function handleLeftMeeting() {
+    console.log('📞 Left Daily meeting');
+    dailyCallActive = false;
+    document.getElementById('videoSection').style.display = 'none';
+}
+
+function handleDailyError(error) {
+    console.error('❌ Daily.co error:', error);
+    showToast('Video call error: ' + error.errorMsg, 'error');
+}
+
+async function toggleCamera() {
+    if (!dailyCallFrame) return;
+    
+    try {
+        isCameraOn = !isCameraOn;
+        await dailyCallFrame.setLocalVideo(isCameraOn);
+        document.getElementById('toggleCamera').textContent = isCameraOn ? '📹' : '🚫';
+        console.log(`📹 Camera ${isCameraOn ? 'enabled' : 'disabled'}`);
+        showToast(`Camera ${isCameraOn ? 'on' : 'off'}`, 'info');
+    } catch (error) {
+        console.error('Failed to toggle camera:', error);
+    }
+}
+
+async function toggleMicrophone() {
+    if (!dailyCallFrame) return;
+    
+    try {
+        isMicOn = !isMicOn;
+        await dailyCallFrame.setLocalAudio(isMicOn);
+        document.getElementById('toggleMic').textContent = isMicOn ? '🎤' : '🔇';
+        console.log(`🎤 Microphone ${isMicOn ? 'enabled' : 'disabled'}`);
+        showToast(`Microphone ${isMicOn ? 'on' : 'off'}`, 'info');
+    } catch (error) {
+        console.error('Failed to toggle microphone:', error);
+    }
+}
+
+async function leaveVideoCall() {
+    if (!dailyCallFrame) return;
+    
+    try {
+        await dailyCallFrame.leave();
+        dailyCallFrame.destroy();
+        dailyCallFrame = null;
+        dailyCallActive = false;
+        document.getElementById('videoSection').style.display = 'none';
+        console.log('📞 Left video call');
+        showToast('Left video call', 'info');
+    } catch (error) {
+        console.error('Failed to leave call:', error);
+    }
 }
 
 // Initialize on load

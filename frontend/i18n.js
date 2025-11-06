@@ -22,7 +22,8 @@ const translations = {
         connecting: "Connecting...",
         connected: "Connected",
         recording: "Recording...",
-        readyForNext: "Ready for next recording"
+        readyForNext: "Ready for next recording",
+        videoCall: "Video Call"
     },
     es: {
         tagline: "Traducción de Voz en Tiempo Real para Llamadas de Negocios",
@@ -43,7 +44,8 @@ const translations = {
         connecting: "Conectando...",
         connected: "Conectado",
         recording: "Grabando...",
-        readyForNext: "Listo para siguiente grabación"
+        readyForNext: "Listo para siguiente grabación",
+        videoCall: "Videollamada"
     },
     fr: {
         tagline: "Traduction Vocale en Temps Réel pour Appels Professionnels",
