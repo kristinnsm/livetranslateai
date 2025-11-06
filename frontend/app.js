@@ -120,11 +120,6 @@ async function startTranslation() {
                 autoGainControl: true
             } 
         });
-        
-        // Start video call if in a room and not already active (user interaction unlocks mobile)
-        if (currentRoom && !dailyCallActive && window.DailyIframe) {
-            await initializeVideoCall();
-        }
 
         // Initialize audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)({
@@ -1246,8 +1241,41 @@ if (uiLanguageSelect) {
 // ===================================
 
 async function initializeVideoCall() {
+    // Don't initialize if already active
+    if (dailyCallActive || dailyCallFrame) {
+        console.log('📹 Video call already active, skipping initialization');
+        return;
+    }
+    
     try {
         console.log('📹 Initializing Daily.co video call...');
+        console.log('📹 Current room:', currentRoom);
+        console.log('📹 Participant ID:', participantId);
+        
+        // Request camera and microphone permissions first
+        let stream;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: true, 
+                video: true 
+            });
+            console.log('✅ Camera and microphone permissions granted');
+            // Stop the tracks as Daily will handle them
+            stream.getTracks().forEach(track => track.stop());
+        } catch (permError) {
+            console.warn('⚠️ Camera/microphone permission denied, trying audio only:', permError);
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                console.log('✅ Microphone permission granted (camera denied)');
+                stream.getTracks().forEach(track => track.stop());
+                isCameraOn = false; // Disable camera if permission denied
+            } catch (audioError) {
+                throw new Error('Microphone access required for video calls');
+            }
+        }
+        
+        // Show video section
+        document.getElementById('videoSection').style.display = 'block';
         
         // Create Daily call frame
         dailyCallFrame = window.DailyIframe.createFrame(
@@ -1275,20 +1303,25 @@ async function initializeVideoCall() {
 
         // Join the Daily room
         const dailyRoomUrl = `https://livetranslateai.daily.co/${currentRoom}`;
+        console.log('📹 Joining Daily room:', dailyRoomUrl);
+        
         await dailyCallFrame.join({ 
             url: dailyRoomUrl,
-            userName: participantId || 'Guest'
+            userName: participantId || 'Guest',
+            videoSource: isCameraOn,
+            audioSource: true
         });
 
         dailyCallActive = true;
-        document.getElementById('videoSection').style.display = 'block';
         
-        console.log('✅ Successfully joined Daily video call:', dailyRoomUrl);
+        console.log('✅ Successfully joined Daily video call');
         showToast('Video call connected!', 'success');
         
     } catch (error) {
         console.error('❌ Failed to initialize video call:', error);
-        showToast('Failed to start video call: ' + error.message, 'error');
+        showToast('Video call failed: ' + error.message, 'error');
+        // Hide video section if failed
+        document.getElementById('videoSection').style.display = 'none';
     }
 }
 
