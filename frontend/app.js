@@ -1067,6 +1067,17 @@ async function connectToRoom() {
             console.log(`🏠 Connected to room: ${currentRoom}`);
             showToast('Connected to room', 'success');
             
+            // Start video call when WebSocket connects (Zoom-like behavior)
+            if (window.DailyIframe && !dailyCallActive) {
+                console.log('📹 Attempting to start video call...');
+                setTimeout(() => {
+                    initializeVideoCall().catch(err => {
+                        console.error('📹 Video call failed:', err);
+                        // Don't show error toast - video is optional
+                    });
+                }, 500); // Small delay to ensure room is fully set up
+            }
+            
             // Send language settings immediately after connection
             if (participantId) {
                 const sourceLang = elements.sourceLang.value;
