@@ -1121,6 +1121,9 @@ function handleRoomMessage(event) {
                 }
                 
                 console.log(`✅ Processing translation for me!`);
+                console.log(`🔍 Translation data - source_lang: ${message.source_lang}, target_lang: ${message.target_lang}`);
+                console.log(`🔍 Original text (${message.source_lang}): "${message.original.substring(0, 50)}..."`);
+                console.log(`🔍 Translated text (${message.target_lang}): "${message.translated.substring(0, 50)}..."`);
                 
                 // Handle translation
                 elements.originalText.textContent = message.original;
