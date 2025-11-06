@@ -566,7 +566,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             source_lang_listener = listener.get("source_lang", "en")
             target_lang_listener = listener.get("target_lang", "es")
             
-            logger.info(f"👂 Processing listener: {listener_name} (id: {listener_id})")
+                logger.info(f"👂 Processing listener: {listener_name} (id: {listener_id})")
             logger.info(f"👂 Listener language settings: source={source_lang_listener} (native), target={target_lang_listener} (speaks to others)")
             logger.info(f"👂 Speaker is speaking: {speaker_source_lang}, Listener will receive translations in: {source_lang_listener}")
             
@@ -574,6 +574,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 # FIXED: Translate to listener's SOURCE language (native), not target_lang
                 # In bidirectional rooms: source = what they want to HEAR, target = what they SPEAK
                 translate_to_lang = source_lang_listener
+                logger.info(f"🔍 DEBUG - translate_to_lang set to: {translate_to_lang}")
                 
                 # IMPORTANT: In bidirectional translation:
                 # - listener's target_lang = what language they want to HEAR translations in
@@ -632,6 +633,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                 translation_time = int((time.time() - translation_start) * 1000)
                 logger.info(f"✅ Translation for {listener['name']}: '{translated}' ({translation_time}ms)")
+                logger.info(f"🔍 DEBUG - Translation details: speaker_lang={speaker_source_lang}, translate_to_lang={translate_to_lang}, translated_text_lang={translate_to_lang}")
                 
                 # Step 2b: Generate TTS audio
                 tts_start = time.time()
@@ -660,7 +662,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 latency_ms = int((time.time() - start_time) * 1000)
                 
                 # Send translation to this specific listener
-                await send_to_participant(room_id, listener["id"], {
+                translation_message = {
                     "type": "translation",
                     "timestamp": datetime.utcnow().timestamp(),
                     "original": transcription,
@@ -669,7 +671,10 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     "target_lang": translate_to_lang,
                     "latency_ms": latency_ms,
                     "audio_base64": audio_base64
-                })
+                }
+                logger.info(f"🔍 DEBUG - Sending to {listener_name}: original_lang={speaker_source_lang}, translated_lang={translate_to_lang}")
+                logger.info(f"🔍 DEBUG - Message content: original='{transcription[:50]}...', translated='{translated[:50]}...'")
+                await send_to_participant(room_id, listener["id"], translation_message)
                 
             except Exception as e:
                 logger.error(f"❌ Translation error for {listener['name']}: {e}")
