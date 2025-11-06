@@ -114,16 +114,25 @@ async function startTranslation() {
             sampleRate: CONFIG.sampleRate
         });
         
+        // Resume AudioContext on mobile (required for iOS/Android)
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+            console.log('✅ AudioContext resumed for mobile');
+        }
+        
         // Unlock audio playback on mobile by playing silent audio
         // This must be done during user interaction (button click)
         try {
             const silentAudio = new Audio();
             silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
             silentAudio.volume = 0.01; // Very quiet
-            await silentAudio.play();
-            console.log('✅ Audio playback unlocked for mobile');
+            const playPromise = silentAudio.play();
+            if (playPromise !== undefined) {
+                await playPromise;
+                console.log('✅ Audio playback unlocked for mobile');
+            }
         } catch (e) {
-            console.log('⚠️ Could not unlock audio (might be desktop, that\'s fine)');
+            console.log('⚠️ Could not unlock audio:', e.message);
         }
 
         // Setup WebSocket connection
