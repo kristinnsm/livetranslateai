@@ -22,6 +22,7 @@ let isRecording = false;
 let sessionId = null;
 let segmentCount = 0;
 let latencyStats = [];
+let globalAudioPlayer = null; // Reusable audio player for mobile unlock
 
 // Room state
 let currentRoom = null;
@@ -120,19 +121,23 @@ async function startTranslation() {
             console.log('✅ AudioContext resumed for mobile');
         }
         
-        // Unlock audio playback on mobile by playing silent audio
-        // This must be done during user interaction (button click)
-        try {
-            const silentAudio = new Audio();
-            silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-            silentAudio.volume = 0.01; // Very quiet
-            const playPromise = silentAudio.play();
-            if (playPromise !== undefined) {
-                await playPromise;
-                console.log('✅ Audio playback unlocked for mobile');
+        // Create global audio player and unlock it during user interaction
+        // This player will be reused for all subsequent audio playback
+        if (!globalAudioPlayer) {
+            globalAudioPlayer = new Audio();
+            globalAudioPlayer.preload = 'auto';
+            
+            // Unlock by playing silent audio during user interaction
+            try {
+                globalAudioPlayer.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+                globalAudioPlayer.volume = 0.01; // Very quiet
+                await globalAudioPlayer.play();
+                globalAudioPlayer.pause();
+                globalAudioPlayer.currentTime = 0;
+                console.log('✅ Global audio player unlocked for mobile');
+            } catch (e) {
+                console.log('⚠️ Could not unlock audio:', e.message);
             }
-        } catch (e) {
-            console.log('⚠️ Could not unlock audio:', e.message);
         }
 
         // Setup WebSocket connection
@@ -604,36 +609,43 @@ async function playAudioFromBase64(base64Audio) {
             console.log('🔊 Converted PCM16 to WAV for playback');
         }
         
-        // Create audio element and play
+        // Use global audio player (already unlocked) or create new one
+        const audio = globalAudioPlayer || new Audio();
         const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
         
-        // Mobile browsers require user interaction for autoplay
-        // Add muted attribute initially to allow playback, then unmute
+        // Set source and reset player
+        audio.src = audioUrl;
+        audio.volume = 1.0;
+        audio.currentTime = 0;
         audio.muted = false;
-        audio.preload = 'auto';
         
-        audio.onended = () => {
+        // Cleanup handler
+        const cleanup = () => {
             URL.revokeObjectURL(audioUrl);
             console.log('✅ Audio playback finished');
         };
         
+        audio.onended = cleanup;
+        
         audio.onerror = (error) => {
             console.error('❌ Audio playback error:', error);
             console.error('❌ Error details:', audio.error);
-            URL.revokeObjectURL(audioUrl);
+            cleanup();
             
             // Show user-friendly error on mobile
             showToast('Audio playback blocked - tap replay to hear', 'warning');
         };
         
-        // Try to play - catch autoplay blocking on mobile
+        // Try to play - should work because player was unlocked during Start Speaking click
         try {
-            await audio.play();
-            console.log('🔊 Playing TTS audio');
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                await playPromise;
+                console.log('🔊 Playing TTS audio via unlocked player');
+            }
         } catch (playError) {
-            console.warn('⚠️ Autoplay blocked (likely mobile browser):', playError.message);
-            console.log('💡 Audio will play on replay button click');
+            console.warn('⚠️ Autoplay still blocked:', playError.message);
+            console.log('💡 Use replay button to hear audio');
             // Don't throw - audio is still stored for replay
         }
         
