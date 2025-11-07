@@ -114,23 +114,23 @@
                 </div>
             </div>
             
-            <!-- Connection Controls - FLOATING SIDE PANEL -->
-            <div class="action-buttons">
-                <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking">
-                    <span class="btn-icon">🎤</span>
-                    <span data-i18n="startSpeaking">Start Speaking</span>
-                </button>
-                <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled>
-                    <span class="btn-icon">⏹️</span>
-                    <span data-i18n="stopTranslate">Stop & Translate</span>
-                </button>
-            </div>
-            
             <!-- Mobile video tip -->
             <div id="mobileVideoTip" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 193, 7, 0.1); border-radius: 4px; font-size: 0.85rem; text-align: center; color: var(--warning);">
                 💡 <span data-i18n="mobileVideoTip">Tip: Turn off camera (📹) to save battery and improve performance</span>
             </div>
         </section>
+        
+        <!-- Connection Controls - FLOATING SIDE PANEL (Desktop) / BOTTOM BAR (Mobile) -->
+        <div class="action-buttons">
+            <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking">
+                <span class="btn-icon">🎤</span>
+                <span data-i18n="startSpeaking">Start Speaking</span>
+            </button>
+            <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled>
+                <span class="btn-icon">⏹️</span>
+                <span data-i18n="stopTranslate">Stop & Translate</span>
+            </button>
+        </div>
 
         <!-- Video Call Container -->
         <section class="video-section" id="videoSection" style="display: none;">
