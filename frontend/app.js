@@ -1494,6 +1494,15 @@ async function leaveVideoCall() {
     }
 }
 
+// Show mobile video tip if on mobile device
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+if (isMobileDevice) {
+    const mobileVideoTip = document.getElementById('mobileVideoTip');
+    if (mobileVideoTip) {
+        mobileVideoTip.style.display = 'block';
+    }
+}
+
 // Initialize on load
 console.log('🚀 LiveTranslateAI initialized');
 
