@@ -47,7 +47,7 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     padding: var(--spacing-md);
-    padding-bottom: 140px; /* Space for fixed controls at bottom */
+    padding-right: 120px; /* Space for fixed controls on right */
     line-height: 1.6;
 }
 
@@ -246,26 +246,27 @@ body {
     margin-top: 1.5rem;
 }
 
-/* Fixed translation controls - always visible at bottom */
+/* Fixed translation controls - floating on right side */
 .controls {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--bg-primary);
-    padding: var(--spacing-md);
-    border-top: 2px solid var(--border);
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000; /* Higher z-index to stay above everything */
-    max-width: 1200px;
-    margin: 0 auto;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(31, 41, 55, 0.95);
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 80px; /* Compact width */
 }
 
 .action-buttons {
     display: flex;
+    flex-direction: column;
     gap: var(--spacing-sm);
-    justify-content: center;
-    flex-wrap: wrap;
+    align-items: center;
 }
 
 /* Buttons */
