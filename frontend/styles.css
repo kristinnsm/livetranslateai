@@ -341,6 +341,54 @@ body {
     font-size: 1.25rem;
 }
 
+/* Compact circular buttons for floating side panel */
+.controls .btn {
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    border-radius: 50%;
+    flex-direction: column;
+    gap: 0;
+    font-size: 0.7rem;
+    position: relative;
+}
+
+.controls .btn .btn-icon {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.controls .btn span:not(.btn-icon) {
+    display: none; /* Hide text labels, show only icons */
+}
+
+/* Tooltip on hover for side buttons */
+.controls .btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 75px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    font-weight: 500;
+}
+
+.controls .btn:hover::after {
+    opacity: 1;
+}
+
+/* Hide language selector and mobile tip in floating side panel */
+.controls .language-selector,
+.controls #mobileVideoTip {
+    display: none;
+}
+
 /* Translation Area */
 .translation-area {
     background: var(--bg-secondary);
