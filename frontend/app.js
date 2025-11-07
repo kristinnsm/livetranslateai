@@ -881,18 +881,21 @@ function updateUIState(state) {
         case 'recording':
             elements.startBtn.disabled = true;
             elements.stopBtn.disabled = false;
+            elements.stopBtn.setAttribute('data-tooltip', 'Stop & Translate');
             updateStatus('recording', '🎤 Recording...');
             break;
 
         case 'connected':
             elements.startBtn.disabled = false;
             elements.stopBtn.disabled = true;
+            elements.startBtn.setAttribute('data-tooltip', 'Start Speaking');
             updateStatus('connected', '✓ Ready for next recording');
             break;
 
         case 'stopped':
             elements.startBtn.disabled = false;
             elements.stopBtn.disabled = true;
+            elements.startBtn.setAttribute('data-tooltip', 'Start Speaking');
             updateStatus('disconnected', 'Disconnected');
             elements.originalText.textContent = 'Waiting for speech...';
             elements.translatedText.textContent = 'Ready to translate...';
