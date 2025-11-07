@@ -198,6 +198,26 @@ async def create_daily_room(request: Request):
                 "name": room_data["name"],
                 "video_enabled": True
             }
+        elif daily_response.status_code == 400:
+            # Room already exists - fetch it instead
+            response_json = daily_response.json()
+            if "already exists" in response_json.get("info", ""):
+                logger.info(f"📹 Daily room {room_name} already exists, fetching it...")
+                get_response = requests.get(
+                    f"https://api.daily.co/v1/rooms/{room_name}",
+                    headers=headers,
+                    timeout=10
+                )
+                if get_response.status_code == 200:
+                    room_data = get_response.json()
+                    logger.info(f"✅ Retrieved existing Daily room: {room_data['url']}")
+                    return {
+                        "url": room_data["url"],
+                        "name": room_data["name"],
+                        "video_enabled": True
+                    }
+            logger.error(f"❌ Daily API error: {daily_response.status_code} - {daily_response.text}")
+            return {"error": "Failed to create video room", "video_enabled": False}, 500
         else:
             logger.error(f"❌ Daily API error: {daily_response.status_code} - {daily_response.text}")
             return {"error": "Failed to create video room", "video_enabled": False}, 500
