@@ -27,6 +27,7 @@ let globalAudioPlayer = null; // Reusable audio player for mobile unlock
 // Room state
 let currentRoom = null;
 let participantId = null;
+let participantName = null; // Store participant's actual name for video display
 let isHost = false;
 let roomParticipants = []; // Track participants in the room
 
@@ -969,6 +970,7 @@ async function createRoom() {
         const data = await response.json();
         currentRoom = data.room_id;
         participantId = data.participant_id;  // Set participant ID from backend
+        participantName = 'Host'; // Default name for room creator
         isHost = true;
         
         // Show room info
@@ -1005,8 +1007,8 @@ async function joinRoom() {
     const roomCode = prompt('Enter room code:');
     if (!roomCode) return;
     
-    const participantName = prompt('Enter your name:');
-    if (!participantName) return;
+    const enteredName = prompt('Enter your name:');
+    if (!enteredName) return;
     
     try {
         // Disable button to prevent multiple clicks
@@ -1019,7 +1021,7 @@ async function joinRoom() {
         const response = await fetch(`${backendUrl}/api/rooms/${roomCode}/join`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ participant_name: participantName })
+            body: JSON.stringify({ participant_name: enteredName })
         });
         
         if (!response.ok) {
@@ -1030,6 +1032,7 @@ async function joinRoom() {
         const data = await response.json();
         currentRoom = roomCode;
         participantId = data.participant_id;
+        participantName = enteredName; // Store the actual name
         isHost = false;
         
         // Show room info
@@ -1346,7 +1349,7 @@ async function initializeVideoCall(isMobileMode = false) {
         // Join with mobile-optimized settings if needed
         const joinConfig = { 
             url: dailyRoomUrl,
-            userName: participantId || 'Guest',
+            userName: participantName || 'Guest', // Use actual name, not ID
             videoSource: isCameraOn,
             audioSource: true
         };
