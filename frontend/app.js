@@ -1415,6 +1415,48 @@ function handleDailyError(error) {
     showToast('Video call error: ' + error.errorMsg, 'error');
 }
 
+function showMobileVideoPrompt() {
+    // Show video section with a join button instead of auto-joining
+    const videoSection = document.getElementById('videoSection');
+    const dailyContainer = document.getElementById('dailyCallContainer');
+    
+    videoSection.style.display = 'block';
+    dailyContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; text-align: center;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">📱 Video Call Available</h3>
+            <p style="margin-bottom: 1.5rem; opacity: 0.9; font-size: 0.95rem;">Join the video call when you're ready. Note: Video calls may use more battery and data on mobile.</p>
+            <button id="joinVideoBtn" style="
+                background: white;
+                color: #667eea;
+                border: none;
+                padding: 0.75rem 2rem;
+                border-radius: 8px;
+                font-size: 1rem;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                transition: transform 0.2s;
+            ">
+                Join Video Call
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('joinVideoBtn').addEventListener('click', async () => {
+        dailyContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%;"><p style="color: #666;">Loading video...</p></div>';
+        try {
+            await initializeVideoCall(true); // Pass true for mobile mode
+        } catch (err) {
+            dailyContainer.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: #666;">
+                    <p>Failed to join video call</p>
+                    <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Try Again</button>
+                </div>
+            `;
+        }
+    });
+}
+
 async function toggleCamera() {
     if (!dailyCallFrame) return;
     
