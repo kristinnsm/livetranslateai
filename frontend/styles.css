@@ -244,6 +244,18 @@ body {
     margin-top: 1.5rem;
 }
 
+/* Sticky translation controls - always visible at bottom */
+.controls {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-primary);
+    padding: var(--spacing-md);
+    border-top: 2px solid var(--border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    margin-top: auto; /* Push to bottom of container */
+}
+
 .action-buttons {
     display: flex;
     gap: var(--spacing-sm);
