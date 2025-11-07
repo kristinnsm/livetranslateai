@@ -1067,24 +1067,17 @@ async function connectToRoom() {
             console.log(`🏠 Connected to room: ${currentRoom}`);
             showToast('Connected to room', 'success');
             
-            // Start video call when WebSocket connects (desktop only by default)
+            // Start video call when WebSocket connects (auto-start on all devices)
             if (window.DailyIframe && !dailyCallActive) {
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
                 
-                if (!isMobile) {
-                    // Auto-start video on desktop
-                    console.log('📹 Attempting to start video call (desktop)...');
-                    setTimeout(() => {
-                        initializeVideoCall().catch(err => {
-                            console.error('📹 Video call failed:', err);
-                            // Don't show error toast - video is optional
-                        });
-                    }, 500);
-                } else {
-                    // On mobile, show a button to join video manually
-                    console.log('📱 Mobile detected - video call available on demand');
-                    showMobileVideoPrompt();
-                }
+                console.log(`📹 Attempting to start video call (${isMobile ? 'mobile - optimized quality' : 'desktop - full quality'})...`);
+                setTimeout(() => {
+                    initializeVideoCall(isMobile).catch(err => {
+                        console.error('📹 Video call failed:', err);
+                        // Don't show error toast - video is optional
+                    });
+                }, 500); // Small delay to ensure room is fully set up
             }
             
             // Send language settings immediately after connection
