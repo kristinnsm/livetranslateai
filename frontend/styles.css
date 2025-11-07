@@ -246,8 +246,13 @@ body {
     margin-top: 1.5rem;
 }
 
-/* Fixed translation controls - floating on right side */
+/* Keep controls section in normal flow */
 .controls {
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Float ONLY the action buttons on right side */
+.action-buttons {
     position: fixed;
     right: 20px;
     top: 50%;
@@ -260,9 +265,6 @@ body {
     z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.1);
     width: 80px; /* Compact width */
-}
-
-.action-buttons {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-sm);
@@ -342,7 +344,7 @@ body {
 }
 
 /* Compact circular buttons for floating side panel */
-.controls .btn {
+.action-buttons .btn {
     width: 64px;
     height: 64px;
     padding: 0;
@@ -353,17 +355,17 @@ body {
     position: relative;
 }
 
-.controls .btn .btn-icon {
+.action-buttons .btn .btn-icon {
     font-size: 1.8rem;
     margin: 0;
 }
 
-.controls .btn span:not(.btn-icon) {
+.action-buttons .btn span:not(.btn-icon) {
     display: none; /* Hide text labels, show only icons */
 }
 
 /* Tooltip on hover for side buttons */
-.controls .btn::after {
+.action-buttons .btn::after {
     content: attr(data-tooltip);
     position: absolute;
     right: 75px;
@@ -379,14 +381,8 @@ body {
     font-weight: 500;
 }
 
-.controls .btn:hover::after {
+.action-buttons .btn:hover::after {
     opacity: 1;
-}
-
-/* Hide language selector and mobile tip in floating side panel */
-.controls .language-selector,
-.controls #mobileVideoTip {
-    display: none;
 }
 
 /* Translation Area */
@@ -740,8 +736,8 @@ body {
         font-size: 1.3rem;
     }
     
-    /* Move controls to bottom on mobile */
-    .controls {
+    /* Move action buttons to bottom on mobile */
+    .action-buttons {
         position: fixed;
         bottom: 0;
         left: 0;
@@ -753,25 +749,22 @@ body {
         border-top: 2px solid var(--border);
         padding: var(--spacing-sm);
         background: rgba(31, 41, 55, 0.98);
-    }
-    
-    .action-buttons {
         flex-direction: row;
         justify-content: space-around;
         gap: var(--spacing-xs);
     }
     
-    .controls .btn {
+    .action-buttons .btn {
         width: 56px;
         height: 56px;
         font-size: 0.65rem;
     }
     
-    .controls .btn .btn-icon {
+    .action-buttons .btn .btn-icon {
         font-size: 1.5rem;
     }
     
-    .controls .btn::after {
+    .action-buttons .btn::after {
         display: none; /* Hide tooltips on mobile */
     }
     
