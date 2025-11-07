@@ -1260,7 +1260,7 @@ if (uiLanguageSelect) {
 // Daily.co Video Call Functions
 // ===================================
 
-async function initializeVideoCall() {
+async function initializeVideoCall(isMobileMode = false) {
     // Don't initialize if already active
     if (dailyCallActive || dailyCallFrame) {
         console.log('📹 Video call already active, skipping initialization');
@@ -1271,13 +1271,14 @@ async function initializeVideoCall() {
         console.log('📹 Initializing Daily.co video call...');
         console.log('📹 Current room:', currentRoom);
         console.log('📹 Participant ID:', participantId);
+        console.log('📹 Mobile mode:', isMobileMode);
         
         // Request camera and microphone permissions first
         let stream;
         try {
             stream = await navigator.mediaDevices.getUserMedia({ 
                 audio: true, 
-                video: true 
+                video: isMobileMode ? { width: 640, height: 480 } : true // Lower resolution on mobile
             });
             console.log('✅ Camera and microphone permissions granted');
             // Stop the tracks as Daily will handle them
@@ -1297,7 +1298,7 @@ async function initializeVideoCall() {
         // Show video section
         document.getElementById('videoSection').style.display = 'block';
         
-        // Create Daily call frame
+        // Create Daily call frame with mobile-optimized settings
         dailyCallFrame = window.DailyIframe.createFrame(
             document.getElementById('dailyCallContainer'),
             {
