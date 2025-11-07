@@ -23,7 +23,8 @@ const translations = {
         connected: "Connected",
         recording: "Recording...",
         readyForNext: "Ready for next recording",
-        videoCall: "Video Call"
+        videoCall: "Video Call",
+    mobileVideoTip: "Tip: Turn off camera (📹) to save battery and improve performance"
     },
     es: {
         tagline: "Traducción de Voz en Tiempo Real para Llamadas de Negocios",
@@ -45,7 +46,8 @@ const translations = {
         connected: "Conectado",
         recording: "Grabando...",
         readyForNext: "Listo para siguiente grabación",
-        videoCall: "Videollamada"
+        videoCall: "Videollamada",
+        mobileVideoTip: "Consejo: Desactiva la cámara (📹) para ahorrar batería y mejorar el rendimiento"
     },
     fr: {
         tagline: "Traduction Vocale en Temps Réel pour Appels Professionnels",
