@@ -253,22 +253,22 @@ body {
 
 /* Float ONLY the action buttons on right side */
 .action-buttons {
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(31, 41, 55, 0.95);
+    position: fixed !important;
+    right: 20px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(31, 41, 55, 0.95) !important;
     backdrop-filter: blur(10px);
-    padding: var(--spacing-sm);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    width: 80px; /* Compact width */
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    align-items: center;
+    padding: var(--spacing-sm) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    z-index: 1000 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    width: 80px !important; /* Compact width */
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-sm) !important;
+    align-items: center !important;
 }
 
 /* Buttons */
@@ -345,23 +345,25 @@ body {
 
 /* Compact circular buttons for floating side panel */
 .action-buttons .btn {
-    width: 64px;
-    height: 64px;
-    padding: 0;
-    border-radius: 50%;
-    flex-direction: column;
-    gap: 0;
-    font-size: 0.7rem;
-    position: relative;
+    width: 64px !important;
+    height: 64px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    font-size: 0.7rem !important;
+    position: relative !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
 }
 
 .action-buttons .btn .btn-icon {
-    font-size: 1.8rem;
-    margin: 0;
+    font-size: 1.8rem !important;
+    margin: 0 !important;
 }
 
 .action-buttons .btn span:not(.btn-icon) {
-    display: none; /* Hide text labels, show only icons */
+    display: none !important; /* Hide text labels, show only icons */
 }
 
 /* Tooltip on hover for side buttons */
