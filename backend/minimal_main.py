@@ -18,6 +18,7 @@ import os
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DAILY_API_KEY = os.getenv("DAILY_API_KEY")  # Get from https://dashboard.daily.co/developers
 
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
@@ -151,6 +152,59 @@ async def leave_room(room_id: str, participant_id: str):
     
     logger.info(f"👋 Participant {participant_id} left room {room_id}")
     return {"status": "left"}
+
+@app.post("/api/daily/create-room")
+async def create_daily_room(request: Request):
+    """Create a Daily.co video room for a translation room"""
+    if not DAILY_API_KEY:
+        logger.warning("⚠️ DAILY_API_KEY not set, video calls disabled")
+        return {"error": "Video calls not configured", "video_enabled": False}, 503
+    
+    try:
+        body = await request.json()
+        room_name = body.get("room_name")  # Our translation room ID
+        
+        # Create Daily.co room via API
+        headers = {
+            "Authorization": f"Bearer {DAILY_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # Room config: expires in 10 minutes, auto-deletes after
+        daily_response = requests.post(
+            "https://api.daily.co/v1/rooms",
+            headers=headers,
+            json={
+                "name": room_name,
+                "privacy": "public",  # Anyone with link can join
+                "properties": {
+                    "exp": int(time.time()) + 600,  # Expires in 10 minutes
+                    "enable_screenshare": False,
+                    "enable_chat": False,
+                    "enable_knocking": False,
+                    "enable_prejoin_ui": False,
+                    "start_video_off": False,
+                    "start_audio_off": False
+                }
+            },
+            timeout=10
+        )
+        
+        if daily_response.status_code == 200:
+            room_data = daily_response.json()
+            logger.info(f"✅ Created Daily room: {room_data['url']}")
+            return {
+                "url": room_data["url"],
+                "name": room_data["name"],
+                "video_enabled": True
+            }
+        else:
+            logger.error(f"❌ Daily API error: {daily_response.status_code} - {daily_response.text}")
+            return {"error": "Failed to create video room", "video_enabled": False}, 500
+            
+    except Exception as e:
+        logger.error(f"❌ Failed to create Daily room: {e}")
+        return {"error": str(e), "video_enabled": False}, 500
 
 @app.websocket("/ws/translate/realtime")
 async def websocket_translate_realtime(websocket: WebSocket):

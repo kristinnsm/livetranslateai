@@ -1312,8 +1312,29 @@ async function initializeVideoCall() {
             .on('left-meeting', handleLeftMeeting)
             .on('error', handleDailyError);
 
-        // Join the Daily room
-        const dailyRoomUrl = `https://livetranslateai.daily.co/${currentRoom}`;
+        // Create Daily.co room via backend API
+        console.log('📹 Creating Daily room via backend...');
+        const backendUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://livetranslateai.onrender.com';
+            
+        const dailyResponse = await fetch(`${backendUrl}/api/daily/create-room`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_name: currentRoom })
+        });
+        
+        if (!dailyResponse.ok) {
+            const errorData = await dailyResponse.json();
+            throw new Error(errorData.error || 'Failed to create video room');
+        }
+        
+        const dailyData = await dailyResponse.json();
+        if (!dailyData.video_enabled) {
+            throw new Error('Video calls not enabled on server');
+        }
+        
+        const dailyRoomUrl = dailyData.url;
         console.log('📹 Joining Daily room:', dailyRoomUrl);
         
         await dailyCallFrame.join({ 
