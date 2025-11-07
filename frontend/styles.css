@@ -691,9 +691,47 @@ body {
         height: 42px;
         font-size: 1.3rem;
     }
-}
-
-@media (max-width: 768px) {
+    
+    /* Move controls to bottom on mobile */
+    .controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        transform: none;
+        width: 100%;
+        border-radius: 0;
+        border-top: 2px solid var(--border);
+        padding: var(--spacing-sm);
+        background: rgba(31, 41, 55, 0.98);
+    }
+    
+    .action-buttons {
+        flex-direction: row;
+        justify-content: space-around;
+        gap: var(--spacing-xs);
+    }
+    
+    .controls .btn {
+        width: 56px;
+        height: 56px;
+        font-size: 0.65rem;
+    }
+    
+    .controls .btn .btn-icon {
+        font-size: 1.5rem;
+    }
+    
+    .controls .btn::after {
+        display: none; /* Hide tooltips on mobile */
+    }
+    
+    body {
+        padding-right: var(--spacing-md) !important;
+        padding-bottom: 90px !important;
+    }
+    
     .title {
         font-size: 2rem;
     }
@@ -705,17 +743,6 @@ body {
     .arrow {
         transform: rotate(90deg);
         margin: 0;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-    }
-    
-    .btn {
-        width: 100%;
-        font-size: 0.9rem;
-        padding: 0.75rem 0.75rem; /* Less horizontal padding */
-        justify-content: center;
     }
     
     .btn span:not(.btn-icon) {
