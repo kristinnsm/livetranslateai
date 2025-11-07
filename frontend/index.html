@@ -121,14 +121,15 @@
         </section>
         
         <!-- Connection Controls - FLOATING SIDE PANEL (Desktop) / BOTTOM BAR (Mobile) -->
-        <div class="action-buttons">
-            <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking">
-                <span class="btn-icon">🎤</span>
-                <span data-i18n="startSpeaking">Start Speaking</span>
+        <!-- Version: FLOATING-v2.0 -->
+        <div class="action-buttons" style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(31, 41, 55, 0.95); padding: 12px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); z-index: 1000; border: 1px solid rgba(255, 255, 255, 0.1); width: 80px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
+            <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking" style="width: 64px; height: 64px; padding: 0; border-radius: 50%; min-width: 64px; max-width: 64px;">
+                <span class="btn-icon" style="font-size: 1.8rem; margin: 0;">🎤</span>
+                <span data-i18n="startSpeaking" style="display: none;">Start Speaking</span>
             </button>
-            <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled>
-                <span class="btn-icon">⏹️</span>
-                <span data-i18n="stopTranslate">Stop & Translate</span>
+            <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled style="width: 64px; height: 64px; padding: 0; border-radius: 50%; min-width: 64px; max-width: 64px;">
+                <span class="btn-icon" style="font-size: 1.8rem; margin: 0;">⏹️</span>
+                <span data-i18n="stopTranslate" style="display: none;">Stop & Translate</span>
             </button>
         </div>
 
