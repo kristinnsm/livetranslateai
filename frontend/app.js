@@ -1067,15 +1067,24 @@ async function connectToRoom() {
             console.log(`🏠 Connected to room: ${currentRoom}`);
             showToast('Connected to room', 'success');
             
-            // Start video call when WebSocket connects (Zoom-like behavior)
+            // Start video call when WebSocket connects (desktop only by default)
             if (window.DailyIframe && !dailyCallActive) {
-                console.log('📹 Attempting to start video call...');
-                setTimeout(() => {
-                    initializeVideoCall().catch(err => {
-                        console.error('📹 Video call failed:', err);
-                        // Don't show error toast - video is optional
-                    });
-                }, 500); // Small delay to ensure room is fully set up
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (!isMobile) {
+                    // Auto-start video on desktop
+                    console.log('📹 Attempting to start video call (desktop)...');
+                    setTimeout(() => {
+                        initializeVideoCall().catch(err => {
+                            console.error('📹 Video call failed:', err);
+                            // Don't show error toast - video is optional
+                        });
+                    }, 500);
+                } else {
+                    // On mobile, show a button to join video manually
+                    console.log('📱 Mobile detected - video call available on demand');
+                    showMobileVideoPrompt();
+                }
             }
             
             // Send language settings immediately after connection
@@ -1337,12 +1346,25 @@ async function initializeVideoCall() {
         const dailyRoomUrl = dailyData.url;
         console.log('📹 Joining Daily room:', dailyRoomUrl);
         
-        await dailyCallFrame.join({ 
+        // Join with mobile-optimized settings if needed
+        const joinConfig = { 
             url: dailyRoomUrl,
             userName: participantId || 'Guest',
             videoSource: isCameraOn,
             audioSource: true
-        });
+        };
+        
+        // Add mobile optimizations
+        if (isMobileMode) {
+            joinConfig.dailyConfig = {
+                experimentalChromeVideoMuteLightOff: true,
+                camSimulcastEncodings: [
+                    { maxBitrate: 100000, scaleResolutionDownBy: 4 } // Lower quality for mobile
+                ]
+            };
+        }
+        
+        await dailyCallFrame.join(joinConfig);
 
         dailyCallActive = true;
         
