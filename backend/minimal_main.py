@@ -132,7 +132,12 @@ async def google_auth(request: Request):
             abuse_flag = existing_google_id and existing_google_id != google_id
             
             if abuse_flag:
-                logger.warning(f"⚠️ Fingerprint {fingerprint} already used by different account. Possible abuse.")
+                logger.warning(f"🚨 ABUSE DETECTED: Fingerprint {fingerprint} already used by account {existing_google_id}. Blocking new signup for {google_id}.")
+                return JSONResponse({
+                    "success": False,
+                    "error": "This device has already been used for a free trial. Please use your existing account or upgrade to premium for unlimited access.",
+                    "abuse_detected": True
+                }, status_code=403)
             
             # Create new user in database
             user_id = str(uuid.uuid4())
@@ -145,10 +150,10 @@ async def google_auth(request: Request):
                 "tier": "free",
                 "fingerprint": fingerprint,
                 "ip_address": client_ip,
-                "abuse_flagged": abuse_flag
+                "abuse_flagged": False  # Not abuse if we let them through
             }
             user = create_user(user_data)
-            logger.info(f"✅ New user created in DB: {user['name']} - Abuse flagged: {abuse_flag}")
+            logger.info(f"✅ New user created in DB: {user['name']}")
         else:
             # Update last login
             update_user_last_login(google_id)
