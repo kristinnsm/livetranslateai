@@ -51,13 +51,14 @@
 
 ### **30 Min Free → 7-Day Trial → Paid**
 
-#### **PHASE 1: 30 Minutes Free** (No Card)
-- **30 minutes free** (email signup only)
+#### **PHASE 1: 15 Minutes Free** (No Card, Fingerprinted)
+- **15 minutes free** (Google login only)
 - Up to 3 participants
 - All 15 languages
 - HD video + audio
 - No credit card required
-- **Goal**: Low friction, taste of value, build trust
+- **One trial per person/device** (IP + browser fingerprinting)
+- **Goal**: Low friction, taste of value, prevent serial abuse
 
 #### **PHASE 2: 7-Day Trial** (Card Required)
 - **Unlimited use for 7 days** (credit card required)

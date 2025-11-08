@@ -45,6 +45,9 @@ websocket_to_participant: Dict[int, str] = {}  # websocket_id (id(websocket)) ->
 
 # User management (in-memory for MVP - replace with database later)
 users_db: Dict[str, Dict] = {}  # google_id -> user_data
+used_fingerprints: Dict[str, str] = {}  # fingerprint -> google_id (for abuse detection)
+
+FREE_MINUTES_LIMIT = 15  # Reduced from 30 to prevent abuse
 
 # CORS
 app.add_middleware(
@@ -79,8 +82,10 @@ async def google_auth(request: Request):
     try:
         data = await request.json()
         token = data.get('token')
+        fingerprint = data.get('fingerprint', 'unknown')
+        client_ip = request.client.host
         
-        logger.info("🔐 Google auth request received")
+        logger.info(f"🔐 Google auth request received from IP: {client_ip}, fingerprint: {fingerprint}")
         
         # Verify Google token
         user_info = await verify_google_token(token)
@@ -96,6 +101,18 @@ async def google_auth(request: Request):
         
         # Check if user exists
         if google_id not in users_db:
+            # Check if fingerprint was already used by DIFFERENT user (abuse detection)
+            if fingerprint in used_fingerprints:
+                existing_user_id = used_fingerprints[fingerprint]
+                if existing_user_id != google_id:
+                    logger.warning(f"⚠️ Fingerprint {fingerprint} already used by different account. Possible abuse.")
+                    # Still allow, but flag it
+                    abuse_flag = True
+                else:
+                    abuse_flag = False
+            else:
+                abuse_flag = False
+                used_fingerprints[fingerprint] = google_id
             # Create new user
             user_id = str(uuid.uuid4())
             users_db[google_id] = {
@@ -106,10 +123,13 @@ async def google_auth(request: Request):
                 "picture": user_info['picture'],
                 "tier": "free",  # Default tier
                 "minutes_used": 0.0,
+                "fingerprint": fingerprint,
+                "ip_address": client_ip,
+                "abuse_flagged": abuse_flag,
                 "created_at": datetime.utcnow().isoformat(),
                 "last_login": datetime.utcnow().isoformat()
             }
-            logger.info(f"✅ New user created: {user_info['name']} ({user_info['email']})")
+            logger.info(f"✅ New user created: {user_info['name']} ({user_info['email']}) - Abuse flagged: {abuse_flag}")
         else:
             # Update last login
             users_db[google_id]['last_login'] = datetime.utcnow().isoformat()

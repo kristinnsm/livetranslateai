@@ -1,8 +1,34 @@
 // Google OAuth Configuration
 const GOOGLE_CLIENT_ID = '712731007087-jmc0mscl0jrknp86hl7kjgqi6uk2q5v7.apps.googleusercontent.com';
 
+// Free tier limit
+const FREE_MINUTES_LIMIT = 15; // Reduced from 30 to prevent abuse
+
 // Current user state
 let currentUser = null;
+
+// Generate device fingerprint for abuse prevention
+function getDeviceFingerprint() {
+    const data = {
+        screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: navigator.language,
+        platform: navigator.platform,
+        hardwareConcurrency: navigator.hardwareConcurrency || 0,
+        deviceMemory: navigator.deviceMemory || 0,
+        userAgent: navigator.userAgent.substring(0, 150)
+    };
+    
+    // Simple hash function
+    const str = JSON.stringify(data);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return `fp_${Math.abs(hash)}`;
+}
 
 // Initialize Google Sign-In when page loads
 function initGoogleAuth() {
@@ -55,6 +81,10 @@ async function handleGoogleLogin(response) {
         // Show loading state
         showAuthLoading(true);
         
+        // Generate device fingerprint
+        const fingerprint = getDeviceFingerprint();
+        console.log('🔒 Device fingerprint generated:', fingerprint);
+        
         // Send token to backend for verification
         const backendUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000'
@@ -63,7 +93,10 @@ async function handleGoogleLogin(response) {
         const result = await fetch(`${backendUrl}/api/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: credential })
+            body: JSON.stringify({ 
+                token: credential,
+                fingerprint: fingerprint
+            })
         });
         
         const data = await result.json();
@@ -138,7 +171,7 @@ function updateAuthUI(isLoggedIn) {
                     <div class="user-details">
                         <div class="user-name">${currentUser.name}</div>
                         <div class="user-email">${currentUser.email}</div>
-                        <div class="user-tier">Free Tier - ${(30 - currentUser.minutes_used).toFixed(1)} min remaining</div>
+                        <div class="user-tier">Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining</div>
                     </div>
                     <button onclick="auth.logout()" class="btn-logout">Logout</button>
                 </div>
@@ -165,7 +198,7 @@ function updateUsageDisplay(user) {
     if (!usageContainer) return;
     
     const minutesUsed = user.minutes_used || 0;
-    const minutesLimit = user.tier === 'free' ? 30 : 999999; // 30 for free, unlimited for paid
+    const minutesLimit = user.tier === 'free' ? FREE_MINUTES_LIMIT : 999999; // 15 for free, unlimited for paid
     const percentage = Math.min((minutesUsed / minutesLimit) * 100, 100);
     
     let statusClass = 'usage-ok';
