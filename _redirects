@@ -1,7 +1,0 @@
-# Netlify redirects file
-# Redirect /app to the app directory
-/app /app/index.html 200
-
-# Redirect root to index.html (landing page)
-/ /index.html 200
-
