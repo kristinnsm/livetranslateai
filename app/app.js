@@ -1086,11 +1086,27 @@ async function connectToRoom() {
                 }, 500); // Small delay to ensure room is fully set up
             }
             
-            // Send language settings immediately after connection
+            // Send language settings and user ID immediately after connection
             if (participantId) {
                 const sourceLang = elements.sourceLang.value;
                 const targetLang = elements.targetLang.value;
-                console.log(`🌍 Auto-sending language settings after connection: ${participantId}`);
+                
+                // Get current user for usage tracking
+                const user = window.auth ? window.auth.getCurrentUser() : null;
+                const userId = user ? user.user_id : null;
+                
+                console.log(`🌍 Auto-sending language settings after connection: ${participantId}, user_id: ${userId}`);
+                
+                // Send identify with user_id for usage tracking
+                websocket.send(JSON.stringify({
+                    action: 'identify',
+                    participant_id: participantId,
+                    user_id: userId,
+                    source_lang: sourceLang,
+                    target_lang: targetLang
+                }));
+                
+                // Also send set_language for backwards compatibility
                 websocket.send(JSON.stringify({
                     action: 'set_language',
                     participant_id: participantId,
