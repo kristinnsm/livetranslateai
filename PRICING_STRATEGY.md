@@ -49,16 +49,22 @@
 
 ## 🚀 Recommended Pricing Model
 
-### **Free Trial + Paid Tiers** (Credit Card Required)
+### **30 Min Free → 7-Day Trial → Paid**
 
-#### **FREE TRIAL** (7-Day Test Drive)
-- **7 days unlimited use** (requires credit card)
+#### **PHASE 1: 30 Minutes Free** (No Card)
+- **30 minutes free** (email signup only)
 - Up to 3 participants
 - All 15 languages
-- Full HD quality
-- All features unlocked
-- **Auto-converts to Starter after 7 days** (can cancel anytime)
-- **Goal**: High-quality signups, prevent abuse, maximize conversion
+- HD video + audio
+- No credit card required
+- **Goal**: Low friction, taste of value, build trust
+
+#### **PHASE 2: 7-Day Trial** (Card Required)
+- **Unlimited use for 7 days** (credit card required)
+- Unlocked after using 30 free minutes
+- All features included
+- **Auto-converts to paid** after trial (can cancel anytime)
+- **Goal**: Qualified buyers, prevent serial trialing
 
 #### **STARTER TIER** - $19/month (or $190/year)
 - **300 minutes/month** (~5 hours) OR **Unlimited** (test both)
