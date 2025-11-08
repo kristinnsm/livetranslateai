@@ -1,0 +1,10 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://livetranslateai.com/sitemap.xml
+
+# Block admin/app pages from search results (users need to login)
+Disallow: /app/
+
