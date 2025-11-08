@@ -165,28 +165,37 @@ async def google_auth(request: Request):
 async def get_user_usage(request: Request):
     """Get current user's usage information"""
     try:
-        # Get user_id from auth header
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
-            return JSONResponse({"error": "Not authorized"}, status_code=401)
-        
-        token = auth_header.replace('Bearer ', '')
-        # For MVP, extract user_id from token (in production, verify JWT)
-        # For now, accept user_id from query param as fallback
+        # Get user_id from query params
         user_id = request.query_params.get('user_id')
         
         if not user_id:
             return JSONResponse({"error": "User ID required"}, status_code=400)
         
+        logger.info(f"📊 Usage check for user_id: {user_id}")
+        logger.info(f"📊 Current users_db has {len(users_db)} users")
+        
         # Find user
         user = None
         for google_id, u in users_db.items():
-            if u['user_id'] == user_id:
+            if u.get('user_id') == user_id:
                 user = u
+                logger.info(f"✅ Found user: {u.get('name')}")
                 break
         
         if not user:
-            return JSONResponse({"error": "User not found"}, status_code=404)
+            logger.warning(f"⚠️ User {user_id} not found. Available users: {[u.get('name') for u in users_db.values()]}")
+            # Return default free tier info instead of 404
+            # This handles the case where users_db was reset (in-memory storage)
+            return JSONResponse({
+                "tier": "free",
+                "minutes_used": 0.0,
+                "minutes_limit": FREE_MINUTES_LIMIT,
+                "minutes_remaining": FREE_MINUTES_LIMIT,
+                "percentage_used": 0,
+                "can_use": True,
+                "status": "ok",
+                "note": "Session not found - showing default. Please logout and login again for accurate tracking."
+            })
         
         # Get usage info
         usage_info = get_usage_info(user)
