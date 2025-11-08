@@ -31,6 +31,10 @@ let participantName = null; // Store participant's actual name for video display
 let isHost = false;
 let roomParticipants = []; // Track participants in the room
 
+// Call timer for live usage tracking
+let callStartTime = null;
+let callTimerInterval = null;
+
 // Replay state
 let lastTranslation = null; // Store last translation for replay
 
@@ -1119,6 +1123,28 @@ async function connectToRoom() {
             console.log(`🏠 Connected to room: ${currentRoom}`);
             showToast('Connected to room', 'success');
             
+            // Start call timer for live usage display
+            callStartTime = Date.now();
+            if (callTimerInterval) clearInterval(callTimerInterval);
+            
+            callTimerInterval = setInterval(() => {
+                if (callStartTime && window.auth && window.auth.getCurrentUser()) {
+                    const elapsedMinutes = (Date.now() - callStartTime) / 60000;
+                    const user = window.auth.getCurrentUser();
+                    
+                    // Show estimated remaining time during call
+                    const estimatedUsed = (user.minutes_used || 0) + elapsedMinutes;
+                    const remaining = Math.max(0, 15 - estimatedUsed);
+                    
+                    // Update profile bar with live estimate
+                    const userTierElem = document.querySelector('.user-tier');
+                    if (userTierElem && !isGuest) {
+                        userTierElem.textContent = `Free Tier - ${remaining.toFixed(1)} min remaining (call in progress)`;
+                        userTierElem.style.color = remaining < 2 ? '#EF4444' : '#4F46E5';
+                    }
+                }
+            }, 5000); // Update every 5 seconds
+            
             // Start video call when WebSocket connects (auto-start on all devices)
             if (window.DailyIframe && !dailyCallActive) {
                 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1166,6 +1192,18 @@ async function connectToRoom() {
         websocket.onclose = () => {
             console.log('🏠 Room connection closed');
             showToast('Room connection lost', 'warning');
+            
+            // Stop call timer
+            if (callTimerInterval) {
+                clearInterval(callTimerInterval);
+                callTimerInterval = null;
+            }
+            callStartTime = null;
+            
+            // Refresh usage from backend (get actual updated value)
+            if (window.auth && window.auth.refreshUsage) {
+                setTimeout(() => window.auth.refreshUsage(), 2000); // Wait 2 sec for backend to update
+            }
         };
         
         websocket.onerror = (error) => {
