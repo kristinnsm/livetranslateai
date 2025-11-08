@@ -17,6 +17,7 @@ from datetime import datetime
 from typing import Dict, List
 import os
 from auth import verify_google_token, create_session_token
+from usage import check_usage_limit, get_usage_info
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -159,6 +160,42 @@ async def google_auth(request: Request):
             {"success": False, "error": str(e)}, 
             status_code=500
         )
+
+@app.get("/api/user/usage")
+async def get_user_usage(request: Request):
+    """Get current user's usage information"""
+    try:
+        # Get user_id from auth header
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return JSONResponse({"error": "Not authorized"}, status_code=401)
+        
+        token = auth_header.replace('Bearer ', '')
+        # For MVP, extract user_id from token (in production, verify JWT)
+        # For now, accept user_id from query param as fallback
+        user_id = request.query_params.get('user_id')
+        
+        if not user_id:
+            return JSONResponse({"error": "User ID required"}, status_code=400)
+        
+        # Find user
+        user = None
+        for google_id, u in users_db.items():
+            if u['user_id'] == user_id:
+                user = u
+                break
+        
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        # Get usage info
+        usage_info = get_usage_info(user)
+        
+        return JSONResponse(usage_info)
+        
+    except Exception as e:
+        logger.error(f"❌ Usage check error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 # Room management endpoints
 @app.post("/api/rooms/create")
@@ -501,8 +538,13 @@ async def websocket_translate(websocket: WebSocket):
 
 @app.websocket("/ws/room/{room_id}")
 async def websocket_room(websocket: WebSocket, room_id: str):
-    """Multi-user room WebSocket for translation"""
+    """Multi-user room WebSocket for translation with usage tracking"""
     logger.info(f"🔌 WebSocket connection request for room {room_id}")
+    
+    # Track call start time for usage billing
+    call_start_time = time.time()
+    current_user_id = None
+    
     try:
         await websocket.accept()
         logger.info(f"✅ WebSocket accepted for room {room_id}")
@@ -646,6 +688,23 @@ async def websocket_room(websocket: WebSocket, room_id: str):
     except Exception as e:
         logger.error(f"Room WebSocket error: {e}")
     finally:
+        # Track usage duration
+        call_duration_seconds = time.time() - call_start_time
+        call_duration_minutes = call_duration_seconds / 60.0
+        
+        logger.info(f"⏱️ Call ended. Duration: {call_duration_minutes:.2f} minutes")
+        
+        # Update user's usage if we have their user_id
+        if current_user_id:
+            for google_id, user in users_db.items():
+                if user.get('user_id') == current_user_id:
+                    user['minutes_used'] += call_duration_minutes
+                    logger.info(f"📊 Updated usage for {user['name']}: {user['minutes_used']:.2f} / {FREE_MINUTES_LIMIT} minutes")
+                    break
+        elif current_participant_id:
+            # Try to find user by participant_id
+            logger.warning(f"⚠️ No user_id for usage tracking, participant: {current_participant_id}")
+        
         # Clean up participant tracking
         websocket_id = id(websocket)
         if websocket_id in websocket_to_participant:
