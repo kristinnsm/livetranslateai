@@ -96,13 +96,18 @@ elements.copyRoomCode.addEventListener('click', copyRoomCode);
  */
 async function startTranslation() {
     try {
-        // Check if user has minutes remaining
-        if (window.auth && window.auth.canStartCall) {
+        // Check if user has minutes remaining (SKIP for guests)
+        const urlParams = new URLSearchParams(window.location.search);
+        const isGuest = urlParams.get('guest') === 'true';
+        
+        if (!isGuest && window.auth && window.auth.canStartCall) {
             const canStart = await window.auth.canStartCall();
             if (!canStart) {
                 console.log('❌ Usage limit reached, cannot start call');
                 return;
             }
+        } else if (isGuest) {
+            console.log('👤 Guest mode - bypassing usage check (host pays)');
         }
         
         // If already recording, ignore (shouldn't happen with button states)
@@ -1241,10 +1246,13 @@ function handleRoomMessage(event) {
 }
 
 function copyRoomCode() {
-    navigator.clipboard.writeText(currentRoom).then(() => {
-        showToast('Room code copied!', 'success');
+    // Always copy the full link, not just the code
+    const fullLink = `${window.location.origin}/room/${currentRoom}`;
+    
+    navigator.clipboard.writeText(fullLink).then(() => {
+        showToast('Room link copied to clipboard!', 'success');
     }).catch(() => {
-        showToast('Failed to copy room code', 'error');
+        showToast('Failed to copy link', 'error');
     });
 }
 
