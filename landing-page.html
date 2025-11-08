@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Break language barriers in real-time. Professional AI voice translation for global teams, tutors, and businesses. 15 languages, instant setup, no interpreters needed.">
+    <meta name="keywords" content="real-time translation, voice translator, AI interpreter, live translation, multilingual meetings, language barrier, business translation">
+    <meta property="og:title" content="LiveTranslateAI - Real-Time Voice Translation for Global Teams">
+    <meta property="og:description" content="Professional AI translation for video calls. 15 languages, HD quality, instant setup. Start free today!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://livetranslateai.com">
+    <meta property="og:image" content="https://livetranslateai.com/og-image.jpg">
+    <title>LiveTranslateAI - Real-Time Voice Translation for Global Teams</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1a202c;
+            background: #ffffff;
+        }
+        
+        /* Header/Navigation */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #667eea;
+        }
+        
+        .btn-login {
+            padding: 0.5rem 1.5rem;
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 8rem 2rem 4rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>') repeat;
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary, .btn-secondary {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: #667eea;
+        }
+        
+        .hero-badges {
+            margin-top: 2rem;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        /* Demo Video Section */
+        .demo-section {
+            padding: 4rem 2rem;
+            background: #f7fafc;
+        }
+        
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .demo-video {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            background: #000;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1a202c;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #718096;
+            margin-bottom: 3rem;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .feature-card p {
+            color: #718096;
+            line-height: 1.7;
+        }
+        
+        /* How It Works */
+        .how-it-works {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #f7fafc 0%, #e6f2ff 100%);
+        }
+        
+        .steps {
+            max-width: 1000px;
+            margin: 3rem auto 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+        
+        .step {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+        
+        .step h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .step p {
+            color: #718096;
+        }
+        
+        /* Use Cases */
+        .use-cases {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .use-case {
+            padding: 2.5rem;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .use-case h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .use-case p {
+            color: #718096;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        
+        .use-case-example {
+            font-style: italic;
+            color: #a0aec0;
+            font-size: 0.95rem;
+        }
+        
+        /* Pricing Section */
+        .pricing {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .pricing-card {
+            background: white;
+            color: #1a202c;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+            position: relative;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .pricing-card.featured {
+            border: 3px solid #fbbf24;
+            transform: scale(1.05);
+        }
+        
+        .featured-badge {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #fbbf24;
+            color: #1a202c;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .price {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            color: #667eea;
+        }
+        
+        .price-period {
+            font-size: 1rem;
+            color: #718096;
+            font-weight: 400;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        
+        .pricing-features li {
+            padding: 0.5rem 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .pricing-features li::before {
+            content: '✓';
+            color: #48bb78;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .btn-pricing {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-pricing:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .testimonial {
+            padding: 2rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .testimonial-text {
+            font-size: 1.1rem;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            line-height: 1.7;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .author-info h4 {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 0.2rem;
+        }
+        
+        .author-info p {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+        
+        /* FAQ */
+        .faq {
+            padding: 5rem 2rem;
+            background: #f7fafc;
+        }
+        
+        .faq-container {
+            max-width: 800px;
+            margin: 3rem auto 0;
+        }
+        
+        .faq-item {
+            background: white;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            padding: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .faq-question:hover {
+            background: #f7fafc;
+        }
+        
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: #718096;
+            line-height: 1.7;
+            display: none;
+        }
+        
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+        
+        .faq-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(45deg);
+        }
+        
+        /* Final CTA */
+        .final-cta {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .final-cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .final-cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 3rem 2rem;
+            background: #1a202c;
+            color: #a0aec0;
+        }
+        
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        
+        .footer-section h3 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section a {
+            color: #a0aec0;
+            text-decoration: none;
+            display: block;
+            padding: 0.3rem 0;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #2d3748;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .pricing-card.featured {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">LiveTranslateAI</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><button class="btn-login" onclick="window.location.href='#'">Login</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Break Language Barriers in Real-Time</h1>
+            <p>Professional AI voice translation for global teams, tutors, and businesses. No interpreters needed.</p>
+            <div class="hero-cta">
+                <a href="https://livetranslateai.netlify.app" class="btn-primary">🚀 Start Free Trial</a>
+                <a href="#demo" class="btn-secondary">▶️ Watch Demo</a>
+            </div>
+            <div class="hero-badges">
+                <div class="badge">✓ 10 minutes free</div>
+                <div class="badge">✓ No credit card required</div>
+                <div class="badge">✓ 15 languages</div>
+                <div class="badge">✓ Instant setup</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Video Section -->
+    <section id="demo" class="demo-section">
+        <div class="demo-container">
+            <h2 class="section-title">See It In Action</h2>
+            <p class="section-subtitle">Watch how LiveTranslateAI translates conversations in real-time</p>
+            <video class="demo-video" controls poster="demo-thumbnail.jpg">
+                <source src="demo-video.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <h2 class="section-title">Everything You Need for Global Communication</h2>
+        <p class="section-subtitle">Powerful features designed for professionals</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>15 Languages</h3>
+                <p>Translate between English, Spanish, French, German, Chinese, Arabic, Russian, Japanese, Korean, Portuguese, Italian, Dutch, Hindi, Turkish, and Vietnamese.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time Translation</h3>
+                <p>Speak naturally and hear translations instantly. Sub-second latency powered by OpenAI's latest models.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎥</div>
+                <h3>HD Video Calls</h3>
+                <p>Built-in video conferencing with crystal-clear audio. See who you're talking to while translations happen live.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>High Accuracy</h3>
+                <p>Industry-leading transcription and translation powered by GPT-4 and Whisper AI. Handles accents and technical terms.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Private & Secure</h3>
+                <p>End-to-end encrypted calls. No conversation recording or data storage. Your privacy is guaranteed.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Works Everywhere</h3>
+                <p>Desktop, mobile, tablet - use any device with a web browser. No app downloads required.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <h2 class="section-title">Get Started in 3 Simple Steps</h2>
+        <p class="section-subtitle">From sign-up to first call in under 60 seconds</p>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Create a Room</h3>
+                <p>Click "Create Room" and choose your languages. Share the room code with your conversation partner.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Start Speaking</h3>
+                <p>Allow microphone access and hit "Start Speaking". Talk naturally in your native language.</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Hear Translation</h3>
+                <p>Your partner hears your words translated instantly in their language. It's that simple!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="use-cases">
+        <h2 class="section-title">Perfect For Every Global Interaction</h2>
+        <p class="section-subtitle">Trusted by professionals across industries</p>
+        
+        <div class="use-cases-grid">
+            <div class="use-case">
+                <h3>👨‍🏫 Language Tutors</h3>
+                <p>Teach students who speak different languages. Explain complex concepts with real-time translation support.</p>
+                <p class="use-case-example">"I can now teach Spanish to Korean students seamlessly!"</p>
+            </div>
+            
+            <div class="use-case">
+                <h3>💼 Business Meetings</h3>
+                <p>Close international deals without hiring expensive interpreters. Professional quality for a fraction of the cost.</p>
+                <p class="use-case-example">"Saved $500/hour on interpretation for client calls."</p>
+            </div>
+            
+            <div class="use-case">
+                <h3>🏥 Telehealth</h3>
+                <p>Provide healthcare services to patients who speak different languages. Clear communication when it matters most.</p>
+                <p class="use-case-example">"Expanded my practice to serve Spanish-speaking patients."</p>
+            </div>
+            
+            <div class="use-case">
+                <h3>🎓 Education</h3>
+                <p>Connect with international students and researchers. Break down language barriers in academic collaboration.</p>
+                <p class="use-case-example">"Our research team collaborates across 5 countries now."</p>
+            </div>
+            
+            <div class="use-case">
+                <h3>👪 Family Calls</h3>
+                <p>Stay connected with family members who speak different languages. Perfect for international families.</p>
+                <p class="use-case-example">"My kids can finally talk to their grandparents in China!"</p>
+            </div>
+            
+            <div class="use-case">
+                <h3>🤝 Customer Support</h3>
+                <p>Serve customers in their native language without multilingual staff. Increase satisfaction and reduce support costs.</p>
+                <p class="use-case-example">"Our customer satisfaction scores increased by 40%."</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="pricing-container">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p class="section-subtitle">Start free, upgrade anytime. No hidden fees.</p>
+            
+            <div class="pricing-grid">
+                <!-- Free Tier -->
+                <div class="pricing-card">
+                    <h3>Free</h3>
+                    <div class="price">$0<span class="price-period">/month</span></div>
+                    <ul class="pricing-features">
+                        <li>10 minutes per month</li>
+                        <li>Up to 2 participants</li>
+                        <li>All 15 languages</li>
+                        <li>HD audio quality</li>
+                        <li>Email support</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="window.location.href='https://livetranslateai.netlify.app'">Start Free</button>
+                </div>
+                
+                <!-- Starter Tier -->
+                <div class="pricing-card featured">
+                    <div class="featured-badge">🔥 Most Popular</div>
+                    <h3>Starter</h3>
+                    <div class="price">$19<span class="price-period">/month</span></div>
+                    <ul class="pricing-features">
+                        <li>300 minutes per month</li>
+                        <li>Up to 3 participants</li>
+                        <li>All 15 languages</li>
+                        <li>HD video + audio</li>
+                        <li>Priority support</li>
+                        <li>No watermark</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="window.location.href='#'">Get Started</button>
+                </div>
+                
+                <!-- Professional Tier -->
+                <div class="pricing-card">
+                    <h3>Professional</h3>
+                    <div class="price">$79<span class="price-period">/month</span></div>
+                    <ul class="pricing-features">
+                        <li>1,500 minutes per month</li>
+                        <li>Up to 10 participants</li>
+                        <li>All 15 languages</li>
+                        <li>HD video + audio</li>
+                        <li>24/7 priority support</li>
+                        <li>Call recording</li>
+                        <li>Transcript export</li>
+                    </ul>
+                    <button class="btn-pricing" onclick="window.location.href='#'">Get Started</button>
+                </div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 2rem; font-size: 1.1rem;">
+                🏢 Need more? <a href="#" style="color: white; text-decoration: underline;">Contact us for Enterprise pricing</a>
+            </p>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <h2 class="section-title">Loved by Professionals Worldwide</h2>
+        <p class="section-subtitle">Join thousands of users breaking language barriers every day</p>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial">
+                <p class="testimonial-text">"Game-changer for my tutoring business! I can now teach students from any country without language barriers. The translation quality is incredible."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">MR</div>
+                    <div class="author-info">
+                        <h4>Maria Rodriguez</h4>
+                        <p>Spanish Tutor, Barcelona</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial">
+                <p class="testimonial-text">"We closed a $50K deal with a Japanese client using LiveTranslateAI. Saved thousands on interpretation and the real-time translation built instant rapport."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">JC</div>
+                    <div class="author-info">
+                        <h4>John Chen</h4>
+                        <p>CEO, TechStartup Inc.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="testimonial">
+                <p class="testimonial-text">"My family is scattered across 3 continents. Now we can all talk together naturally despite speaking different languages. It's brought us closer than ever."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">AP</div>
+                    <div class="author-info">
+                        <h4>Ahmed Patel</h4>
+                        <p>Software Engineer, Dubai</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="faq">
+        <h2 class="section-title">Frequently Asked Questions</h2>
+        
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    How accurate is the translation?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    Our translations are powered by OpenAI's GPT-4 and Whisper AI, achieving 85-95% accuracy depending on language pair and audio quality. We handle accents, technical terms, and conversational language exceptionally well.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    Is my conversation private?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    Absolutely. We use in-memory processing only - no conversations are recorded or stored on our servers. All audio is processed in real-time and immediately discarded. Your privacy is our #1 priority.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    What devices can I use?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    LiveTranslateAI works on any device with a modern web browser - desktop, laptop, tablet, or smartphone. Chrome is recommended for the best experience, but Firefox, Safari, and Edge are also supported.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    How fast is the translation?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    Translation latency is typically under 1 second in realtime mode and 3-5 seconds in traditional mode. This means near-instant communication, allowing for natural conversation flow.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    Can I cancel anytime?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    Yes! No contracts or commitments. Cancel your subscription anytime with one click. You'll keep access until the end of your billing period.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    Do you offer refunds?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    We offer a 30-day money-back guarantee, no questions asked. If you're not satisfied for any reason, we'll refund your entire payment.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <h2>Ready to Break Language Barriers?</h2>
+        <p>Join thousands of professionals communicating globally with AI-powered translation</p>
+        <a href="https://livetranslateai.netlify.app" class="btn-primary" style="display: inline-block; margin-top: 1rem;">🚀 Start Your Free Trial</a>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">10 minutes free • No credit card required • Cancel anytime</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Product</h3>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#">Roadmap</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Company</h3>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">GDPR</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Connect</h3>
+                <ul>
+                    <li><a href="#">Twitter</a></li>
+                    <li><a href="#">LinkedIn</a></li>
+                    <li><a href="#">Facebook</a></li>
+                    <li><a href="#">support@livetranslateai.com</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 LiveTranslateAI. All rights reserved. Made with ❤️ for global communication.</p>
+        </div>
+    </footer>
+
+    <!-- Simple FAQ Toggle Script -->
+    <script>
+        // FAQ Toggle - Already handled inline, but adding for consistency
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                question.parentElement.classList.toggle('active');
+            });
+        });
+        
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
