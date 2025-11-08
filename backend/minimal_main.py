@@ -18,6 +18,11 @@ from typing import Dict, List
 import os
 from auth import verify_google_token, create_session_token
 from usage import check_usage_limit, get_usage_info
+from database import (
+    init_database, create_user, get_user_by_google_id, 
+    get_user_by_user_id, update_user_usage, update_user_last_login,
+    check_fingerprint_used, update_user_tier
+)
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -44,11 +49,23 @@ active_connections: Dict[str, List[WebSocket]] = {}
 participant_connections: Dict[str, WebSocket] = {}  # participant_id -> websocket
 websocket_to_participant: Dict[int, str] = {}  # websocket_id (id(websocket)) -> participant_id (reverse lookup)
 
-# User management (in-memory for MVP - replace with database later)
-users_db: Dict[str, Dict] = {}  # google_id -> user_data
-used_fingerprints: Dict[str, str] = {}  # fingerprint -> google_id (for abuse detection)
-
 FREE_MINUTES_LIMIT = 15  # Reduced from 30 to prevent abuse
+
+# Initialize database on startup
+try:
+    if os.getenv('DATABASE_URL'):
+        init_database()
+        logger.info("✅ Database initialized successfully")
+    else:
+        logger.warning("⚠️ DATABASE_URL not set - using in-memory storage (data will be lost on restart!)")
+        # Fallback to in-memory for development
+        users_db: Dict[str, Dict] = {}
+        used_fingerprints: Dict[str, str] = {}
+except Exception as e:
+    logger.error(f"❌ Database initialization failed: {e}")
+    logger.warning("⚠️ Falling back to in-memory storage")
+    users_db: Dict[str, Dict] = {}
+    used_fingerprints: Dict[str, str] = {}
 
 # CORS
 app.add_middleware(
@@ -100,43 +117,36 @@ async def google_auth(request: Request):
         
         google_id = user_info['google_id']
         
-        # Check if user exists
-        if google_id not in users_db:
-            # Check if fingerprint was already used by DIFFERENT user (abuse detection)
-            if fingerprint in used_fingerprints:
-                existing_user_id = used_fingerprints[fingerprint]
-                if existing_user_id != google_id:
-                    logger.warning(f"⚠️ Fingerprint {fingerprint} already used by different account. Possible abuse.")
-                    # Still allow, but flag it
-                    abuse_flag = True
-                else:
-                    abuse_flag = False
-            else:
-                abuse_flag = False
-                used_fingerprints[fingerprint] = google_id
-            # Create new user
+        # Check if user exists in database
+        user = get_user_by_google_id(google_id)
+        
+        if not user:
+            # Check if fingerprint was already used (abuse detection)
+            existing_google_id = check_fingerprint_used(fingerprint)
+            abuse_flag = existing_google_id and existing_google_id != google_id
+            
+            if abuse_flag:
+                logger.warning(f"⚠️ Fingerprint {fingerprint} already used by different account. Possible abuse.")
+            
+            # Create new user in database
             user_id = str(uuid.uuid4())
-            users_db[google_id] = {
+            user_data = {
                 "user_id": user_id,
                 "google_id": google_id,
                 "email": user_info['email'],
                 "name": user_info['name'],
-                "picture": user_info['picture'],
-                "tier": "free",  # Default tier
-                "minutes_used": 0.0,
+                "picture": user_info.get('picture', ''),
+                "tier": "free",
                 "fingerprint": fingerprint,
                 "ip_address": client_ip,
-                "abuse_flagged": abuse_flag,
-                "created_at": datetime.utcnow().isoformat(),
-                "last_login": datetime.utcnow().isoformat()
+                "abuse_flagged": abuse_flag
             }
-            logger.info(f"✅ New user created: {user_info['name']} ({user_info['email']}) - Abuse flagged: {abuse_flag}")
+            user = create_user(user_data)
+            logger.info(f"✅ New user created in DB: {user['name']} - Abuse flagged: {abuse_flag}")
         else:
             # Update last login
-            users_db[google_id]['last_login'] = datetime.utcnow().isoformat()
-            logger.info(f"✅ Existing user logged in: {users_db[google_id]['name']}")
-        
-        user = users_db[google_id]
+            update_user_last_login(google_id)
+            logger.info(f"✅ Existing user logged in from DB: {user['name']}")
         
         # Create session token
         session_token = create_session_token(user['user_id'])
@@ -172,20 +182,13 @@ async def get_user_usage(request: Request):
             return JSONResponse({"error": "User ID required"}, status_code=400)
         
         logger.info(f"📊 Usage check for user_id: {user_id}")
-        logger.info(f"📊 Current users_db has {len(users_db)} users")
         
-        # Find user
-        user = None
-        for google_id, u in users_db.items():
-            if u.get('user_id') == user_id:
-                user = u
-                logger.info(f"✅ Found user: {u.get('name')}")
-                break
+        # Get user from database
+        user = get_user_by_user_id(user_id)
         
         if not user:
-            logger.warning(f"⚠️ User {user_id} not found. Available users: {[u.get('name') for u in users_db.values()]}")
-            # Return default free tier info instead of 404
-            # This handles the case where users_db was reset (in-memory storage)
+            logger.warning(f"⚠️ User {user_id} not found in database")
+            # Return default instead of error
             return JSONResponse({
                 "tier": "free",
                 "minutes_used": 0.0,
@@ -194,7 +197,7 @@ async def get_user_usage(request: Request):
                 "percentage_used": 0,
                 "can_use": True,
                 "status": "ok",
-                "note": "Session not found - showing default. Please logout and login again for accurate tracking."
+                "note": "Session not found. Please logout and login again."
             })
         
         # Get usage info
@@ -216,17 +219,14 @@ async def create_room(request: Request):
         
         logger.info(f"🏠 POST /api/rooms/create - Creating new room for user: {user_id}")
         
-        # Find the HOST user
-        host_user = None
-        for google_id, user in users_db.items():
-            if user['user_id'] == user_id:
-                host_user = user
-                break
+        # Get HOST user from database
+        host_user = get_user_by_user_id(user_id)
         
         if not host_user:
-            logger.warning(f"⚠️ Room creation without valid user: {user_id}")
-            # Allow for backward compatibility, but log it
-            host_user = {"name": "Host", "tier": "free", "minutes_used": 0}
+            logger.error(f"❌ User {user_id} not found in database")
+            return JSONResponse({
+                "error": "User not found. Please logout and login again."
+            }, status_code=404)
         
         # Check if HOST has minutes remaining (for free tier)
         if host_user.get('tier') == 'free':
@@ -738,17 +738,20 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         logger.info(f"⏱️ Call ended. Duration: {call_duration_minutes:.2f} minutes")
         
         # Track usage for HOST only (not guests)
-        # Find the room's HOST and update their usage
+        # Find the room's HOST and update their usage in database
         if room_id in rooms:
             host_user_id = rooms[room_id].get('host_user_id')
             
             if host_user_id:
-                # Find HOST user and update their usage
-                for google_id, user in users_db.items():
-                    if user.get('user_id') == host_user_id:
-                        user['minutes_used'] += call_duration_minutes
-                        logger.info(f"📊 Updated HOST usage for {user['name']}: {user['minutes_used']:.2f} / {FREE_MINUTES_LIMIT} minutes (call duration: {call_duration_minutes:.2f} min)")
-                        break
+                try:
+                    # Update usage in database (persistent!)
+                    updated_user = update_user_usage(host_user_id, call_duration_minutes)
+                    if updated_user:
+                        logger.info(f"📊 Updated HOST usage in DB: {updated_user['name']} now at {updated_user['minutes_used']:.2f} / {FREE_MINUTES_LIMIT} minutes")
+                    else:
+                        logger.warning(f"⚠️ Could not update usage for user {host_user_id}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to update usage in DB: {e}")
             else:
                 logger.warning(f"⚠️ Room {room_id} has no host_user_id for usage tracking")
         
