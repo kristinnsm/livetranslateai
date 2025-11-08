@@ -119,32 +119,43 @@ function checkAuthStatus() {
 // Update UI based on auth state
 function updateAuthUI(isLoggedIn) {
     const authContainer = document.getElementById('auth-container');
-    const appContainer = document.getElementById('app-container');
     const userInfo = document.getElementById('user-info');
     
+    console.log('🎨 Updating UI, logged in:', isLoggedIn, 'User:', currentUser);
+    
     if (isLoggedIn && currentUser) {
-        // Hide login, show app
-        if (authContainer) authContainer.style.display = 'none';
-        if (appContainer) appContainer.style.display = 'block';
+        // Hide auth overlay
+        if (authContainer) {
+            authContainer.style.display = 'none';
+        }
         
-        // Show user info
+        // Show user info bar
         if (userInfo) {
+            userInfo.style.display = 'block';
             userInfo.innerHTML = `
                 <div class="user-profile">
                     <img src="${currentUser.picture}" alt="${currentUser.name}" class="user-avatar">
                     <div class="user-details">
                         <div class="user-name">${currentUser.name}</div>
                         <div class="user-email">${currentUser.email}</div>
+                        <div class="user-tier">Free Tier - ${(30 - currentUser.minutes_used).toFixed(1)} min remaining</div>
                     </div>
-                    <button onclick="logout()" class="btn-logout">Logout</button>
+                    <button onclick="auth.logout()" class="btn-logout">Logout</button>
                 </div>
             `;
+            console.log('✅ User info displayed');
+        } else {
+            console.warn('⚠️ User info element not found');
         }
     } else {
-        // Show login, hide app
-        if (authContainer) authContainer.style.display = 'flex';
-        if (appContainer) appContainer.style.display = 'none';
-        if (userInfo) userInfo.innerHTML = '';
+        // Show login overlay
+        if (authContainer) {
+            authContainer.style.display = 'flex';
+        }
+        if (userInfo) {
+            userInfo.style.display = 'none';
+            userInfo.innerHTML = '';
+        }
     }
 }
 

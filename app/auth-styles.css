@@ -47,15 +47,14 @@
 
 /* User Info Bar */
 .user-info-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
+    position: relative;
+    background: rgba(8, 145, 178, 0.1);
     backdrop-filter: blur(10px);
-    padding: 0.75rem 2rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 9999;
+    padding: 1rem 2rem;
+    margin-bottom: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(8, 145, 178, 0.2);
 }
 
 .user-profile {
@@ -81,11 +80,19 @@
 .user-name {
     font-weight: 600;
     color: #1f2937;
+    font-size: 1rem;
 }
 
 .user-email {
     font-size: 0.85rem;
     color: #6b7280;
+}
+
+.user-tier {
+    font-size: 0.85rem;
+    color: #0891B2;
+    font-weight: 600;
+    margin-top: 0.2rem;
 }
 
 .btn-logout {
