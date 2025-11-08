@@ -1,9 +1,13 @@
 [build]
   publish = "."
   command = "echo 'No build step needed for static site'"
-
+  
 [build.environment]
   NODE_VERSION = "18"
+  
+# Skip Python/pip installation (backend runs on Render)
+[build.processing]
+  skip_processing = false
 
 [[redirects]]
   from = "http://livetranslateai.com/*"

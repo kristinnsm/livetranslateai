@@ -1,19 +1,7 @@
-# Backend files (not needed for frontend deployment)
-backend/
+# Ignore backend files (backend runs on Render, not Netlify)
 requirements.txt
-runtime.txt
-start.py
-render.yaml
+backend/
 *.py
-*.pyc
 __pycache__/
+*.pyc
 venv/
-.env
-.env.*
-
-# Development files
-.git/
-.gitignore
-README.md
-SAAS_ROADMAP.md
-ZOOM_TEAMS_SETUP.md
