@@ -60,14 +60,30 @@
 - **Auto-converts to Starter after 7 days** (can cancel anytime)
 - **Goal**: High-quality signups, prevent abuse, maximize conversion
 
-#### **STARTER TIER** - $19/month
-- **300 minutes/month** (~5 hours)
+#### **STARTER TIER** - $19/month (or $190/year)
+- **300 minutes/month** (~5 hours) OR **Unlimited** (test both)
 - Up to 3 participants per call
 - All 15 languages
-- HD audio quality
-- Email support
+- HD video + audio
+- Email support (24-48 hour response)
 - No watermark
+- Call history (last 30 days)
 - **Target**: Freelancers, tutors, small teams
+
+**Tier Limitation Options:**
+
+| Approach | Pros | Cons | Recommendation |
+|----------|------|------|----------------|
+| **Unlimited everything at $19** | Simple, attractive, no tracking needed | Higher costs for power users | ✅ **Best for MVP** |
+| **300 min/month limit** | Predictable costs, upsell opportunity | Requires usage tracking, more complex | Later phase |
+| **Pay-per-minute overages** | Fair pricing, scales with usage | Billing complexity, surprise charges | Avoid for now |
+
+**MVP Recommendation: Start with UNLIMITED at $19/month**
+- Simple to explain: "One price, use as much as you need"
+- No usage tracking needed (faster to launch)
+- Learn actual usage patterns first
+- Add limits later if costs get too high
+- Easy marketing: "Unlimited calls, unlimited minutes, $19"
 
 #### **PROFESSIONAL TIER** - $79/month
 - **1,500 minutes/month** (~25 hours)
@@ -145,14 +161,155 @@
 
 ---
 
-## 🎁 Launch Pricing Strategy
+## 💰 Annual Pricing Option
+
+### **Monthly vs Annual:**
+
+| Plan | Monthly | Annual | Annual Savings |
+|------|---------|--------|----------------|
+| **Starter** | $19/month | $190/year | $38/year (17% off) |
+| **Professional** | $79/month | $790/year | $158/year (17% off) |
+
+**Benefits of Annual:**
+- ✅ **Cash flow**: Get 12 months revenue upfront
+- ✅ **Lower churn**: Committed for full year
+- ✅ **Higher LTV**: $190 vs $19 × avg 6-8 months = $114-152
+- ✅ **Industry standard**: 15-20% annual discount is expected
+
+**Recommendation**: Offer both, but highlight annual savings in pricing table.
+
+---
+
+## 🔄 Cancellation & Retention Strategy
+
+### **Cancellation Flow:**
+
+When user clicks "Cancel" during trial or after:
+
+**Step 1: Survey** (Understand why)
+- "Why are you canceling?" (Multiple choice + optional text)
+  - ☐ Too expensive
+  - ☐ Don't need it anymore  
+  - ☐ Technical issues
+  - ☐ Found another solution
+  - ☐ Not enough usage
+  - ☐ Other: ___________
+
+**Step 2: Retention Offer** (50% OFF for 3 months)
+```
+╔═══════════════════════════════════════╗
+║  Wait! Here's an Exclusive Offer      ║
+║                                       ║
+║  Get 50% OFF for the next 3 months   ║
+║  $9.50/month (instead of $19)        ║
+║                                       ║
+║  ✓ All features included              ║
+║  ✓ Cancel anytime                     ║
+║  ✓ Regular price resumes after 3 mo   ║
+║                                       ║
+║  [Accept Offer] [No Thanks, Cancel]   ║
+╚═══════════════════════════════════════╝
+```
+
+**Step 3: Confirm Cancellation**
+- "We're sad to see you go! You're always welcome back."
+- Send confirmation email with:
+  - Reason for leaving (their survey response)
+  - Easy reactivation link
+  - What they'll miss out on
+
+### **Retention Math:**
+
+| Scenario | Cancelers/Month | Accept Offer (30%) | Revenue Saved |
+|----------|-----------------|-------------------|---------------|
+| **Month 3** | 20 | 6 | $171/month |
+| **Month 6** | 40 | 12 | $342/month |
+| **Month 12** | 80 | 24 | $684/month |
+
+**After 3-month discount period:**
+- ~50% convert to full price ($19/month)
+- ~30% cancel again (but you got $28.50)
+- ~20% request another extension (offer annual at discount)
+
+**Net Result:** $28.50 - $85.50 per "saved" customer instead of $0
+
+---
+
+## 🚀 MVP Launch Strategy: ONE TIER ONLY
+
+### **Why Start with Just One Tier?**
+
+| Reason | Benefit |
+|--------|---------|
+| **Simplicity** | Easy to explain: "Try free, then $19/month" |
+| **Focus** | All users on same plan = easier support |
+| **Price validation** | Learn if $19 is too high/low |
+| **Faster launch** | No tier comparison, no feature gating |
+| **Higher conversion** | No analysis paralysis ("which tier?") |
+
+### **Phase 1 Launch (Weeks 1-8):**
+```
+┌─────────────────────────────────────────┐
+│  7-Day Free Trial                       │
+│  ↓                                      │
+│  $19/month or $190/year UNLIMITED      │
+│  (No Professional tier yet)             │
+└─────────────────────────────────────────┘
+```
+
+**What's included:**
+- ✅ Unlimited minutes
+- ✅ Up to 3 participants per call
+- ✅ All 15 languages
+- ✅ HD video + audio
+- ✅ Call history (30 days)
+- ✅ Email support
+
+**What's NOT included (yet):**
+- ❌ Call recording
+- ❌ Transcript export
+- ❌ 10+ participants
+- ❌ API access
+- ❌ White-label
+
+### **Phase 2: Add Professional Tier (Month 3+)**
+
+Only add after you:
+- ✅ Have 50+ paying customers
+- ✅ Understand actual usage patterns
+- ✅ Get requests for missing features
+- ✅ Validate $19 price point
+
+**Then launch:**
+- **Professional**: $79/month ($790/year)
+  - Everything in Starter, PLUS:
+  - Call recording
+  - Transcript export (.txt, .vtt)
+  - Up to 10 participants
+  - Priority support (4-hour response)
+  - Advanced analytics
+
+### **Phase 3: Add Enterprise (Month 6+)**
+
+When you have 5+ companies asking for:
+- White-label branding
+- 25+ participants
+- On-premise deployment
+- Custom contracts
+- Dedicated support
+
+**Custom pricing**: $500-2000/month based on needs
+
+---
+
+## 🎁 Launch Promotions
 
 ### **Pre-Launch Offers** (First 100 Customers):
-1. **Lifetime Founder's Deal**: $99 one-time = Starter forever
-2. **50% Off First Year**: Professional for $39/month (Year 1)
+1. **Lifetime Founder's Deal**: $99 one-time = Starter forever (limited spots)
+2. **Annual discount**: $190/year (save $38, or 17%)
 3. **Money-back guarantee**: 30 days, no questions asked
 
-### **Referral Program**:
+### **Referral Program** (Launch after 50 customers):
 - **Give $10, Get $10**: Both parties get $10 credit
 - **Affiliate program**: 20% recurring commission for first 12 months
 
