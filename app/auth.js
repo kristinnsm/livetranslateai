@@ -184,7 +184,9 @@ function updateAuthUI(isLoggedIn) {
                     <div class="user-details">
                         <div class="user-name">${currentUser.name}</div>
                         <div class="user-email">${currentUser.email}</div>
-                        <div class="user-tier">Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining</div>
+                        <div class="user-tier">${currentUser.minutes_used > FREE_MINUTES_LIMIT 
+                            ? `Free Tier - Over limit (${currentUser.minutes_used.toFixed(1)} min used)` 
+                            : `Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining`}</div>
                     </div>
                     <button onclick="auth.logout()" class="btn-logout">Logout</button>
                 </div>
