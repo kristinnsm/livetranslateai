@@ -96,6 +96,15 @@ elements.copyRoomCode.addEventListener('click', copyRoomCode);
  */
 async function startTranslation() {
     try {
+        // Check if user has minutes remaining
+        if (window.auth && window.auth.canStartCall) {
+            const canStart = await window.auth.canStartCall();
+            if (!canStart) {
+                console.log('❌ Usage limit reached, cannot start call');
+                return;
+            }
+        }
+        
         // If already recording, ignore (shouldn't happen with button states)
         if (isRecording) {
             console.log('Already recording');
