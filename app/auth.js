@@ -273,8 +273,26 @@ function getAuthToken() {
 
 // Show upgrade modal
 function showUpgradeModal() {
-    alert('Upgrade flow coming soon! This will redirect to Stripe checkout for 7-day trial.');
-    // TODO: Implement Stripe checkout
+    const user = getCurrentUser();
+    const minutesUsed = user ? user.minutes_used.toFixed(1) : '15';
+    
+    const message = `
+🎉 You've used your ${minutesUsed} free minutes!
+
+Ready for unlimited access?
+
+✅ Start 7-day FREE trial
+✅ Unlimited calls during trial
+✅ No charge for 7 days
+✅ Then $29/month (cancel anytime)
+
+Add your credit card to continue.
+`;
+    
+    if (confirm(message)) {
+        // TODO: Redirect to Stripe checkout
+        alert('Stripe checkout coming soon! For now, please contact support@livetranslateai.com to upgrade.');
+    }
 }
 
 // Initialize on page load
@@ -287,6 +305,13 @@ window.addEventListener('load', () => {
     // If not logged in, init Google button
     if (!isLoggedIn) {
         initGoogleAuth();
+    } else {
+        // If logged in, refresh usage every 30 seconds
+        setInterval(async () => {
+            if (isAuthenticated()) {
+                await refreshUsage();
+            }
+        }, 30000); // Every 30 seconds
     }
 });
 
