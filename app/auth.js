@@ -284,27 +284,51 @@ function getAuthToken() {
     return localStorage.getItem('auth_token');
 }
 
-// Show upgrade modal
+// Show upgrade modal (beautiful UI, not ugly alert)
 function showUpgradeModal() {
     const user = getCurrentUser();
-    const minutesUsed = user ? user.minutes_used.toFixed(1) : '15';
+    const minutesUsed = user ? user.minutes_used.toFixed(1) : '15.0';
     
-    const message = `
-🎉 You've used your ${minutesUsed} free minutes!
-
-Ready for unlimited access?
-
-✅ Start 7-day FREE trial
-✅ Unlimited calls during trial
-✅ No charge for 7 days
-✅ Then $29/month (cancel anytime)
-
-Add your credit card to continue.
-`;
+    // Update modal with actual usage
+    const modalMinutesElem = document.getElementById('modalMinutesUsed');
+    if (modalMinutesElem) {
+        modalMinutesElem.textContent = minutesUsed;
+    }
     
-    if (confirm(message)) {
-        // TODO: Redirect to Stripe checkout
-        alert('Stripe checkout coming soon! For now, please contact support@livetranslateai.com to upgrade.');
+    // Show modal
+    const modal = document.getElementById('upgradeModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        console.log('🎉 Showing upgrade modal');
+    }
+    
+    // Set up button handlers (only once)
+    const upgradeBtn = document.getElementById('upgradeNowBtn');
+    const laterBtn = document.getElementById('upgradeLaterBtn');
+    
+    if (upgradeBtn && !upgradeBtn.hasClickListener) {
+        upgradeBtn.addEventListener('click', () => {
+            console.log('💳 User clicked Start Free Trial');
+            hideUpgradeModal();
+            // TODO: Redirect to Stripe checkout
+            alert('Stripe checkout coming soon! For now, email support@livetranslateai.com to upgrade.');
+        });
+        upgradeBtn.hasClickListener = true;
+    }
+    
+    if (laterBtn && !laterBtn.hasClickListener) {
+        laterBtn.addEventListener('click', () => {
+            console.log('⏭️ User clicked Maybe Later');
+            hideUpgradeModal();
+        });
+        laterBtn.hasClickListener = true;
+    }
+}
+
+function hideUpgradeModal() {
+    const modal = document.getElementById('upgradeModal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 

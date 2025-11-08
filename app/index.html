@@ -6,6 +6,7 @@
     <title>LiveTranslateAI - Real-Time Voice Translation for Business</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth-styles.css">
+    <link rel="stylesheet" href="upgrade-modal.css">
     <!-- Daily.co Video SDK -->
     <script src="https://unpkg.com/@daily-co/daily-js@0.66.0/dist/daily-iframe.js"></script>
     <!-- Auth Script -->
@@ -251,6 +252,36 @@
 
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="upgrade-modal-overlay" style="display: none;">
+        <div class="upgrade-modal">
+            <div class="upgrade-modal-header">
+                <div class="upgrade-modal-icon">🎉</div>
+                <h2>You've Used Your Free Minutes!</h2>
+                <p>Ready for unlimited access?</p>
+            </div>
+            <div class="upgrade-modal-body">
+                <div class="usage-summary">
+                    You've used <strong id="modalMinutesUsed">15.0</strong> minutes
+                </div>
+                <ul class="benefits-list">
+                    <li>Start 7-day FREE trial</li>
+                    <li>Unlimited calls during trial</li>
+                    <li>No charge for 7 days</li>
+                    <li>Then $29/month</li>
+                    <li>Cancel anytime (instant)</li>
+                </ul>
+                <div class="upgrade-modal-actions">
+                    <button id="upgradeNowBtn" class="btn-upgrade-primary">Start Free Trial</button>
+                    <button id="upgradeLaterBtn" class="btn-upgrade-secondary">Maybe Later</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                💳 Secure payment via Stripe • No commitment
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="guest-init.js"></script>

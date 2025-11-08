@@ -1,0 +1,198 @@
+/* Upgrade Modal Styles */
+
+.upgrade-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    padding: 2rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.upgrade-modal {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.upgrade-modal-header {
+    background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+    color: white;
+}
+
+.upgrade-modal-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 0.6s ease;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.upgrade-modal-header h2 {
+    font-size: 1.8rem;
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+}
+
+.upgrade-modal-header p {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.upgrade-modal-body {
+    padding: 2rem;
+}
+
+.usage-summary {
+    background: #F3F4F6;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.usage-summary strong {
+    color: #4F46E5;
+    font-size: 1.3rem;
+}
+
+.benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.benefits-list li {
+    padding: 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #374151;
+    font-size: 1rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.benefits-list li:last-child {
+    border-bottom: none;
+}
+
+.benefits-list li::before {
+    content: '✓';
+    background: #10B981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.upgrade-modal-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-upgrade-primary {
+    flex: 1;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.btn-upgrade-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.btn-upgrade-secondary {
+    flex: 1;
+    padding: 1rem 2rem;
+    background: transparent;
+    color: #6B7280;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-upgrade-secondary:hover {
+    border-color: #4F46E5;
+    color: #4F46E5;
+}
+
+.modal-footer {
+    text-align: center;
+    padding: 0 2rem 2rem;
+    font-size: 0.85rem;
+    color: #9CA3AF;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .upgrade-modal {
+        max-width: 90%;
+    }
+    
+    .upgrade-modal-header {
+        padding: 2rem 1.5rem 1.5rem;
+    }
+    
+    .upgrade-modal-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .upgrade-modal-body {
+        padding: 1.5rem;
+    }
+    
+    .upgrade-modal-actions {
+        flex-direction: column;
+    }
+}
+
