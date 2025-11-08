@@ -117,6 +117,12 @@ async function handleGoogleLogin(response) {
             updateUsageDisplay(data.user);
             
         } else {
+            // Handle specific error cases
+            if (data.abuse_detected) {
+                alert('⚠️ Free Trial Already Used\n\nThis device has already been used for a free trial.\n\nOptions:\n1. Login with your existing account\n2. Start 7-day trial (card required)\n3. Upgrade to unlimited for $29/month\n\nContact support@livetranslateai.com if you believe this is an error.');
+                showAuthLoading(false);
+                return;
+            }
             throw new Error(data.error || 'Login failed');
         }
     } catch (error) {
