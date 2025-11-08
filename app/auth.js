@@ -127,8 +127,21 @@ async function handleGoogleLogin(response) {
     }
 }
 
-// Check if user is already logged in
+// Check if user is already logged in OR if guest mode
 function checkAuthStatus() {
+    // Check if guest mode (from URL params)
+    const urlParams = new URLSearchParams(window.location.search);
+    const isGuest = urlParams.get('guest') === 'true';
+    
+    if (isGuest) {
+        console.log('👤 Guest mode detected - bypassing auth');
+        // Hide auth overlay for guests
+        const authContainer = document.getElementById('auth-container');
+        if (authContainer) authContainer.style.display = 'none';
+        return true; // Allow access
+    }
+    
+    // Normal auth check
     const token = localStorage.getItem('auth_token');
     const userStr = localStorage.getItem('user');
     
