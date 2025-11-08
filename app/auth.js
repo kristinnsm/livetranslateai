@@ -119,7 +119,7 @@ async function handleGoogleLogin(response) {
         } else {
             // Handle specific error cases
             if (data.abuse_detected) {
-                alert('⚠️ Free Trial Already Used\n\nThis device has already been used for a free trial.\n\nOptions:\n1. Login with your existing account\n2. Start 7-day trial (card required)\n3. Upgrade to unlimited for $29/month\n\nContact support@livetranslateai.com if you believe this is an error.');
+                showAbuseModal();
                 showAuthLoading(false);
                 return;
             }
@@ -307,16 +307,7 @@ function getAuthToken() {
 
 // Show upgrade modal (beautiful UI, not ugly alert)
 function showUpgradeModal() {
-    const user = getCurrentUser();
-    const minutesUsed = user ? user.minutes_used.toFixed(1) : '15.0';
-    
-    // Update modal with actual usage
-    const modalMinutesElem = document.getElementById('modalMinutesUsed');
-    if (modalMinutesElem) {
-        modalMinutesElem.textContent = minutesUsed;
-    }
-    
-    // Show modal
+    // Show modal (no need to update minutes - we removed that confusing text)
     const modal = document.getElementById('upgradeModal');
     if (modal) {
         modal.style.display = 'flex';
@@ -360,6 +351,55 @@ function hideUpgradeModal() {
         modal.style.display = 'none';
     }
 }
+
+// Show abuse detection modal (beautiful custom UI, not ugly alert)
+function showAbuseModal() {
+    // Create modal HTML
+    const modalHTML = `
+        <div id="abuseModal" class="upgrade-modal-overlay" style="display: flex;">
+            <div class="upgrade-modal" style="max-width: 500px;">
+                <div class="upgrade-modal-header" style="background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);">
+                    <div class="upgrade-modal-icon">⚠️</div>
+                    <h2>Free Trial Already Used</h2>
+                    <p>This device has already been used for a free trial.</p>
+                </div>
+                <div class="upgrade-modal-body">
+                    <p style="text-align: center; color: #64748b; margin-bottom: 1.5rem;">
+                        We've detected that this device already claimed the free 15 minutes. To continue using LiveTranslateAI:
+                    </p>
+                    <ul class="benefits-list">
+                        <li>Login with your existing Google account</li>
+                        <li>Start 7-day unlimited trial (card required)</li>
+                        <li>Upgrade to Premium ($29/month unlimited)</li>
+                    </ul>
+                    <p style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 1.5rem;">
+                        Believe this is an error? Contact <a href="mailto:support@livetranslateai.com" style="color: #4F46E5;">support@livetranslateai.com</a>
+                    </p>
+                    <div class="upgrade-modal-actions">
+                        <button onclick="hideAbuseModal()" class="btn-upgrade-secondary" style="width: 100%;">Got It</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add to page if not exists
+    if (!document.getElementById('abuseModal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    } else {
+        document.getElementById('abuseModal').style.display = 'flex';
+    }
+}
+
+function hideAbuseModal() {
+    const modal = document.getElementById('abuseModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Make it globally accessible
+window.hideAbuseModal = hideAbuseModal;
 
 // Initialize on page load
 window.addEventListener('load', () => {
