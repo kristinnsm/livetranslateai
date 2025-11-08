@@ -3,6 +3,10 @@ fastapi==0.115.0
 uvicorn[standard]==0.32.0
 python-dotenv==1.0.1
 
+# Authentication  
+google-auth==2.43.0
+PyJWT==2.10.1
+
 # WebSocket & Async
 websockets==13.1
 python-socketio==5.11.4
