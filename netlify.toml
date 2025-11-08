@@ -1,5 +1,5 @@
 [build]
-  publish = "frontend"
+  publish = "."
   command = "echo 'No build step needed for static site'"
 
 [build.environment]
