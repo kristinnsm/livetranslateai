@@ -7,8 +7,8 @@ python-dotenv==1.0.1
 google-auth==2.43.0
 PyJWT==2.10.1
 
-# Database
-psycopg2-binary==2.9.9
+# Database (psycopg 3 - Python 3.13 compatible)
+psycopg[binary]==3.2.3
 
 # WebSocket & Async
 websockets==13.1
