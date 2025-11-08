@@ -577,25 +577,115 @@ function handlePaymentStatus() {
     const payment = urlParams.get('payment');
     
     if (payment === 'success') {
-        console.log('✅ Payment successful!');
-        // Show success message
-        setTimeout(() => {
-            alert('🎉 Welcome to LiveTranslateAI Pro! Your 7-day free trial has started. You now have unlimited calls!');
-            // Refresh usage to show new tier
-            refreshUsage();
+        console.log('✅ Payment successful! Refreshing user data...');
+        
+        // FORCE logout and re-fetch from database to get updated tier
+        setTimeout(async () => {
+            console.log('🔄 Forcing data refresh from database...');
+            
+            // Clear localStorage to force fresh fetch
+            const authToken = localStorage.getItem('auth_token');
+            const userStr = localStorage.getItem('user');
+            
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                
+                // Fetch fresh user data from backend
+                const backendUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000'
+                    : 'https://livetranslateai.onrender.com';
+                
+                try {
+                    const response = await fetch(`${backendUrl}/api/user/usage?user_id=${user.user_id}`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    });
+                    
+                    if (response.ok) {
+                        const freshData = await response.json();
+                        console.log('🔄 Fresh user data:', freshData);
+                        
+                        // Update localStorage with fresh tier
+                        user.tier = freshData.tier;
+                        user.minutes_used = freshData.minutes_used;
+                        localStorage.setItem('user', JSON.stringify(user));
+                        currentUser = user;
+                        
+                        // Update UI
+                        updateAuthUI(true);
+                        
+                        // Show success modal (beautiful, not ugly alert)
+                        showPaymentSuccessModal();
+                    }
+                } catch (error) {
+                    console.error('❌ Failed to refresh user data:', error);
+                    // Fallback: Force logout/login
+                    alert('🎉 Payment successful! Please logout and login again to see your Premium status.');
+                }
+            }
+            
             // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
-        }, 1000);
+        }, 1500); // Wait 1.5 sec for webhook to process
+        
     } else if (payment === 'cancelled') {
         console.log('❌ Payment cancelled');
-        // Show cancelled message
+        // Show cancelled message with toast (not ugly alert)
         setTimeout(() => {
-            alert('Payment cancelled. You can upgrade anytime from your profile.');
+            showToast('Payment cancelled. You can upgrade anytime from your profile.', 'info', 5000);
             // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }, 1000);
     }
 }
+
+// Show payment success modal (beautiful custom UI)
+function showPaymentSuccessModal() {
+    const modalHTML = `
+        <div id="successModal" class="upgrade-modal-overlay" style="display: flex;">
+            <div class="upgrade-modal" style="max-width: 500px;">
+                <div class="upgrade-modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                    <div class="upgrade-modal-icon">🎉</div>
+                    <h2>Welcome to LiveTranslateAI Pro!</h2>
+                    <p>Your 7-day free trial has started</p>
+                </div>
+                <div class="upgrade-modal-body">
+                    <p style="text-align: center; color: #64748b; font-size: 1.1rem; margin-bottom: 1.5rem; font-weight: 600;">
+                        ✨ You now have unlimited calls! ✨
+                    </p>
+                    <ul class="benefits-list">
+                        <li>Unlimited translation minutes</li>
+                        <li>All 15 languages included</li>
+                        <li>HD video calls</li>
+                        <li>No charge for 7 days</li>
+                        <li>Then $29/month (cancel anytime)</li>
+                    </ul>
+                    <p style="text-align: center; color: #94a3b8; font-size: 0.9rem; margin-top: 1.5rem;">
+                        Manage your subscription anytime from your profile
+                    </p>
+                    <div class="upgrade-modal-actions">
+                        <button onclick="hideSuccessModal()" class="btn-upgrade-primary" style="width: 100%;">Start Using Pro! 🚀</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add to page
+    if (!document.getElementById('successModal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    } else {
+        document.getElementById('successModal').style.display = 'flex';
+    }
+}
+
+function hideSuccessModal() {
+    const modal = document.getElementById('successModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+window.hideSuccessModal = hideSuccessModal;
 
 // Export functions for use in app.js
 window.auth = {
