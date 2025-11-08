@@ -16,11 +16,14 @@ window.addEventListener('load', () => {
         
         // Wait for app.js to fully load
         setTimeout(() => {
-            // Set up guest session
-            window.currentRoom = roomId;
-            window.participantId = guestParticipantId;
-            window.participantName = guestName;
-            window.isHost = false;
+            // Access global variables from app.js
+            if (typeof currentRoom !== 'undefined') {
+                // app.js loaded, set global variables directly
+                currentRoom = roomId;
+                participantId = guestParticipantId;
+                participantName = guestName;
+                isHost = false;
+            }
             
             // Set language if provided
             const sourceLangSelect = document.getElementById('sourceLang');
@@ -31,7 +34,10 @@ window.addEventListener('load', () => {
             // Show room info
             const roomCodeElem = document.getElementById('roomCode');
             const roomInfoElem = document.getElementById('roomInfo');
-            if (roomCodeElem) roomCodeElem.textContent = roomId;
+            if (roomCodeElem) {
+                roomCodeElem.textContent = `Guest in room: ${roomId}`;
+                roomCodeElem.style.fontSize = '1rem';
+            }
             if (roomInfoElem) roomInfoElem.style.display = 'flex';
             
             // Hide room creation buttons
@@ -40,14 +46,18 @@ window.addEventListener('load', () => {
             if (createBtn) createBtn.style.display = 'none';
             if (joinBtn) joinBtn.style.display = 'none';
             
-            // Show guest indicator
+            // Show guest banner
             if (window.showToast) {
-                window.showToast(`Joined as guest: ${guestName}. Host pays for this call.`, 'info', 5000);
+                window.showToast(`👤 Joined as guest: ${guestName}. Host is paying. You can see and use all features!`, 'info', 7000);
             }
             
+            // Hide user info bar (guests don't have accounts)
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) userInfo.style.display = 'none';
+            
             // Auto-connect to room
-            if (window.connectToRoom) {
-                setTimeout(() => window.connectToRoom(), 1000);
+            if (typeof connectToRoom === 'function') {
+                setTimeout(() => connectToRoom(), 1000);
             }
         }, 500);
     }

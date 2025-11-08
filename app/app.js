@@ -1000,8 +1000,13 @@ async function createRoom() {
         participantName = data.host_name || 'Host'; // Use host name from backend
         isHost = true;
         
-        // Show room info with shareable link
-        elements.roomCode.textContent = currentRoom;
+        // Generate shareable link
+        const shareableLink = `${window.location.origin}/room/${currentRoom}`;
+        
+        // Show FULL LINK in room code (not just code)
+        elements.roomCode.textContent = shareableLink;
+        elements.roomCode.style.fontSize = '0.85rem'; // Smaller font for long link
+        elements.roomCode.style.wordBreak = 'break-all'; // Allow wrapping
         elements.participantCount.textContent = '1';
         elements.roomInfo.style.display = 'flex';
         
@@ -1010,13 +1015,12 @@ async function createRoom() {
         elements.joinRoomBtn.style.display = 'none';
         
         // Show shareable link message
-        const shareableLink = `${window.location.origin}/room/${currentRoom}`;
-        showToast(`Room created! Share this link: ${shareableLink}`, 'success', 10000);
+        showToast(`Room link copied to clipboard! Share it with guests.`, 'success', 5000);
         
         // Copy link to clipboard automatically
         try {
             await navigator.clipboard.writeText(shareableLink);
-            console.log('📋 Room link copied to clipboard');
+            console.log('📋 Room link copied to clipboard:', shareableLink);
         } catch (e) {
             console.log('⚠️ Could not auto-copy link');
         }
