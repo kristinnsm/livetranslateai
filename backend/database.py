@@ -92,6 +92,15 @@ def init_database():
         raise
 
 # User CRUD operations
+def _convert_decimals(user_dict: dict) -> dict:
+    """Convert Decimal types to float for JSON serialization"""
+    if user_dict:
+        user_dict = dict(user_dict)
+        if 'minutes_used' in user_dict:
+            user_dict['minutes_used'] = float(user_dict['minutes_used'])
+        return user_dict
+    return None
+
 def create_user(user_data: dict) -> dict:
     """Create a new user in database"""
     try:
@@ -114,7 +123,7 @@ def create_user(user_data: dict) -> dict:
                 user_data.get('ip_address', ''),
                 user_data.get('abuse_flagged', False)
             ))
-            user = dict(cursor.fetchone())
+            user = _convert_decimals(cursor.fetchone())
             logger.info(f"✅ Created user in database: {user['name']}")
             return user
     except Exception as e:
@@ -128,7 +137,7 @@ def get_user_by_google_id(google_id: str) -> dict:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users WHERE google_id = %s", (google_id,))
             user = cursor.fetchone()
-            return dict(user) if user else None
+            return _convert_decimals(user) if user else None
     except Exception as e:
         logger.error(f"❌ Failed to get user: {e}")
         return None
@@ -140,7 +149,7 @@ def get_user_by_user_id(user_id: str) -> dict:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
             user = cursor.fetchone()
-            return dict(user) if user else None
+            return _convert_decimals(user) if user else None
     except Exception as e:
         logger.error(f"❌ Failed to get user: {e}")
         return None
@@ -158,8 +167,9 @@ def update_user_usage(user_id: str, minutes_to_add: float) -> dict:
             """, (minutes_to_add, user_id))
             user = cursor.fetchone()
             if user:
+                user = _convert_decimals(user)
                 logger.info(f"📊 Updated usage in DB: {user['name']} now at {user['minutes_used']:.2f} minutes")
-                return dict(user)
+                return user
             return None
     except Exception as e:
         logger.error(f"❌ Failed to update usage: {e}")
