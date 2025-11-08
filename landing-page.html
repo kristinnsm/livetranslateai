@@ -909,7 +909,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    Our translations are powered by OpenAI's GPT-4 and Whisper AI, achieving 85-95% accuracy depending on language pair and audio quality. We handle accents, technical terms, and conversational language exceptionally well.
+                    We use OpenAI's latest models (Whisper for speech recognition, GPT-4 for translation, and high-quality TTS for voice output). Accuracy is typically 85-95% depending on audio quality, accents, and language pair. Common language pairs like English↔Spanish work best. Technical or domain-specific terms may need clearer pronunciation. The AI learns context during the conversation, so accuracy often improves as you talk.
                 </div>
             </div>
             
@@ -919,7 +919,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    Absolutely. We use in-memory processing only - no conversations are recorded or stored on our servers. All audio is processed in real-time and immediately discarded. Your privacy is our #1 priority.
+                    Yes. We process audio in real-time using in-memory buffers - nothing is permanently stored. Audio is sent to OpenAI's API for processing (covered by their privacy policy), then immediately discarded. We don't record, save, or log conversation content. However, we do track usage metadata (call duration, language pairs) for billing purposes. Video calls use Daily.co's infrastructure with end-to-end encryption.
                 </div>
             </div>
             
@@ -929,7 +929,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    LiveTranslateAI works on any device with a modern web browser - desktop, laptop, tablet, or smartphone. Chrome is recommended for the best experience, but Firefox, Safari, and Edge are also supported.
+                    Any device with a modern browser and microphone. Desktop/laptop works best for longer calls. Mobile (iOS/Android) works but uses more battery for video calls - we recommend turning off video on mobile to save power. Chrome or Safari are recommended. You need a stable internet connection (at least 1 Mbps up/down). No app download needed - everything runs in your browser.
                 </div>
             </div>
             
@@ -939,7 +939,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    Translation latency is typically under 1 second in realtime mode and 3-5 seconds in traditional mode. This means near-instant communication, allowing for natural conversation flow.
+                    It depends on the mode. Our traditional pipeline (Whisper → GPT → TTS) takes 3-5 seconds after you stop speaking - this is what we're using now. We're working on a real-time mode that will deliver translations in under 1 second. The delay is noticeable but manageable for most conversations. Think of it like talking with a slight international phone delay. Pro tip: Speak in shorter sentences (10-15 seconds) for faster turnaround.
                 </div>
             </div>
             
@@ -949,7 +949,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    Yes! No contracts or commitments. Cancel your subscription anytime with one click. You'll keep access until the end of your billing period.
+                    Yes. Cancel with one click from your account dashboard - no phone calls, no "are you sure?" guilt trips, no retention department. You keep access until your current billing period ends. If you paid for a month and cancel on day 5, you still get the remaining 25 days. If you cancel during the 7-day trial, you won't be charged at all. We use Stripe for billing, so cancellation is instant.
                 </div>
             </div>
             
@@ -959,7 +959,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    We offer a 30-day money-back guarantee, no questions asked. If you're not satisfied for any reason, we'll refund your entire payment.
+                    Yes - 30-day money-back guarantee, no questions asked. Email us at support@livetranslateai.com with "Refund Request" and we'll process it within 2 business days. You don't need to explain why. If you're unhappy in the first month, you get your money back. Simple as that. (Note: This applies to paid subscriptions, not the free 30 minutes or trial period.)
                 </div>
             </div>
             
@@ -969,7 +969,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    Sign up with your email (no credit card needed) and you'll get 30 minutes of free translation time. This is enough for 1-2 real calls to test the quality and see if it works for your needs. No tricks, no auto-charges.
+                    Sign up with just your email (Google login coming soon). You immediately get 30 minutes of translation time to test with real calls - no credit card needed. The timer only counts when you're actively in a call, not idle time. 30 minutes = roughly 2 full conversations. Use it to test quality, try different language pairs, and see if it fits your needs. Once you hit 30 minutes, you'll see a prompt to start your 7-day unlimited trial (card required). No auto-charges, no sneaky billing.
                 </div>
             </div>
             
@@ -979,7 +979,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    After 30 minutes, you can start a 7-day unlimited trial by adding a credit card. You won't be charged during the trial. If you love it, you'll automatically continue at $19/month. If not, cancel anytime during the 7 days with one click.
+                    You'll see a message: "30 minutes used! Start 7-day unlimited trial?" Click yes, add your credit card (via Stripe's secure checkout), and you get 7 more days of unlimited calls. No charge during the trial. After 7 days, you're automatically billed $19/month (or $190/year if you chose annual). Cancel anytime during the trial to avoid charges. If you don't want to add a card, your account stays active but you can't make new calls until you upgrade.
                 </div>
             </div>
             
@@ -989,7 +989,7 @@
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    The 7-day trial requires a card to prevent abuse and ensure serious users get the best experience. You already got 30 free minutes to test - the trial unlocks unlimited use for a week. You can cancel anytime before being charged.
+                    Two reasons: (1) Prevents abuse - without it, people create unlimited free accounts. One card = one trial keeps the service fast and reliable for paying customers. (2) You already got 30 free minutes with no card - that's your no-risk test drive. The trial is for people who liked what they saw and want to integrate it into their workflow. Think of it like test-driving a car: you can sit in it for free (30 min), but to take it home for a week (trial), we need your info.
                 </div>
             </div>
         </div>
