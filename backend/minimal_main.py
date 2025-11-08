@@ -199,33 +199,67 @@ async def get_user_usage(request: Request):
 
 # Room management endpoints
 @app.post("/api/rooms/create")
-async def create_room():
-    """Create a new translation room"""
-    logger.info("🏠 POST /api/rooms/create - Creating new room")
-    room_id = str(uuid.uuid4())[:8].upper()  # Short room code
-    
-    # Create host participant
-    host_participant_id = str(uuid.uuid4())[:8]
-    host_participant = {
-        "id": host_participant_id,
-        "name": "Host",
-        "source_lang": "en",
-        "target_lang": "es"
-    }
-    
-    rooms[room_id] = {
-        "id": room_id,
-        "created_at": datetime.utcnow().isoformat(),
-        "participants": [host_participant],
-        "active": True
-    }
-    active_connections[room_id] = []
-    logger.info(f"🏠 Created room: {room_id} with host participant: {host_participant_id}")
-    return {
-        "room_id": room_id,
-        "participant_id": host_participant_id,
-        "status": "created"
-    }
+async def create_room(request: Request):
+    """Create a new translation room (HOST only)"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')  # HOST's user ID
+        
+        logger.info(f"🏠 POST /api/rooms/create - Creating new room for user: {user_id}")
+        
+        # Find the HOST user
+        host_user = None
+        for google_id, user in users_db.items():
+            if user['user_id'] == user_id:
+                host_user = user
+                break
+        
+        if not host_user:
+            logger.warning(f"⚠️ Room creation without valid user: {user_id}")
+            # Allow for backward compatibility, but log it
+            host_user = {"name": "Host", "tier": "free", "minutes_used": 0}
+        
+        # Check if HOST has minutes remaining (for free tier)
+        if host_user.get('tier') == 'free':
+            minutes_used = host_user.get('minutes_used', 0)
+            if minutes_used >= FREE_MINUTES_LIMIT:
+                return JSONResponse({
+                    "error": f"Free tier limit reached ({FREE_MINUTES_LIMIT} minutes). Please upgrade to create rooms.",
+                    "usage_exceeded": True
+                }, status_code=403)
+        
+        room_id = str(uuid.uuid4())[:8].upper()  # Short room code
+        
+        # Create host participant
+        host_participant_id = str(uuid.uuid4())[:8]
+        host_participant = {
+            "id": host_participant_id,
+            "name": host_user.get('name', 'Host'),
+            "source_lang": "en",
+            "target_lang": "es",
+            "is_host": True
+        }
+        
+        rooms[room_id] = {
+            "id": room_id,
+            "host_user_id": user_id,  # Track HOST for billing
+            "host_name": host_user.get('name', 'Host'),
+            "created_at": datetime.utcnow().isoformat(),
+            "participants": [host_participant],
+            "active": True
+        }
+        active_connections[room_id] = []
+        logger.info(f"🏠 Created room: {room_id} for HOST: {host_user.get('name')} (user_id: {user_id})")
+        return {
+            "room_id": room_id,
+            "participant_id": host_participant_id,
+            "host_name": host_user.get('name', 'Host'),
+            "status": "created"
+        }
+    except Exception as e:
+        logger.error(f"❌ Room creation error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 
 @app.get("/api/rooms/{room_id}")
 async def get_room(room_id: str):
@@ -694,16 +728,20 @@ async def websocket_room(websocket: WebSocket, room_id: str):
         
         logger.info(f"⏱️ Call ended. Duration: {call_duration_minutes:.2f} minutes")
         
-        # Update user's usage if we have their user_id
-        if current_user_id:
-            for google_id, user in users_db.items():
-                if user.get('user_id') == current_user_id:
-                    user['minutes_used'] += call_duration_minutes
-                    logger.info(f"📊 Updated usage for {user['name']}: {user['minutes_used']:.2f} / {FREE_MINUTES_LIMIT} minutes")
-                    break
-        elif current_participant_id:
-            # Try to find user by participant_id
-            logger.warning(f"⚠️ No user_id for usage tracking, participant: {current_participant_id}")
+        # Track usage for HOST only (not guests)
+        # Find the room's HOST and update their usage
+        if room_id in rooms:
+            host_user_id = rooms[room_id].get('host_user_id')
+            
+            if host_user_id:
+                # Find HOST user and update their usage
+                for google_id, user in users_db.items():
+                    if user.get('user_id') == host_user_id:
+                        user['minutes_used'] += call_duration_minutes
+                        logger.info(f"📊 Updated HOST usage for {user['name']}: {user['minutes_used']:.2f} / {FREE_MINUTES_LIMIT} minutes (call duration: {call_duration_minutes:.2f} min)")
+                        break
+            else:
+                logger.warning(f"⚠️ Room {room_id} has no host_user_id for usage tracking")
         
         # Clean up participant tracking
         websocket_id = id(websocket)

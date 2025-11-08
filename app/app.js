@@ -947,6 +947,21 @@ setInterval(() => {
  */
 
 async function createRoom() {
+    // Check if user is logged in (HOST requirement)
+    if (!window.auth || !window.auth.isAuthenticated()) {
+        alert('Please login to create a room. Only the host needs an account - guests can join without logging in!');
+        return;
+    }
+    
+    // Check if HOST has minutes remaining
+    if (window.auth && window.auth.canStartCall) {
+        const canStart = await window.auth.canStartCall();
+        if (!canStart) {
+            console.log('❌ Usage limit reached, cannot create room');
+            return;
+        }
+    }
+    
     // Prevent multiple clicks
     if (elements.createRoomBtn.disabled) {
         console.log('🏠 Create room already in progress...');
@@ -958,7 +973,9 @@ async function createRoom() {
         elements.createRoomBtn.disabled = true;
         elements.createRoomBtn.textContent = 'Creating...';
         
-        console.log('🏠 Creating room...');
+        const user = window.auth.getCurrentUser();
+        
+        console.log('🏠 Creating room as HOST...');
         const backendUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:8000'
             : 'https://livetranslateai.onrender.com';
@@ -966,7 +983,8 @@ async function createRoom() {
         console.log(`🏠 Backend URL: ${backendUrl}`);
         const response = await fetch(`${backendUrl}/api/rooms/create`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: user.user_id })
         });
         
         console.log(`🏠 Response status: ${response.status}`);
@@ -979,10 +997,10 @@ async function createRoom() {
         const data = await response.json();
         currentRoom = data.room_id;
         participantId = data.participant_id;  // Set participant ID from backend
-        participantName = 'Host'; // Default name for room creator
+        participantName = data.host_name || 'Host'; // Use host name from backend
         isHost = true;
         
-        // Show room info
+        // Show room info with shareable link
         elements.roomCode.textContent = currentRoom;
         elements.participantCount.textContent = '1';
         elements.roomInfo.style.display = 'flex';
@@ -991,7 +1009,17 @@ async function createRoom() {
         elements.createRoomBtn.style.display = 'none';
         elements.joinRoomBtn.style.display = 'none';
         
-        showToast(`Room created: ${currentRoom}`, 'success');
+        // Show shareable link message
+        const shareableLink = `${window.location.origin}/room/${currentRoom}`;
+        showToast(`Room created! Share this link: ${shareableLink}`, 'success', 10000);
+        
+        // Copy link to clipboard automatically
+        try {
+            await navigator.clipboard.writeText(shareableLink);
+            console.log('📋 Room link copied to clipboard');
+        } catch (e) {
+            console.log('⚠️ Could not auto-copy link');
+        }
         
         // Connect to room WebSocket
         await connectToRoom();

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Translation Room - LiveTranslateAI</title>
+    <link rel="stylesheet" href="/app/styles.css">
+    <link rel="stylesheet" href="/app/auth-styles.css">
+    <script src="https://unpkg.com/@daily-co/daily-js@0.66.0/dist/daily-iframe.js"></script>
+    <style>
+        .guest-join-card {
+            max-width: 500px;
+            margin: 4rem auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .guest-join-card h1 {
+            color: #0891B2;
+            margin-bottom: 0.5rem;
+        }
+        .guest-join-card p {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+        .guest-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .guest-input:focus {
+            outline: none;
+            border-color: #0891B2;
+        }
+        .lang-select-group {
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        .lang-select-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .join-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, #0891B2, #0E7490);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .join-btn:hover {
+            transform: translateY(-2px);
+        }
+        .join-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .guest-note {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body style="background: linear-gradient(135deg, #0891B2 0%, #0E7490 100%); min-height: 100vh;">
+    <div class="guest-join-card">
+        <h1>Join Translation Call</h1>
+        <p>The host has invited you to a real-time translation session</p>
+        
+        <div>
+            <label for="guestName" style="display: block; text-align: left; margin-bottom: 0.5rem; font-weight: 600;">Your Name:</label>
+            <input type="text" id="guestName" class="guest-input" placeholder="Enter your name" required>
+        </div>
+        
+        <div class="lang-select-group">
+            <label for="guestLang">Your Language:</label>
+            <select id="guestLang" class="guest-input">
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="fr">🇫🇷 French</option>
+                <option value="de">🇩🇪 German</option>
+                <option value="zh">🇨🇳 Chinese</option>
+                <option value="ar">🇸🇦 Arabic</option>
+                <option value="ru">🇷🇺 Russian</option>
+                <option value="ja">🇯🇵 Japanese</option>
+                <option value="ko">🇰🇷 Korean</option>
+                <option value="pt">🇵🇹 Portuguese</option>
+                <option value="it">🇮🇹 Italian</option>
+                <option value="nl">🇳🇱 Dutch</option>
+                <option value="hi">🇮🇳 Hindi</option>
+                <option value="tr">🇹🇷 Turkish</option>
+                <option value="vi">🇻🇳 Vietnamese</option>
+            </select>
+        </div>
+        
+        <button id="joinRoomBtn" class="join-btn">Join Call</button>
+        
+        <div class="guest-note">
+            💡 <strong>No account needed!</strong> The host is paying for this call. Just enter your name and join.
+        </div>
+    </div>
+    
+    <script>
+        // Get room ID from URL
+        const pathParts = window.location.pathname.split('/');
+        const roomId = pathParts[pathParts.length - 1];
+        
+        document.getElementById('joinRoomBtn').addEventListener('click', async () => {
+            const guestName = document.getElementById('guestName').value.trim();
+            const guestLang = document.getElementById('guestLang').value;
+            
+            if (!guestName) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            try {
+                document.getElementById('joinRoomBtn').disabled = true;
+                document.getElementById('joinRoomBtn').textContent = 'Joining...';
+                
+                const backendUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:8000'
+                    : 'https://livetranslateai.onrender.com';
+                
+                const response = await fetch(`${backendUrl}/api/rooms/${roomId}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        participant_name: guestName
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to join room');
+                }
+                
+                const data = await response.json();
+                
+                // Redirect to app with room info in URL params
+                const appUrl = `/app?room=${roomId}&participant=${data.participant_id}&name=${encodeURIComponent(guestName)}&lang=${guestLang}&guest=true`;
+                window.location.href = appUrl;
+                
+            } catch (error) {
+                alert('Failed to join room: ' + error.message);
+                document.getElementById('joinRoomBtn').disabled = false;
+                document.getElementById('joinRoomBtn').textContent = 'Join Call';
+            }
+        });
+        
+        // Allow Enter key to submit
+        document.getElementById('guestName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('joinRoomBtn').click();
+            }
+        });
+    </script>
+</body>
+</html>
+
