@@ -290,6 +290,69 @@ window.addEventListener('load', () => {
     }
 });
 
+// Fetch latest usage from backend
+async function refreshUsage() {
+    const user = getCurrentUser();
+    if (!user) return null;
+    
+    try {
+        const backendUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000'
+            : 'https://livetranslateai.onrender.com';
+            
+        const response = await fetch(`${backendUrl}/api/user/usage?user_id=${user.user_id}`, {
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const usageData = await response.json();
+            
+            // Update stored user with latest usage
+            currentUser.minutes_used = usageData.minutes_used;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            // Update displays
+            updateAuthUI(true);
+            updateUsageDisplay(currentUser);
+            
+            console.log(`📊 Usage refreshed: ${usageData.minutes_used}/${usageData.minutes_limit} min`);
+            
+            return usageData;
+        }
+    } catch (error) {
+        console.error('❌ Failed to refresh usage:', error);
+    }
+    
+    return null;
+}
+
+// Check if user can start a call
+async function canStartCall() {
+    const user = getCurrentUser();
+    if (!user) {
+        alert('Please login first');
+        return false;
+    }
+    
+    // Refresh usage from backend
+    const usageData = await refreshUsage();
+    
+    if (!usageData) {
+        // Couldn't get usage, allow call (fail open)
+        return true;
+    }
+    
+    if (!usageData.can_use) {
+        // Show upgrade modal
+        showUpgradeModal();
+        return false;
+    }
+    
+    return true;
+}
+
 // Export functions for use in app.js
 window.auth = {
     getCurrentUser,
@@ -297,6 +360,8 @@ window.auth = {
     getAuthToken,
     logout,
     updateUsageDisplay,
-    checkAuthStatus
+    checkAuthStatus,
+    refreshUsage,
+    canStartCall
 };
 
