@@ -1056,27 +1056,46 @@
         </div>
     </footer>
 
-    <!-- Simple FAQ Toggle Script -->
+    <!-- FAQ Toggle & Smooth Scroll Scripts -->
     <script>
-        // FAQ Toggle - Already handled inline, but adding for consistency
-        document.querySelectorAll('.faq-question').forEach(question => {
-            question.addEventListener('click', () => {
-                question.parentElement.classList.toggle('active');
+        // Wait for DOM to fully load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Initializing FAQ toggles...');
+            
+            // FAQ Toggle
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            console.log(`Found ${faqQuestions.length} FAQ questions`);
+            
+            faqQuestions.forEach((question, index) => {
+                question.addEventListener('click', function() {
+                    const faqItem = this.parentElement;
+                    const wasActive = faqItem.classList.contains('active');
+                    
+                    // Optional: Close all other FAQs (accordion style)
+                    // document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('active'));
+                    
+                    // Toggle this one
+                    faqItem.classList.toggle('active');
+                    
+                    console.log(`FAQ ${index + 1} ${wasActive ? 'collapsed' : 'expanded'}`);
+                });
             });
-        });
-        
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                const href = this.getAttribute('href');
-                if (href !== '#') {
-                    e.preventDefault();
-                    const target = document.querySelector(href);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Smooth scroll for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href !== '#') {
+                        e.preventDefault();
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     }
-                }
+                });
             });
+            
+            console.log('✅ Landing page scripts initialized');
         });
     </script>
 </body>
