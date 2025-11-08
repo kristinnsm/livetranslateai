@@ -222,3 +222,47 @@ def update_user_tier(user_id: str, new_tier: str, subscription_id: str = None):
         logger.error(f"❌ Failed to update tier: {e}")
         raise
 
+def get_user_by_subscription_id(subscription_id: str) -> dict:
+    """Get user by Stripe subscription ID"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE subscription_id = %s", (subscription_id,))
+            user = cursor.fetchone()
+            return _convert_decimals(user) if user else None
+    except Exception as e:
+        logger.error(f"❌ Failed to get user by subscription ID: {e}")
+        return None
+
+def update_stripe_customer(user_id: str, stripe_customer_id: str):
+    """Store Stripe customer ID for user"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            # Add stripe_customer_id column if it doesn't exist
+            cursor.execute("""
+                ALTER TABLE users 
+                ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(255)
+            """)
+            cursor.execute("""
+                UPDATE users 
+                SET stripe_customer_id = %s
+                WHERE user_id = %s
+            """, (stripe_customer_id, user_id))
+            logger.info(f"✅ Stored Stripe customer ID for user {user_id}")
+    except Exception as e:
+        logger.error(f"❌ Failed to store Stripe customer ID: {e}")
+        raise
+
+def get_user_stripe_customer_id(user_id: str) -> str:
+    """Get user's Stripe customer ID"""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT stripe_customer_id FROM users WHERE user_id = %s", (user_id,))
+            result = cursor.fetchone()
+            return result['stripe_customer_id'] if result and result.get('stripe_customer_id') else None
+    except Exception as e:
+        logger.error(f"❌ Failed to get Stripe customer ID: {e}")
+        return None
+

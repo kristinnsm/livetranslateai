@@ -21,7 +21,13 @@ from usage import check_usage_limit, get_usage_info
 from database import (
     init_database, create_user, get_user_by_google_id, 
     get_user_by_user_id, update_user_usage, update_user_last_login,
-    check_fingerprint_used, update_user_tier
+    check_fingerprint_used, update_user_tier, get_user_by_subscription_id,
+    update_stripe_customer, get_user_stripe_customer_id
+)
+from stripe_integration import (
+    create_checkout_session, create_portal_session,
+    verify_webhook_signature, handle_checkout_completed,
+    handle_subscription_updated, handle_subscription_deleted
 )
 
 # Configuration
@@ -397,6 +403,164 @@ async def create_daily_room(request: Request):
     except Exception as e:
         logger.error(f"❌ Failed to create Daily room: {e}")
         return {"error": str(e), "video_enabled": False}, 500
+
+# ===================================
+# Stripe Payment Endpoints
+# ===================================
+
+@app.post("/api/stripe/create-checkout-session")
+async def create_stripe_checkout(request: Request):
+    """Create a Stripe Checkout session for subscription signup"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return JSONResponse({"error": "user_id required"}, status_code=400)
+        
+        # Get user from database
+        user = get_user_by_user_id(user_id)
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        # Create Stripe checkout session
+        frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
+        success_url = f"{frontend_url}/app?payment=success"
+        cancel_url = f"{frontend_url}/app?payment=cancelled"
+        
+        session = create_checkout_session(
+            user_id=user['user_id'],
+            user_email=user['email'],
+            success_url=success_url,
+            cancel_url=cancel_url
+        )
+        
+        # Store Stripe customer ID
+        update_stripe_customer(user['user_id'], session['customer_id'])
+        
+        logger.info(f"✅ Created Stripe checkout session for {user['email']}")
+        
+        return JSONResponse({
+            "checkout_url": session['url'],
+            "session_id": session['id']
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Stripe checkout error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/stripe/create-portal-session")
+async def create_stripe_portal(request: Request):
+    """Create a Stripe Customer Portal session for subscription management"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return JSONResponse({"error": "user_id required"}, status_code=400)
+        
+        # Get user's Stripe customer ID
+        customer_id = get_user_stripe_customer_id(user_id)
+        if not customer_id:
+            return JSONResponse({"error": "No subscription found"}, status_code=404)
+        
+        # Create portal session
+        frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
+        return_url = f"{frontend_url}/app"
+        
+        session = create_portal_session(customer_id, return_url)
+        
+        logger.info(f"✅ Created Stripe portal session for user {user_id}")
+        
+        return JSONResponse({
+            "portal_url": session['url']
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Stripe portal error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.post("/api/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhook events"""
+    try:
+        # Get raw body for signature verification
+        payload = await request.body()
+        signature = request.headers.get('stripe-signature')
+        
+        if not signature:
+            logger.error("❌ Missing Stripe signature")
+            return JSONResponse({"error": "Missing signature"}, status_code=400)
+        
+        # Verify webhook signature
+        event = verify_webhook_signature(payload, signature)
+        if not event:
+            logger.error("❌ Invalid webhook signature")
+            return JSONResponse({"error": "Invalid signature"}, status_code=400)
+        
+        event_type = event['type']
+        logger.info(f"📨 Stripe webhook received: {event_type}")
+        
+        # Handle different event types
+        if event_type == 'checkout.session.completed':
+            # Payment successful, activate subscription
+            session = event['data']['object']
+            result = handle_checkout_completed(session)
+            
+            # Upgrade user to premium tier
+            if result['user_id']:
+                update_user_tier(
+                    result['user_id'],
+                    'premium',
+                    result['subscription_id']
+                )
+                logger.info(f"✅ Upgraded user {result['user_id']} to premium")
+        
+        elif event_type == 'customer.subscription.updated':
+            # Subscription status changed
+            subscription = event['data']['object']
+            result = handle_subscription_updated(subscription)
+            
+            # Update user tier based on status
+            if result['user_id']:
+                if result['status'] == 'active':
+                    update_user_tier(result['user_id'], 'premium', result['subscription_id'])
+                elif result['status'] in ['past_due', 'unpaid']:
+                    logger.warning(f"⚠️ Subscription {result['subscription_id']} is {result['status']}")
+                elif result['status'] == 'canceled':
+                    update_user_tier(result['user_id'], 'free', None)
+                    logger.info(f"❌ Downgraded user {result['user_id']} to free (subscription cancelled)")
+        
+        elif event_type == 'customer.subscription.deleted':
+            # Subscription cancelled
+            subscription = event['data']['object']
+            result = handle_subscription_deleted(subscription)
+            
+            # Downgrade user to free tier
+            if result['user_id']:
+                update_user_tier(result['user_id'], 'free', None)
+                logger.info(f"❌ Downgraded user {result['user_id']} to free")
+        
+        elif event_type == 'invoice.payment_failed':
+            # Payment failed
+            invoice = event['data']['object']
+            logger.warning(f"⚠️ Payment failed for subscription: {invoice.get('subscription')}")
+        
+        else:
+            logger.info(f"ℹ️ Unhandled webhook event: {event_type}")
+        
+        return JSONResponse({"status": "success"})
+        
+    except Exception as e:
+        logger.error(f"❌ Webhook error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# ===================================
+# WebSocket Endpoints
+# ===================================
 
 @app.websocket("/ws/translate/realtime")
 async def websocket_translate_realtime(websocket: WebSocket):

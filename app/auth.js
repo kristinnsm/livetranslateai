@@ -178,17 +178,34 @@ function updateAuthUI(isLoggedIn) {
         // Show user info bar
         if (userInfo) {
             userInfo.style.display = 'block';
+            
+            // Determine tier display
+            let tierDisplay = '';
+            if (currentUser.tier === 'premium') {
+                tierDisplay = '<div class="user-tier" style="color: #10B981;">✨ Premium - Unlimited calls</div>';
+            } else if (currentUser.minutes_used > FREE_MINUTES_LIMIT) {
+                tierDisplay = `<div class="user-tier" style="color: #EF4444;">Free Tier - Over limit (${currentUser.minutes_used.toFixed(1)} min used)</div>`;
+            } else {
+                tierDisplay = `<div class="user-tier">Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining</div>`;
+            }
+            
+            // Add "Manage Subscription" button for premium users
+            const manageButton = currentUser.tier === 'premium' 
+                ? '<button onclick="auth.openCustomerPortal()" class="btn-manage" style="background: #4F46E5; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; margin-right: 0.5rem;">Manage Subscription</button>'
+                : '';
+            
             userInfo.innerHTML = `
                 <div class="user-profile">
                     <img src="${currentUser.picture}" alt="${currentUser.name}" class="user-avatar">
                     <div class="user-details">
                         <div class="user-name">${currentUser.name}</div>
                         <div class="user-email">${currentUser.email}</div>
-                        <div class="user-tier">${currentUser.minutes_used > FREE_MINUTES_LIMIT 
-                            ? `Free Tier - Over limit (${currentUser.minutes_used.toFixed(1)} min used)` 
-                            : `Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining`}</div>
+                        ${tierDisplay}
                     </div>
-                    <button onclick="auth.logout()" class="btn-logout">Logout</button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        ${manageButton}
+                        <button onclick="auth.logout()" class="btn-logout">Logout</button>
+                    </div>
                 </div>
             `;
             console.log('✅ User info displayed');
@@ -305,11 +322,19 @@ function showUpgradeModal() {
     const laterBtn = document.getElementById('upgradeLaterBtn');
     
     if (upgradeBtn && !upgradeBtn.hasClickListener) {
-        upgradeBtn.addEventListener('click', () => {
+        upgradeBtn.addEventListener('click', async () => {
             console.log('💳 User clicked Start Free Trial');
-            hideUpgradeModal();
-            // TODO: Redirect to Stripe checkout
-            alert('Stripe checkout coming soon! For now, email support@livetranslateai.com to upgrade.');
+            upgradeBtn.disabled = true;
+            upgradeBtn.textContent = 'Loading...';
+            
+            try {
+                await startStripeCheckout();
+            } catch (error) {
+                console.error('❌ Stripe checkout error:', error);
+                alert('Failed to start checkout. Please try again or contact support.');
+                upgradeBtn.disabled = false;
+                upgradeBtn.textContent = 'Start Free Trial';
+            }
         });
         upgradeBtn.hasClickListener = true;
     }
@@ -413,6 +438,119 @@ async function canStartCall() {
     return true;
 }
 
+// Stripe Integration
+async function startStripeCheckout() {
+    const user = getCurrentUser();
+    if (!user) {
+        throw new Error('User not logged in');
+    }
+    
+    const backendUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000'
+        : 'https://livetranslateai.onrender.com';
+    
+    const frontendUrl = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : window.location.origin;
+    
+    console.log('💳 Creating Stripe checkout session...');
+    
+    const response = await fetch(`${backendUrl}/api/stripe/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getAuthToken()}`
+        },
+        body: JSON.stringify({
+            user_id: user.user_id,
+            frontend_url: frontendUrl
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create checkout session');
+    }
+    
+    const data = await response.json();
+    
+    console.log('✅ Checkout session created, redirecting to Stripe...');
+    
+    // Redirect to Stripe Checkout
+    window.location.href = data.checkout_url;
+}
+
+async function openCustomerPortal() {
+    const user = getCurrentUser();
+    if (!user) {
+        alert('Please login first');
+        return;
+    }
+    
+    const backendUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8000'
+        : 'https://livetranslateai.onrender.com';
+    
+    const frontendUrl = window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : window.location.origin;
+    
+    console.log('🔧 Opening Stripe Customer Portal...');
+    
+    try {
+        const response = await fetch(`${backendUrl}/api/stripe/create-portal-session`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getAuthToken()}`
+            },
+            body: JSON.stringify({
+                user_id: user.user_id,
+                frontend_url: frontendUrl
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to open portal');
+        }
+        
+        const data = await response.json();
+        
+        // Redirect to Stripe Customer Portal
+        window.location.href = data.portal_url;
+    } catch (error) {
+        console.error('❌ Portal error:', error);
+        alert('Failed to open subscription management. Please try again or contact support.');
+    }
+}
+
+// Handle payment status from URL parameters
+function handlePaymentStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const payment = urlParams.get('payment');
+    
+    if (payment === 'success') {
+        console.log('✅ Payment successful!');
+        // Show success message
+        setTimeout(() => {
+            alert('🎉 Welcome to LiveTranslateAI Pro! Your 7-day free trial has started. You now have unlimited calls!');
+            // Refresh usage to show new tier
+            refreshUsage();
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1000);
+    } else if (payment === 'cancelled') {
+        console.log('❌ Payment cancelled');
+        // Show cancelled message
+        setTimeout(() => {
+            alert('Payment cancelled. You can upgrade anytime from your profile.');
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 1000);
+    }
+}
+
 // Export functions for use in app.js
 window.auth = {
     getCurrentUser,
@@ -422,6 +560,11 @@ window.auth = {
     updateUsageDisplay,
     checkAuthStatus,
     refreshUsage,
-    canStartCall
+    canStartCall,
+    startStripeCheckout,
+    openCustomerPortal
 };
+
+// Check for payment status on load
+handlePaymentStatus();
 
