@@ -574,12 +574,13 @@
             padding: 0 1.5rem;
             color: #718096;
             line-height: 1.7;
-            transition: max-height 0.3s ease, padding 0.3s ease;
+            transition: max-height 0.4s ease-out, padding 0.3s ease;
         }
         
         .faq-item.active .faq-answer {
-            max-height: 500px;
+            max-height: 1000px;
             padding: 0 1.5rem 1.5rem;
+            overflow: visible;
         }
         
         .faq-icon {
@@ -688,7 +689,7 @@
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><a href="#faq">FAQ</a></li>
-                <li><button class="btn-login" onclick="window.location.href='#'">Login</button></li>
+                <li><button class="btn-login" onclick="window.location.href='/app'">Login</button></li>
             </ul>
         </nav>
     </header>
