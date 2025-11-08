@@ -31,6 +31,15 @@
             background: #ffffff;
         }
         
+        /* Color Variables */
+        :root {
+            --primary: #0891B2;
+            --primary-dark: #0E7490;
+            --accent: #F59E0B;
+            --text-dark: #0F172A;
+            --text-light: #64748B;
+        }
+        
         /* Header/Navigation */
         .header {
             position: fixed;
@@ -55,7 +64,7 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -76,14 +85,14 @@
         }
         
         .nav-links a:hover {
-            color: #667eea;
+            color: var(--primary);
         }
         
         .btn-login {
             padding: 0.5rem 1.5rem;
             background: transparent;
-            border: 2px solid #667eea;
-            color: #667eea;
+            border: 2px solid var(--primary);
+            color: var(--primary);
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
@@ -91,14 +100,14 @@
         }
         
         .btn-login:hover {
-            background: #667eea;
+            background: var(--primary);
             color: white;
         }
         
         /* Hero Section */
         .hero {
             padding: 8rem 2rem 4rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             text-align: center;
             position: relative;
@@ -157,7 +166,7 @@
         
         .btn-primary {
             background: white;
-            color: #667eea;
+            color: var(--primary);
             border: none;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
@@ -175,7 +184,7 @@
         
         .btn-secondary:hover {
             background: white;
-            color: #667eea;
+            color: var(--primary);
         }
         
         .hero-badges {
@@ -298,7 +307,7 @@
         .step-number {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border-radius: 50%;
             display: flex;
@@ -336,7 +345,7 @@
         .use-case {
             padding: 2.5rem;
             background: white;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid var(--primary);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
@@ -362,7 +371,7 @@
         /* Pricing Section */
         .pricing {
             padding: 5rem 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
         }
         
@@ -418,7 +427,7 @@
             font-size: 3rem;
             font-weight: 800;
             margin: 1rem 0;
-            color: #667eea;
+            color: var(--primary);
         }
         
         .price-period {
@@ -451,7 +460,7 @@
         .btn-pricing {
             width: 100%;
             padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -462,7 +471,7 @@
         
         .btn-pricing:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
         }
         
         /* Testimonials */
@@ -504,7 +513,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -582,7 +591,7 @@
         /* Final CTA */
         .final-cta {
             padding: 5rem 2rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             text-align: center;
         }
@@ -691,10 +700,10 @@
                 <a href="#demo" class="btn-secondary">▶️ Watch Demo</a>
             </div>
             <div class="hero-badges">
-                <div class="badge">✓ 7 days free trial</div>
-                <div class="badge">✓ Unlimited use during trial</div>
+                <div class="badge">✓ 30 minutes free</div>
+                <div class="badge">✓ No credit card required</div>
                 <div class="badge">✓ 15 languages</div>
-                <div class="badge">✓ Cancel anytime</div>
+                <div class="badge">✓ Then 7-day trial</div>
             </div>
         </div>
     </section>
@@ -832,27 +841,28 @@
             <p class="section-subtitle">Start free, upgrade anytime. No hidden fees.</p>
             
             <div class="pricing-grid">
-                <!-- Free Trial -->
+                <!-- Free Start -->
                 <div class="pricing-card">
-                    <h3>Free Trial</h3>
-                    <div class="price">$0<span class="price-period">/7 days</span></div>
+                    <h3>Start Free</h3>
+                    <div class="price">$0<span class="price-period">/30 min</span></div>
                     <ul class="pricing-features">
-                        <li>7 days unlimited use</li>
+                        <li>30 minutes free to test</li>
                         <li>Up to 3 participants</li>
                         <li>All 15 languages</li>
                         <li>HD video + audio</li>
-                        <li>Full feature access</li>
-                        <li>Credit card required</li>
+                        <li>No credit card required</li>
+                        <li>Then upgrade to trial</li>
                     </ul>
-                    <button class="btn-pricing" onclick="window.location.href='https://livetranslateai.netlify.app'">Start Trial</button>
+                    <button class="btn-pricing" onclick="window.location.href='https://livetranslateai.netlify.app'">Start Free</button>
                 </div>
                 
-                <!-- Starter Tier -->
+                <!-- Paid Plan -->
                 <div class="pricing-card featured">
                     <div class="featured-badge">🔥 Most Popular</div>
-                    <h3>Starter</h3>
+                    <h3>Full Access</h3>
                     <div class="price">$19<span class="price-period">/month</span></div>
-                    <p style="text-align: center; color: #667eea; font-weight: 600; margin: 0.5rem 0;">or $190/year (save 17%)</p>
+                    <p style="text-align: center; color: var(--primary); font-weight: 600; margin: 0.5rem 0;">or $190/year (save 17%)</p>
+                    <p style="text-align: center; color: #64748b; font-size: 0.9rem; margin: 0.5rem 0;">7-day trial • Card required</p>
                     <ul class="pricing-features">
                         <li>Unlimited minutes</li>
                         <li>Up to 3 participants</li>
@@ -861,23 +871,23 @@
                         <li>Email support</li>
                         <li>Call history (30 days)</li>
                     </ul>
-                    <button class="btn-pricing" onclick="window.location.href='#'">Get Started</button>
+                    <button class="btn-pricing" onclick="window.location.href='#'">Start 7-Day Trial</button>
                 </div>
                 
                 <!-- Professional Tier (Coming Soon) -->
                 <div class="pricing-card" style="opacity: 0.7;">
                     <h3>Professional</h3>
                     <div class="price">$79<span class="price-period">/month</span></div>
-                    <p style="text-align: center; color: #667eea; font-weight: 600; margin: 0.5rem 0;">or $790/year (save 17%)</p>
+                    <p style="text-align: center; color: var(--primary); font-weight: 600; margin: 0.5rem 0;">or $790/year (save 17%)</p>
                     <ul class="pricing-features">
-                        <li>Everything in Starter</li>
+                        <li>Everything included</li>
                         <li>Up to 10 participants</li>
                         <li>Call recording</li>
                         <li>Transcript export</li>
                         <li>Priority support (4h)</li>
                         <li>Advanced analytics</li>
                     </ul>
-                    <button class="btn-pricing" style="background: #cbd5e0; cursor: not-allowed;" disabled>Coming Soon</button>
+                    <button class="btn-pricing" style="background: #e2e8f0; color: #64748b; cursor: not-allowed; border: 2px solid #cbd5e0;" disabled>Coming Soon</button>
                 </div>
             </div>
             
@@ -887,46 +897,6 @@
         </div>
     </section>
 
-    <!-- Testimonials -->
-    <section class="testimonials">
-        <h2 class="section-title">Loved by Professionals Worldwide</h2>
-        <p class="section-subtitle">Join thousands of users breaking language barriers every day</p>
-        
-        <div class="testimonials-grid">
-            <div class="testimonial">
-                <p class="testimonial-text">"Game-changer for my tutoring business! I can now teach students from any country without language barriers. The translation quality is incredible."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">MR</div>
-                    <div class="author-info">
-                        <h4>Maria Rodriguez</h4>
-                        <p>Spanish Tutor, Barcelona</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="testimonial">
-                <p class="testimonial-text">"We closed a $50K deal with a Japanese client using LiveTranslateAI. Saved thousands on interpretation and the real-time translation built instant rapport."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">JC</div>
-                    <div class="author-info">
-                        <h4>John Chen</h4>
-                        <p>CEO, TechStartup Inc.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="testimonial">
-                <p class="testimonial-text">"My family is scattered across 3 continents. Now we can all talk together naturally despite speaking different languages. It's brought us closer than ever."</p>
-                <div class="testimonial-author">
-                    <div class="author-avatar">AP</div>
-                    <div class="author-info">
-                        <h4>Ahmed Patel</h4>
-                        <p>Software Engineer, Dubai</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- FAQ -->
     <section id="faq" class="faq">
@@ -995,21 +965,31 @@
             
             <div class="faq-item">
                 <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
-                    Why do you need my credit card for the free trial?
+                    How does the free 30 minutes work?
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    We require a credit card to prevent abuse and ensure a high-quality experience for all users. You won't be charged during your 7-day trial, and you can cancel anytime before it ends. If you love the service, you'll automatically continue on the Starter plan at $19/month.
+                    Sign up with your email (no credit card needed) and you'll get 30 minutes of free translation time. This is enough for 1-2 real calls to test the quality and see if it works for your needs. No tricks, no auto-charges.
                 </div>
             </div>
             
             <div class="faq-item">
                 <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
-                    What happens after my 7-day trial ends?
+                    What happens after I use my 30 free minutes?
                     <span class="faq-icon">+</span>
                 </div>
                 <div class="faq-answer">
-                    After your trial, you'll automatically be enrolled in the Starter plan ($19/month) unless you cancel. You'll receive email reminders at day 5 and day 6 of your trial. Canceling is instant and takes just one click - no phone calls or hassle.
+                    After 30 minutes, you can start a 7-day unlimited trial by adding a credit card. You won't be charged during the trial. If you love it, you'll automatically continue at $19/month. If not, cancel anytime during the 7 days with one click.
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+                    Why does the trial require a credit card?
+                    <span class="faq-icon">+</span>
+                </div>
+                <div class="faq-answer">
+                    The 7-day trial requires a card to prevent abuse and ensure serious users get the best experience. You already got 30 free minutes to test - the trial unlocks unlimited use for a week. You can cancel anytime before being charged.
                 </div>
             </div>
         </div>
@@ -1018,9 +998,9 @@
     <!-- Final CTA -->
     <section class="final-cta">
         <h2>Ready to Break Language Barriers?</h2>
-        <p>Join thousands of professionals communicating globally with AI-powered translation</p>
-        <a href="https://livetranslateai.netlify.app" class="btn-primary" style="display: inline-block; margin-top: 1rem;">🚀 Start Your 7-Day Free Trial</a>
-        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">7 days unlimited • Cancel anytime • No long-term commitment</p>
+        <p>Start with 30 free minutes - no credit card required</p>
+        <a href="https://livetranslateai.netlify.app" class="btn-primary" style="display: inline-block; margin-top: 1rem;">🚀 Start Free Now</a>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">30 min free • Then 7-day trial • Cancel anytime</p>
     </section>
 
     <!-- Footer -->
