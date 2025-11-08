@@ -274,15 +274,25 @@ async def google_auth(request: Request):
 4. Go to **Developers** → **API keys**
 5. Copy **Publishable key** and **Secret key**
 
-### 2. Create Stripe Products
+### 2. Create Stripe Products with 7-Day Trial
 
 Using Stripe Dashboard:
 
 1. Go to **Products** → **Add product**
 2. Create products:
-   - **Starter**: $19/month, recurring
-   - **Professional**: $79/month, recurring
-3. Copy **Price ID** for each product
+   - **Starter**: $19/month, recurring, **7-day free trial**
+   - **Professional**: $79/month, recurring, **7-day free trial**
+3. Enable trial period:
+   - Click product → **Pricing** → **Add trial period**
+   - Set **Trial period**: 7 days
+   - Enable **Customer must add payment method** ✅
+4. Copy **Price ID** for each product
+
+**Stripe automatically handles:**
+- No charge during 7-day trial
+- Auto-conversion to paid after trial
+- Email notifications before trial ends
+- Easy cancellation (customer portal)
 
 ### 3. Frontend: Stripe Checkout
 

@@ -49,15 +49,16 @@
 
 ## 🚀 Recommended Pricing Model
 
-### **Freemium + Usage Tiers**
+### **Free Trial + Paid Tiers** (Credit Card Required)
 
-#### **FREE TIER** (Customer Acquisition)
-- **10 minutes/month free**
-- Up to 2 participants
-- 15 languages
-- Standard quality
-- Watermark: "Powered by LiveTranslateAI"
-- **Goal**: Viral growth, word-of-mouth
+#### **FREE TRIAL** (7-Day Test Drive)
+- **7 days unlimited use** (requires credit card)
+- Up to 3 participants
+- All 15 languages
+- Full HD quality
+- All features unlocked
+- **Auto-converts to Starter after 7 days** (can cancel anytime)
+- **Goal**: High-quality signups, prevent abuse, maximize conversion
 
 #### **STARTER TIER** - $19/month
 - **300 minutes/month** (~5 hours)
@@ -93,27 +94,54 @@
 ## 📊 Revenue Projections
 
 ### Conservative Scenario (Year 1):
-| Tier | Users | MRR/User | Total MRR | Total ARR |
-|------|-------|----------|-----------|-----------|
-| Free | 1,000 | $0 | $0 | $0 |
-| Starter | 50 | $19 | $950 | $11,400 |
-| Professional | 20 | $79 | $1,580 | $18,960 |
-| Enterprise | 2 | $500 | $1,000 | $12,000 |
-| **TOTAL** | **1,072** | - | **$3,530** | **$42,360** |
+| Tier | Trials | Conversion | Paying Users | MRR/User | Total MRR | Total ARR |
+|------|--------|------------|--------------|----------|-----------|-----------|
+| Trial → Starter | 500 | 20% | 100 | $19 | $1,900 | $22,800 |
+| Trial → Pro | 200 | 25% | 50 | $79 | $3,950 | $47,400 |
+| Enterprise | - | - | 2 | $500 | $1,000 | $12,000 |
+| **TOTAL** | **700** | **21%** | **152** | - | **$6,850** | **$82,200** |
+
+**Note**: 20-25% trial→paid conversion is industry standard with card-required trials (vs 2-5% with no-card free tiers)
 
 ### Growth Scenario (Year 2):
-| Tier | Users | MRR/User | Total MRR | Total ARR |
-|------|-------|----------|-----------|-----------|
-| Free | 5,000 | $0 | $0 | $0 |
-| Starter | 250 | $19 | $4,750 | $57,000 |
-| Professional | 100 | $79 | $7,900 | $94,800 |
-| Enterprise | 10 | $500 | $5,000 | $60,000 |
-| **TOTAL** | **5,360** | - | **$17,650** | **$211,800** |
+| Tier | Trials | Conversion | Paying Users | MRR/User | Total MRR | Total ARR |
+|------|--------|------------|--------------|----------|-----------|-----------|
+| Trial → Starter | 2,000 | 20% | 400 | $19 | $7,600 | $91,200 |
+| Trial → Pro | 800 | 25% | 200 | $79 | $15,800 | $189,600 |
+| Enterprise | - | - | 10 | $500 | $5,000 | $60,000 |
+| **TOTAL** | **2,800** | **21%** | **610** | - | **$28,400** | **$340,800** |
 
 ### Cost Analysis:
 - **Gross margin**: ~75-85% (after infrastructure costs)
 - **Break-even**: ~100 paying customers
 - **Unit economics**: Each Starter customer = $16/month profit after costs
+
+### 🔥 Why 7-Day Trial with Card Beats "10 Minutes Free"
+
+| Metric | 10 Min Free (No Card) | 7-Day Trial (Card Required) | Winner |
+|--------|----------------------|----------------------------|--------|
+| **Conversion Rate** | 2-5% | 20-25% | 🏆 Trial (5x better) |
+| **Signup Quality** | Many tire-kickers | Serious buyers only | 🏆 Trial |
+| **Abuse Prevention** | Easy (multiple emails) | Hard (one card = one trial) | 🏆 Trial |
+| **User Experience** | Frustrating (too short) | Proper testing (realistic) | 🏆 Trial |
+| **Revenue/100 Signups** | $38-95 | $380-475 | 🏆 Trial (5x more) |
+| **Churn Rate** | Higher (bad fit users) | Lower (self-qualified) | 🏆 Trial |
+| **Barrier to Entry** | None | Credit card | 🏆 Free (easier) |
+| **Virality** | Higher | Lower | 🏆 Free |
+
+**Verdict**: For a B2B product like LiveTranslateAI, **7-day trial wins**.
+
+**Why?**
+- 10 minutes = maybe 1 call → can't evaluate properly
+- 7 days = 5-10 calls → real understanding of value
+- Card required = prevents "serial free trial" abuse
+- Auto-conversion = passive revenue (user has to cancel, not upgrade)
+- Industry standard = users expect it (Zoom, Slack, Notion all do this)
+
+**Estimated Trial Usage Cost:**
+- Average trial user: ~3 hours over 7 days = $9 cost
+- 20% convert at $19/month = $228 LTV (12-month avg)
+- **ROI: 25x return on trial cost** 🚀
 
 ---
 
