@@ -111,76 +111,76 @@
     color: white;
 }
 
-/* Usage Display */
+/* Usage Display - Compact & Clean */
 .usage-info {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgba(79, 70, 229, 0.1);
+    border: 1px solid rgba(79, 70, 229, 0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
     margin-bottom: 1rem;
-}
-
-.usage-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    gap: 1rem;
 }
 
 .usage-label {
     font-weight: 600;
-    color: #1f2937;
-}
-
-.usage-status {
+    color: #E0E7FF;
     font-size: 0.85rem;
-    padding: 0.25rem 0.75rem;
-    border-radius: 12px;
-    font-weight: 600;
-}
-
-.usage-ok .usage-status {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.usage-warning .usage-status {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.usage-exceeded .usage-status {
-    background: #fee2e2;
-    color: #991b1b;
+    min-width: 80px;
 }
 
 .usage-bar {
-    width: 100%;
-    height: 8px;
-    background: #e5e7eb;
-    border-radius: 4px;
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
     overflow: hidden;
-    margin-bottom: 0.5rem;
 }
 
 .usage-progress {
     height: 100%;
-    background: linear-gradient(90deg, #0891B2, #0E7490);
+    background: linear-gradient(90deg, #4F46E5, #8B5CF6);
     transition: width 0.3s ease;
+    border-radius: 3px;
 }
 
 .usage-exceeded .usage-progress {
-    background: linear-gradient(90deg, #dc2626, #b91c1c);
+    background: linear-gradient(90deg, #EF4444, #DC2626);
 }
 
 .usage-warning .usage-progress {
-    background: linear-gradient(90deg, #f59e0b, #d97706);
+    background: linear-gradient(90deg, #F59E0B, #EAB308);
 }
 
 .usage-text {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: #C7D2FE;
+    white-space: nowrap;
+    min-width: 100px;
+    text-align: right;
+}
+
+.usage-status {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.usage-ok .usage-status {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6EE7B7;
+}
+
+.usage-warning .usage-status {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FCD34D;
+}
+
+.usage-exceeded .usage-status {
+    background: rgba(239, 68, 68, 0.2);
+    color: #FCA5A5;
 }
 
 .btn-upgrade {

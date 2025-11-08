@@ -227,22 +227,18 @@ function updateUsageDisplay(user) {
     
     usageContainer.innerHTML = `
         <div class="usage-info ${statusClass}">
-            <div class="usage-header">
-                <span class="usage-label">Free Minutes</span>
-                <span class="usage-status">${statusText}</span>
-            </div>
+            <span class="usage-label">⏱️ Usage</span>
             <div class="usage-bar">
                 <div class="usage-progress" style="width: ${percentage}%"></div>
             </div>
-            <div class="usage-text">
-                ${minutesUsed.toFixed(1)} / ${minutesLimit} minutes used
-            </div>
-            ${percentage >= 80 ? `
-                <button onclick="showUpgradeModal()" class="btn-upgrade">
-                    ${percentage >= 100 ? 'Upgrade to Continue' : 'Get More Minutes'}
-                </button>
-            ` : ''}
+            <span class="usage-text">${minutesUsed.toFixed(1)} / ${minutesLimit} min</span>
+            <span class="usage-status">${statusText}</span>
         </div>
+        ${percentage >= 80 ? `
+            <button onclick="showUpgradeModal()" class="btn-upgrade">
+                ${percentage >= 100 ? '🚀 Upgrade Now' : '💎 Get Unlimited'}
+            </button>
+        ` : ''}
     `;
 }
 
