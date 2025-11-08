@@ -4,6 +4,7 @@ Minimal LiveTranslateAI Backend - Ultra-simple version for deployment
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import asyncio
 import json
 import logging
@@ -15,6 +16,7 @@ import requests
 from datetime import datetime
 from typing import Dict, List
 import os
+from auth import verify_google_token, create_session_token
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -40,6 +42,9 @@ rooms: Dict[str, Dict] = {}
 active_connections: Dict[str, List[WebSocket]] = {}
 participant_connections: Dict[str, WebSocket] = {}  # participant_id -> websocket
 websocket_to_participant: Dict[int, str] = {}  # websocket_id (id(websocket)) -> participant_id (reverse lookup)
+
+# User management (in-memory for MVP - replace with database later)
+users_db: Dict[str, Dict] = {}  # google_id -> user_data
 
 # CORS
 app.add_middleware(
@@ -67,6 +72,73 @@ async def health_check():
         "api_key_configured": bool(OPENAI_API_KEY),
         "mode": "minimal"
     }
+
+@app.post("/api/auth/google")
+async def google_auth(request: Request):
+    """Verify Google OAuth token and create session"""
+    try:
+        data = await request.json()
+        token = data.get('token')
+        
+        logger.info("🔐 Google auth request received")
+        
+        # Verify Google token
+        user_info = await verify_google_token(token)
+        
+        if not user_info:
+            logger.error("❌ Invalid Google token")
+            return JSONResponse(
+                {"success": False, "error": "Invalid token"}, 
+                status_code=401
+            )
+        
+        google_id = user_info['google_id']
+        
+        # Check if user exists
+        if google_id not in users_db:
+            # Create new user
+            user_id = str(uuid.uuid4())
+            users_db[google_id] = {
+                "user_id": user_id,
+                "google_id": google_id,
+                "email": user_info['email'],
+                "name": user_info['name'],
+                "picture": user_info['picture'],
+                "tier": "free",  # Default tier
+                "minutes_used": 0.0,
+                "created_at": datetime.utcnow().isoformat(),
+                "last_login": datetime.utcnow().isoformat()
+            }
+            logger.info(f"✅ New user created: {user_info['name']} ({user_info['email']})")
+        else:
+            # Update last login
+            users_db[google_id]['last_login'] = datetime.utcnow().isoformat()
+            logger.info(f"✅ Existing user logged in: {users_db[google_id]['name']}")
+        
+        user = users_db[google_id]
+        
+        # Create session token
+        session_token = create_session_token(user['user_id'])
+        
+        return JSONResponse({
+            "success": True,
+            "session_token": session_token,
+            "user": {
+                "user_id": user['user_id'],
+                "name": user['name'],
+                "email": user['email'],
+                "picture": user['picture'],
+                "tier": user['tier'],
+                "minutes_used": user['minutes_used']
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Auth error: {e}")
+        return JSONResponse(
+            {"success": False, "error": str(e)}, 
+            status_code=500
+        )
 
 # Room management endpoints
 @app.post("/api/rooms/create")

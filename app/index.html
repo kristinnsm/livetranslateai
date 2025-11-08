@@ -5,10 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LiveTranslateAI - Real-Time Voice Translation for Business</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
     <!-- Daily.co Video SDK -->
     <script src="https://unpkg.com/@daily-co/daily-js@0.66.0/dist/daily-iframe.js"></script>
+    <!-- Auth Script -->
+    <script src="auth.js" defer></script>
 </head>
 <body>
+    <!-- Auth Overlay (shown when not logged in) -->
+    <div id="auth-container" class="auth-overlay" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>LiveTranslate<span style="color: #0891B2;">AI</span></h1>
+                <p style="color: #64748b; margin-top: 0.5rem;">Real-Time Voice Translation</p>
+            </div>
+            <div class="auth-content">
+                <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Welcome!</h2>
+                <p style="color: #64748b; margin-bottom: 2rem;">Sign in to start your 30 free minutes</p>
+                <div id="google-signin-button" style="display: flex; justify-content: center; margin: 2rem 0;"></div>
+                <div class="auth-benefits">
+                    <p style="color: #10b981; font-size: 0.95rem;">✓ No credit card required</p>
+                    <p style="color: #10b981; font-size: 0.95rem;">✓ 30 minutes free to test</p>
+                    <p style="color: #10b981; font-size: 0.95rem;">✓ 15 languages available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Info Bar (shown when logged in) -->
+    <div id="user-info" class="user-info-bar" style="display: none;"></div>
+
+    <!-- App Container -->
     <div class="container">
         <!-- Header -->
         <header class="header">
@@ -216,6 +243,10 @@
                 </div>
             </div>
         </footer>
+    </div>
+
+        <!-- Usage Display (inside container, at top) -->
+        <div id="usage-display" style="margin-bottom: 1rem;"></div>
     </div>
 
     <!-- Toast Notifications -->
