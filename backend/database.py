@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
     fingerprint VARCHAR(255),
     ip_address VARCHAR(100),
     abuse_flagged BOOLEAN DEFAULT FALSE,
+    subscription_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
