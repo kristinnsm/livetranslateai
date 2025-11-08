@@ -1132,6 +1132,11 @@ async function connectToRoom() {
                     const elapsedMinutes = (Date.now() - callStartTime) / 60000;
                     const user = window.auth.getCurrentUser();
                     
+                    // Only update for free tier users (premium = unlimited)
+                    if (user.tier === 'premium') {
+                        return; // Skip for premium users
+                    }
+                    
                     // Show estimated remaining time during call
                     const estimatedUsed = (user.minutes_used || 0) + elapsedMinutes;
                     const remaining = Math.max(0, 15 - estimatedUsed);
@@ -1139,11 +1144,11 @@ async function connectToRoom() {
                     // Update profile bar with live estimate
                     const userTierElem = document.querySelector('.user-tier');
                     if (userTierElem && !isGuest) {
-                        userTierElem.textContent = `Free Tier - ${remaining.toFixed(1)} min remaining (call in progress)`;
+                        userTierElem.textContent = `Free Tier - ${remaining.toFixed(1)} min remaining (live)`;
                         userTierElem.style.color = remaining < 2 ? '#EF4444' : '#4F46E5';
                     }
                 }
-            }, 5000); // Update every 5 seconds
+            }, 2000); // Update every 2 seconds for more responsive display
             
             // Start video call when WebSocket connects (auto-start on all devices)
             if (window.DailyIframe && !dailyCallActive) {
@@ -1201,8 +1206,15 @@ async function connectToRoom() {
             callStartTime = null;
             
             // Refresh usage from backend (get actual updated value)
+            // Give backend 3 seconds to process the disconnect and update DB
             if (window.auth && window.auth.refreshUsage) {
-                setTimeout(() => window.auth.refreshUsage(), 2000); // Wait 2 sec for backend to update
+                console.log('⏳ Waiting 3 seconds for backend to update usage...');
+                setTimeout(async () => {
+                    console.log('📊 Refreshing usage from backend...');
+                    await window.auth.refreshUsage();
+                    console.log('✅ Usage refreshed after call ended');
+                    showToast('Usage updated', 'info');
+                }, 3000); // Wait 3 sec for backend to update
             }
         };
         
