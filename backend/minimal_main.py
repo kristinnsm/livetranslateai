@@ -29,13 +29,25 @@ from stripe_integration import (
     verify_webhook_signature, handle_checkout_completed,
     handle_subscription_updated, handle_subscription_deleted
 )
+# Rate limiting for security (prevent API abuse)
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DAILY_API_KEY = os.getenv("DAILY_API_KEY")  # Get from https://dashboard.daily.co/developers
+FREE_MINUTES_LIMIT = 15  # Free tier limit
+MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB max audio chunk (security limit)
+MAX_CONCURRENT_CALLS_PER_USER = 3  # Prevent abuse
 
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
+
+# Rate Limiting (protect against API abuse)
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Get logger - uvicorn handles basic config, we just ensure our logs show
 logger = logging.getLogger(__name__)
