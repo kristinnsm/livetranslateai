@@ -195,10 +195,15 @@ function updateAuthUI(isLoggedIn) {
                 tierDisplay = `<div class="user-tier">Free Tier - ${(FREE_MINUTES_LIMIT - currentUser.minutes_used).toFixed(1)} min remaining</div>`;
             }
             
-            // Add "Manage Subscription" button for premium users
-            const manageButton = currentUser.tier === 'premium' 
-                ? '<button onclick="auth.openCustomerPortal()" class="btn-manage" style="background: #4F46E5; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; margin-right: 0.5rem;">Manage Subscription</button>'
-                : '';
+            // Add appropriate action button based on tier
+            let actionButton = '';
+            if (currentUser.tier === 'premium') {
+                // Premium users: Show "Manage Subscription" button
+                actionButton = '<button onclick="auth.openCustomerPortal()" class="btn-manage" style="background: #4F46E5; color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; margin-right: 0.5rem;">Manage Subscription</button>';
+            } else {
+                // Free users: Show "Upgrade Now" button (always visible)
+                actionButton = '<button onclick="showUpgradeModal()" class="btn-upgrade-now" style="background: linear-gradient(135deg, #8B5CF6 0%, #4F46E5 100%); color: white; border: none; padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; margin-right: 0.5rem; font-weight: 600;">💎 Upgrade Now</button>';
+            }
             
             userInfo.innerHTML = `
                 <div class="user-profile">
@@ -209,7 +214,7 @@ function updateAuthUI(isLoggedIn) {
                         ${tierDisplay}
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
-                        ${manageButton}
+                        ${actionButton}
                         <button onclick="auth.logout()" class="btn-logout">Logout</button>
                     </div>
                 </div>
@@ -541,7 +546,7 @@ async function openCustomerPortal() {
         ? 'http://localhost:3000'
         : window.location.origin;
     
-    console.log('🔧 Opening Stripe Customer Portal...');
+    console.log('🔧 Opening Stripe Customer Portal...', { user_id: user.user_id, email: user.email });
     
     try {
         const response = await fetch(`${backendUrl}/api/stripe/create-portal-session`, {
@@ -558,16 +563,25 @@ async function openCustomerPortal() {
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error || 'Failed to open portal');
+            console.error('❌ Portal API error:', error);
+            
+            // More helpful error messages
+            if (response.status === 404) {
+                alert('⚠️ Subscription not found. This can happen if:\n\n1. Your payment just completed (wait 30 seconds)\n2. Your trial was cancelled\n\nPlease try logging out and back in. If this persists, contact support@livetranslateai.com');
+            } else {
+                throw new Error(error.error || 'Failed to open portal');
+            }
+            return;
         }
         
         const data = await response.json();
+        console.log('✅ Portal URL received, redirecting...');
         
         // Redirect to Stripe Customer Portal
         window.location.href = data.portal_url;
     } catch (error) {
         console.error('❌ Portal error:', error);
-        alert('Failed to open subscription management. Please try again or contact support.');
+        alert('Failed to open subscription management. Please try again or contact support@livetranslateai.com');
     }
 }
 

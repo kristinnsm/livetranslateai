@@ -101,6 +101,7 @@ async def health_check():
     }
 
 @app.post("/api/auth/google")
+@limiter.limit("10/minute")  # Max 10 login attempts per minute per IP (prevent brute force)
 async def google_auth(request: Request):
     """Verify Google OAuth token and create session"""
     try:
@@ -222,6 +223,7 @@ async def get_user_usage(request: Request):
 
 # Room management endpoints
 @app.post("/api/rooms/create")
+@limiter.limit("20/hour")  # Max 20 rooms per hour per IP (prevent spam)
 async def create_room(request: Request):
     """Create a new translation room (HOST only)"""
     try:
@@ -414,6 +416,7 @@ async def create_daily_room(request: Request):
 # ===================================
 
 @app.post("/api/stripe/create-checkout-session")
+@limiter.limit("5/minute")  # Max 5 checkout attempts per minute (prevent spam)
 async def create_stripe_checkout(request: Request):
     """Create a Stripe Checkout session for subscription signup"""
     try:
@@ -465,10 +468,23 @@ async def create_stripe_portal(request: Request):
         if not user_id:
             return JSONResponse({"error": "user_id required"}, status_code=400)
         
+        # Get user data
+        user = get_user_by_user_id(user_id)
+        if not user:
+            logger.error(f"❌ User not found: {user_id}")
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        logger.info(f"🔍 Looking for Stripe customer ID for user: {user['email']} (tier: {user.get('tier')})")
+        
         # Get user's Stripe customer ID
         customer_id = get_user_stripe_customer_id(user_id)
+        
         if not customer_id:
-            return JSONResponse({"error": "No subscription found"}, status_code=404)
+            logger.warning(f"⚠️ No Stripe customer ID found for user {user_id} ({user['email']})")
+            logger.warning(f"   Database fields: stripe_customer_id={user.get('stripe_customer_id')}, subscription_id={user.get('subscription_id')}")
+            return JSONResponse({
+                "error": "No subscription found. If you just paid, please wait 30 seconds and try again."
+            }, status_code=404)
         
         # Create portal session
         frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
@@ -476,7 +492,7 @@ async def create_stripe_portal(request: Request):
         
         session = create_portal_session(customer_id, return_url)
         
-        logger.info(f"✅ Created Stripe portal session for user {user_id}")
+        logger.info(f"✅ Created Stripe portal session for user {user_id} ({user['email']})")
         
         return JSONResponse({
             "portal_url": session['url']
@@ -514,8 +530,13 @@ async def stripe_webhook(request: Request):
             session = event['data']['object']
             result = handle_checkout_completed(session)
             
-            # Upgrade user to premium tier
+            # Upgrade user to premium tier AND store customer ID
             if result['user_id']:
+                # First, ensure customer ID is stored
+                update_stripe_customer(result['user_id'], result['customer_id'])
+                logger.info(f"✅ Stored Stripe customer ID {result['customer_id']} for user {result['user_id']}")
+                
+                # Then upgrade tier
                 update_user_tier(
                     result['user_id'],
                     'premium',
@@ -806,6 +827,15 @@ async def websocket_room(websocket: WebSocket, room_id: str):
                 if "bytes" in data:
                     # Handle audio data
                     audio_chunk = data["bytes"]
+                    
+                    # Security: Validate audio size (prevent malicious huge uploads)
+                    if len(audio_chunk) > MAX_AUDIO_SIZE:
+                        logger.warning(f"⚠️ Audio chunk too large: {len(audio_chunk)} bytes (max: {MAX_AUDIO_SIZE})")
+                        await websocket.send_json({
+                            "type": "error",
+                            "message": "Audio chunk too large. Maximum 10MB per chunk."
+                        })
+                        continue
                     
                     # Identify speaker from WebSocket connection using id() as key
                     websocket_id = id(websocket)
