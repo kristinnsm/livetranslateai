@@ -39,7 +39,3 @@ slowapi==0.1.9
 
 # Payments
 stripe==11.1.1
-
-# Payments
-stripe==11.1.1
-
