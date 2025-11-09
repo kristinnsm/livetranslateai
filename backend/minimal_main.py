@@ -494,9 +494,33 @@ async def create_stripe_portal(request: Request):
         if not customer_id:
             logger.warning(f"⚠️ No Stripe customer ID found for user {user_id} ({user['email']})")
             logger.warning(f"   Database fields: stripe_customer_id={user.get('stripe_customer_id')}, subscription_id={user.get('subscription_id')}")
-            return JSONResponse({
-                "error": "No subscription found. If you just paid, please wait 30 seconds and try again."
-            }, status_code=404)
+            
+            # TRY TO FIND IT FROM STRIPE DIRECTLY
+            # This is a fallback if webhook didn't fire or database wasn't updated
+            try:
+                import stripe
+                stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+                
+                # Search Stripe for customer by email
+                customers = stripe.Customer.list(email=user['email'], limit=1)
+                if customers.data:
+                    found_customer_id = customers.data[0].id
+                    logger.info(f"🔍 Found customer in Stripe: {found_customer_id}, storing in DB...")
+                    
+                    # Store it in database for next time
+                    update_stripe_customer(user_id, found_customer_id)
+                    customer_id = found_customer_id
+                    logger.info(f"✅ Recovered customer ID from Stripe and stored in DB")
+                else:
+                    logger.error(f"❌ Customer not found in Stripe either for email: {user['email']}")
+                    return JSONResponse({
+                        "error": "No subscription found. Please contact support@livetranslateai.com"
+                    }, status_code=404)
+            except Exception as stripe_error:
+                logger.error(f"❌ Failed to recover customer from Stripe: {stripe_error}")
+                return JSONResponse({
+                    "error": "No subscription found. If you just paid, please wait 30 seconds and try again."
+                }, status_code=404)
         
         # Create portal session
         frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
