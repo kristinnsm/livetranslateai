@@ -320,7 +320,32 @@ const translations = {
         connecting: "Đang kết nối...",
         connected: "Đã kết nối",
         recording: "Đang ghi...",
-        readyForNext: "Sẵn sàng cho lần tiếp theo"
+        readyForNext: "Sẵn sàng cho lần tiếp theo",
+        videoCall: "Cuộc gọi video",
+        mobileVideoTip: "Mẹo: Tắt camera (📹) để tiết kiệm pin và cải thiện hiệu suất"
+    },
+    is: {
+        tagline: "Rauntímaþýðing fyrir viðskiptasímtöl",
+        createRoom: "Búa til herbergi",
+        joinRoom: "Ganga í herbergi",
+        roomCode: "Herbergisnúmer:",
+        participants: "Þátttakendur",
+        from: "Frá",
+        to: "Til",
+        startSpeaking: "Hefja að tala",
+        stopTranslate: "Stöðva og þýða",
+        original: "Upprunalegt",
+        translation: "Þýðing",
+        replay: "Spila aftur",
+        replayLast: "Spila síðustu þýðingu",
+        waitingForSpeech: "Bíð eftir tal...",
+        readyToTranslate: "Tilbúið til að þýða...",
+        connecting: "Tengist...",
+        connected: "Tengt",
+        recording: "Tek upp...",
+        readyForNext: "Tilbúið fyrir næsta upptöku",
+        videoCall: "Myndsímtal",
+        mobileVideoTip: "Ábending: Slökktu á myndavélinni (📹) til að spara rafhlöðu og bæta afköst"
     }
 };
 
