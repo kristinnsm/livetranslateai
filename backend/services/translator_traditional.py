@@ -127,11 +127,22 @@ class TraditionalTranslator:
             Translated text
         """
         try:
-            # Translation prompt optimized for natural conversation
-            system_prompt = f"""You are a professional real-time translator.
+            # Translation prompt optimized for natural conversation with Icelandic-specific instructions
+            icelandic_instructions = ""
+            if self.target_lang == "is" or source_lang == "is":
+                icelandic_instructions = """
+CRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:
+- Special characters: ð (eth), þ (thorn), æ, ö
+- Correct declensions and conjugations
+- Proper capitalization (Icelandic uses lowercase for most nouns)
+- Natural Icelandic word order
+"""
+            
+            system_prompt = f"""You are a professional real-time translator specializing in accurate, natural translations.
 Translate the following from {source_lang} to {self.target_lang}.
+{icelandic_instructions}
 Maintain natural conversational tone, slang, and emotional context.
-Keep translations concise and accurate.
+Keep translations concise and accurate. Use correct spelling, grammar, and punctuation.
 Previous context: {self.previous_transcript[-150:] if self.previous_transcript else 'None'}"""
 
             response = await self.client.chat.completions.create(

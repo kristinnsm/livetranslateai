@@ -708,11 +708,17 @@ async def websocket_translate(websocket: WebSocket):
                         if not transcription:
                             raise Exception("Empty transcription - no speech detected")
                         
-                        # Step 2: Translate with GPT-4o (ultra-fast)
+                        # Step 2: Translate with GPT-3.5-turbo (with Icelandic-specific instructions)
                         translation_start = time.time()
                         logger.info("🌍 Starting translation...")
                         
-                        # Use minimal system message for fastest response
+                        # Add Icelandic-specific instructions if translating to/from Icelandic
+                        icelandic_instructions = ""
+                        if target_lang == "is" or source_lang == "is":
+                            icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                        
+                        translation_prompt = f"Translate from {source_lang} to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
+                        
                         translation_response = requests.post(
                             "https://api.openai.com/v1/chat/completions",
                             headers={
@@ -722,7 +728,7 @@ async def websocket_translate(websocket: WebSocket):
                             json={
                                 "model": "gpt-3.5-turbo",  # 5x faster than GPT-4o for simple translations
                                 "messages": [
-                                    {"role": "user", "content": f"Translate from {source_lang} to {target_lang}:\n{transcription}"}
+                                    {"role": "user", "content": translation_prompt}
                                 ],
                                 "max_tokens": 200,
                                 "temperature": 0,
@@ -1117,8 +1123,16 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 # Translate to listener's native language (source), not target
                 logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {translate_to_lang} (speaker speaks {speaker_source_lang}, listener wants {translate_to_lang})")
                 
-                # Step 2a: Translate with GPT-3.5-turbo
+                # Step 2a: Translate with GPT-3.5-turbo (with Icelandic-specific instructions)
                 translation_start = time.time()
+                
+                # Add Icelandic-specific instructions if translating to/from Icelandic
+                icelandic_instructions = ""
+                if translate_to_lang == "is" or speaker_source_lang == "is":
+                    icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                
+                translation_prompt = f"Translate from {speaker_source_lang} to {translate_to_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
+                
                 translation_response = requests.post(
                     "https://api.openai.com/v1/chat/completions",
                     headers={
@@ -1128,7 +1142,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     json={
                         "model": "gpt-3.5-turbo",
                         "messages": [
-                            {"role": "user", "content": f"Translate from {speaker_source_lang} to {translate_to_lang}:\n{transcription}"}
+                            {"role": "user", "content": translation_prompt}
                         ],
                         "max_tokens": 1000,  # Increased to handle longer translations
                         "temperature": 0,
