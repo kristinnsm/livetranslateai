@@ -96,11 +96,24 @@ class TraditionalTranslator:
             audio_file.name = "audio.wav"
             
             # Whisper transcription with context
+            # Build prompt: previous transcript + Icelandic-specific vocabulary if needed
+            whisper_prompt = None
+            if self.previous_transcript:
+                whisper_prompt = self.previous_transcript[-200:]
+            
+            # Add Icelandic-specific vocabulary to improve transcription accuracy
+            if self.source_lang == "is":
+                icelandic_vocab = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+                if whisper_prompt:
+                    whisper_prompt = f"{icelandic_vocab} {whisper_prompt}"
+                else:
+                    whisper_prompt = icelandic_vocab
+            
             response = await self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
                 language=self.source_lang if self.source_lang != "auto" else None,
-                prompt=self.previous_transcript[-200:] if self.previous_transcript else None,
+                prompt=whisper_prompt,
                 response_format="verbose_json"
             )
             

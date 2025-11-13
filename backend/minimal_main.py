@@ -682,6 +682,20 @@ async def websocket_translate(websocket: WebSocket):
                         
                         # Step 1: Transcribe audio with Whisper (optimized)
                         logger.info("📝 Starting Whisper transcription...")
+                        
+                        # Add Icelandic-specific prompt to improve transcription accuracy
+                        whisper_prompt = None
+                        if source_lang == "is":
+                            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+                        
+                        whisper_data = {
+                            "model": "whisper-1",
+                            "language": source_lang,  # Use selected source language
+                            "response_format": "json"  # Explicit format
+                        }
+                        if whisper_prompt:
+                            whisper_data["prompt"] = whisper_prompt
+                        
                         whisper_response = requests.post(
                             "https://api.openai.com/v1/audio/transcriptions",
                             headers={
@@ -690,11 +704,7 @@ async def websocket_translate(websocket: WebSocket):
                             files={
                                 "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
                             },
-                            data={
-                                "model": "whisper-1",
-                                "language": source_lang,  # Use selected source language
-                                "response_format": "json"  # Explicit format
-                            },
+                            data=whisper_data,
                             timeout=10  # Whisper is usually done in 2-4s
                         )
                         
@@ -1040,6 +1050,20 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
         # Step 1: Transcribe audio ONCE in the speaker's language
         whisper_start = time.time()
         logger.info(f"📝 Transcribing audio in {speaker_source_lang} (speaker's language)...")
+        
+        # Add Icelandic-specific prompt to improve transcription accuracy
+        whisper_prompt = None
+        if speaker_source_lang == "is":
+            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+        
+        whisper_data = {
+            "model": "whisper-1",
+            "language": speaker_source_lang,  # Use speaker's source language
+            "response_format": "json"
+        }
+        if whisper_prompt:
+            whisper_data["prompt"] = whisper_prompt
+        
         whisper_response = requests.post(
             "https://api.openai.com/v1/audio/transcriptions",
             headers={
@@ -1048,11 +1072,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
             files={
                 "file": ("audio.webm", io.BytesIO(audio_chunk), "audio/webm")
             },
-            data={
-                "model": "whisper-1",
-                "language": speaker_source_lang,  # Use speaker's source language
-                "response_format": "json"
-            },
+            data=whisper_data,
             timeout=10
         )
         
