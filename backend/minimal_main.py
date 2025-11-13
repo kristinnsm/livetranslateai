@@ -686,7 +686,7 @@ async def websocket_translate(websocket: WebSocket):
                         # Add Icelandic-specific prompt to improve transcription accuracy
                         whisper_prompt = None
                         if source_lang == "is":
-                            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+                            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð og setningar: vandamálið, prófum, prófa, prófað, prófun, þýðing, þýðingin, þýðingar, þýða, þýðir, þýddi, spænska, spænsku, íslenska, íslensku, íslenskar, íslenskum, nokkurnvegin, nokkurn veginn, rétt, réttur, réttur, rétt, réttri, réttum, textinn, texti, texta, þarf, þarft, þurfa, þurftu, nákvæmlega, nákvæmur, nákvæmt, getur, geta, getum, getið, gettu, leiðinlegt, leiðinlegur, leiðinleg, sjáum, sjá, sér, séð, smátt, smá, smáir, smáar, smáum, hversu, hversu mikið, hversu lengi, ættir, ætti, ættum, ættuð, ættu, appið, app, appi, appin."
                         
                         whisper_data = {
                             "model": "whisper-1",
@@ -1054,7 +1054,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
         # Add Icelandic-specific prompt to improve transcription accuracy
         whisper_prompt = None
         if speaker_source_lang == "is":
-            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+            whisper_prompt = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð og setningar: vandamálið, prófum, prófa, prófað, prófun, þýðing, þýðingin, þýðingar, þýða, þýðir, þýddi, spænska, spænsku, íslenska, íslensku, íslenskar, íslenskum, nokkurnvegin, nokkurn veginn, rétt, réttur, réttur, rétt, réttri, réttum, textinn, texti, texta, þarf, þarft, þurfa, þurftu, nákvæmlega, nákvæmur, nákvæmt, getur, geta, getum, getið, gettu, leiðinlegt, leiðinlegur, leiðinleg, sjáum, sjá, sér, séð, smátt, smá, smáir, smáar, smáum, hversu, hversu mikið, hversu lengi, ættir, ætti, ættum, ættuð, ættu, appið, app, appi, appin."
         
         whisper_data = {
             "model": "whisper-1",

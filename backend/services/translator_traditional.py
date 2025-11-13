@@ -103,7 +103,7 @@ class TraditionalTranslator:
             
             # Add Icelandic-specific vocabulary to improve transcription accuracy
             if self.source_lang == "is":
-                icelandic_vocab = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð: hvernig, það, þessi, þetta, ég, þú, við, þið, þeir, þær, þau, spurning, spænsku, íslensku, ukrænsku, arabísku, viennamsku, stafi, stafir, rétt, réttur, góður, góða, fullkomið, erfiðir, erfiðt."
+                icelandic_vocab = "Þetta er íslenskur texti með íslenskum stöfum: ð, þ, æ, ö. Algeng orð og setningar: vandamálið, prófum, prófa, prófað, prófun, þýðing, þýðingin, þýðingar, þýða, þýðir, þýddi, spænska, spænsku, íslenska, íslensku, íslenskar, íslenskum, nokkurnvegin, nokkurn veginn, rétt, réttur, réttur, rétt, réttri, réttum, textinn, texti, texta, þarf, þarft, þurfa, þurftu, nákvæmlega, nákvæmur, nákvæmt, getur, geta, getum, getið, gettu, leiðinlegt, leiðinlegur, leiðinleg, sjáum, sjá, sér, séð, smátt, smá, smáir, smáar, smáum, hversu, hversu mikið, hversu lengi, ættir, ætti, ættum, ættuð, ættu, appið, app, appi, appin."
                 if whisper_prompt:
                     whisper_prompt = f"{icelandic_vocab} {whisper_prompt}"
                 else:
