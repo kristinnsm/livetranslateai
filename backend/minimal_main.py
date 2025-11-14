@@ -544,6 +544,7 @@ async def create_stripe_checkout(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/api/admin/reset-account")
+@limiter.limit("10/minute")  # Rate limit admin endpoints
 async def reset_account(request: Request):
     """Admin endpoint to reset user account (clear test mode Stripe data)"""
     try:
@@ -587,6 +588,7 @@ async def reset_account(request: Request):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/api/admin/sync-stripe")
+@limiter.limit("10/minute")  # Rate limit admin endpoints
 async def sync_stripe_subscription(request: Request):
     """Manually sync user subscription from Stripe (useful if webhook didn't fire)"""
     try:
@@ -728,6 +730,9 @@ async def create_stripe_portal(request: Request):
 async def stripe_webhook(request: Request):
     """Handle Stripe webhook events"""
     try:
+        # Log that webhook endpoint was hit (even if signature fails)
+        logger.info(f"📨 Webhook endpoint hit from IP: {request.client.host}")
+        
         # Get raw body for signature verification
         payload = await request.body()
         signature = request.headers.get('stripe-signature')
@@ -736,10 +741,12 @@ async def stripe_webhook(request: Request):
             logger.error("❌ Missing Stripe signature")
             return JSONResponse({"error": "Missing signature"}, status_code=400)
         
+        logger.info(f"📨 Webhook signature present: {signature[:20]}...")
+        
         # Verify webhook signature
         event = verify_webhook_signature(payload, signature)
         if not event:
-            logger.error("❌ Invalid webhook signature")
+            logger.error("❌ Invalid webhook signature - check STRIPE_WEBHOOK_SECRET matches Stripe dashboard")
             return JSONResponse({"error": "Invalid signature"}, status_code=400)
         
         event_type = event['type']
