@@ -619,31 +619,40 @@ async def sync_stripe_subscription(request: Request):
         customer = customers.data[0]
         customer_id = customer.id
         
-        # Get active subscriptions for this customer
-        subscriptions = stripe.Subscription.list(customer=customer_id, status='active', limit=1)
+        # Get subscriptions for this customer (check both active and trialing status)
+        # Trialing = 7-day free trial, Active = paid subscription
+        subscriptions_active = stripe.Subscription.list(customer=customer_id, status='active', limit=1)
+        subscriptions_trialing = stripe.Subscription.list(customer=customer_id, status='trialing', limit=1)
         
-        if subscriptions.data:
-            subscription = subscriptions.data[0]
+        subscription = None
+        if subscriptions_active.data:
+            subscription = subscriptions_active.data[0]
+        elif subscriptions_trialing.data:
+            subscription = subscriptions_trialing.data[0]
+        
+        if subscription:
             subscription_id = subscription.id
+            subscription_status = subscription.status
             
-            # Store customer ID and upgrade user
+            # Store customer ID and upgrade user (both trialing and active count as premium)
             update_stripe_customer(user_id, customer_id)
             update_user_tier(user_id, 'premium', subscription_id)
             
-            logger.info(f"✅ Synced subscription: customer={customer_id}, subscription={subscription_id}")
+            logger.info(f"✅ Synced subscription: customer={customer_id}, subscription={subscription_id}, status={subscription_status}")
             
             return JSONResponse({
                 "status": "success",
-                "message": f"User upgraded to premium",
+                "message": f"User upgraded to premium (subscription status: {subscription_status})",
                 "customer_id": customer_id,
-                "subscription_id": subscription_id
+                "subscription_id": subscription_id,
+                "subscription_status": subscription_status
             })
         else:
-            # No active subscription found
-            logger.warning(f"⚠️ Customer {customer_id} exists but no active subscription")
+            # No subscription found
+            logger.warning(f"⚠️ Customer {customer_id} exists but no subscription found (checked active and trialing)")
             return JSONResponse({
                 "status": "no_subscription",
-                "message": "Customer exists but no active subscription found"
+                "message": "Customer exists but no subscription found (checked active and trialing status)"
             })
         
     except Exception as e:
