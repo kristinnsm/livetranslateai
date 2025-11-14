@@ -41,6 +41,82 @@ FREE_MINUTES_LIMIT = 15  # Free tier limit
 MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB max audio chunk (security limit)
 MAX_CONCURRENT_CALLS_PER_USER = 3  # Prevent abuse
 
+# Helper function for two-step translation (improves quality for Icelandic)
+def translate_via_english(text: str, source_lang: str, target_lang: str) -> str:
+    """
+    Two-step translation: source → English → target
+    Improves quality for Icelandic translations (English has best training data)
+    
+    Args:
+        text: Source text to translate
+        source_lang: Source language code
+        target_lang: Target language code (should be "is" for Icelandic)
+    
+    Returns:
+        Translated text
+    """
+    try:
+        # Step 1: Translate to English (if not already English)
+        if source_lang != "en":
+            logger.info(f"🌍 Step 1: Translating {source_lang} → English")
+            step1_response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "gpt-3.5-turbo",
+                    "messages": [
+                        {"role": "user", "content": f"Translate from {source_lang} to English. Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{text}"}
+                    ],
+                    "max_tokens": 200,
+                    "temperature": 0,
+                },
+                timeout=4
+            )
+            
+            if step1_response.status_code != 200:
+                raise Exception(f"Step 1 translation failed: {step1_response.status_code}")
+            
+            english_text = step1_response.json()["choices"][0]["message"]["content"].strip()
+            logger.info(f"✅ English intermediate: '{english_text}'")
+        else:
+            english_text = text
+        
+        # Step 2: Translate English → Icelandic (with Icelandic-specific instructions)
+        logger.info(f"🌍 Step 2: Translating English → {target_lang}")
+        icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+        
+        step2_response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENAI_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "user", "content": f"Translate from English to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{english_text}"}
+                ],
+                "max_tokens": 200,
+                "temperature": 0,
+            },
+            timeout=4
+        )
+        
+        if step2_response.status_code != 200:
+            raise Exception(f"Step 2 translation failed: {step2_response.status_code}")
+        
+        final_translation = step2_response.json()["choices"][0]["message"]["content"].strip()
+        logger.info(f"✅ Final translation: '{final_translation}'")
+        
+        return final_translation
+        
+    except Exception as e:
+        logger.error(f"❌ Two-step translation error: {e}")
+        raise
+
 # Setup
 app = FastAPI(title="LiveTranslateAI API", version="1.0.0")
 
@@ -718,38 +794,46 @@ async def websocket_translate(websocket: WebSocket):
                         if not transcription:
                             raise Exception("Empty transcription - no speech detected")
                         
-                        # Step 2: Translate with GPT-3.5-turbo (with Icelandic-specific instructions)
+                        # Step 2: Translate with GPT-3.5-turbo
+                        # Use two-step translation (via English) for Icelandic when source is not English
+                        # This improves quality because English has the best training data
                         translation_start = time.time()
                         logger.info("🌍 Starting translation...")
                         
-                        # Add Icelandic-specific instructions if translating to/from Icelandic
-                        icelandic_instructions = ""
-                        if target_lang == "is" or source_lang == "is":
-                            icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                        if target_lang == "is" and source_lang != "en":
+                            # Two-step: source → English → Icelandic (better quality)
+                            logger.info(f"🌍 Using two-step translation for better Icelandic quality: {source_lang} → English → Icelandic")
+                            translated = translate_via_english(transcription, source_lang, target_lang)
+                        else:
+                            # Direct translation (faster, sufficient for most cases)
+                            icelandic_instructions = ""
+                            if target_lang == "is" or source_lang == "is":
+                                icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                            
+                            translation_prompt = f"Translate from {source_lang} to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
+                            
+                            translation_response = requests.post(
+                                "https://api.openai.com/v1/chat/completions",
+                                headers={
+                                    "Authorization": f"Bearer {OPENAI_API_KEY}",
+                                    "Content-Type": "application/json"
+                                },
+                                json={
+                                    "model": "gpt-3.5-turbo",  # 5x faster than GPT-4o for simple translations
+                                    "messages": [
+                                        {"role": "user", "content": translation_prompt}
+                                    ],
+                                    "max_tokens": 200,
+                                    "temperature": 0,
+                                },
+                                timeout=4  # Much faster model
+                            )
+                            
+                            if translation_response.status_code != 200:
+                                raise Exception(f"Translation failed: {translation_response.status_code}")
+                            
+                            translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                         
-                        translation_prompt = f"Translate from {source_lang} to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
-                        
-                        translation_response = requests.post(
-                            "https://api.openai.com/v1/chat/completions",
-                            headers={
-                                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                                "Content-Type": "application/json"
-                            },
-                            json={
-                                "model": "gpt-3.5-turbo",  # 5x faster than GPT-4o for simple translations
-                                "messages": [
-                                    {"role": "user", "content": translation_prompt}
-                                ],
-                                "max_tokens": 200,
-                                "temperature": 0,
-                            },
-                            timeout=4  # Much faster model
-                        )
-                        
-                        if translation_response.status_code != 200:
-                            raise Exception(f"Translation failed: {translation_response.status_code}")
-                        
-                        translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                         translation_time = int((time.time() - translation_start) * 1000)
                         logger.info(f"✅ Translation: '{translated}' ({translation_time}ms)")
                         
@@ -785,8 +869,9 @@ async def websocket_translate(websocket: WebSocket):
                         latency_ms = int((time.time() - start_time) * 1000)
                         logger.info(f"⏱️ Total latency: {latency_ms}ms (Whisper: {whisper_time}ms | Translation: {translation_time}ms | TTS: {tts_time if tts_response.status_code == 200 else 0}ms)")
                         
-                        # Hide original transcription for Icelandic (not needed for display)
-                        # Still transcribe internally for translation, but don't show to users
+                        # Hide original transcription ONLY when source is Icelandic (workers don't need to see what they said)
+                        # BUT show it when target is Icelandic (workers need to see what refugees said)
+                        # So: hide when source_lang == "is", show when target_lang == "is"
                         original_display = "" if source_lang == "is" else transcription
                         
                         await websocket.send_json({
@@ -1147,38 +1232,49 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 # Translate to listener's native language (source), not target
                 logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {translate_to_lang} (speaker speaks {speaker_source_lang}, listener wants {translate_to_lang})")
                 
-                # Step 2a: Translate with GPT-3.5-turbo (with Icelandic-specific instructions)
+                # Step 2a: Translate with GPT-3.5-turbo
+                # Use two-step translation (via English) for Icelandic when source is not English
                 translation_start = time.time()
                 
-                # Add Icelandic-specific instructions if translating to/from Icelandic
-                icelandic_instructions = ""
-                if translate_to_lang == "is" or speaker_source_lang == "is":
-                    icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                if translate_to_lang == "is" and speaker_source_lang != "en":
+                    # Two-step: source → English → Icelandic (better quality)
+                    logger.info(f"🌍 Using two-step translation for better Icelandic quality: {speaker_source_lang} → English → Icelandic")
+                    try:
+                        translated = translate_via_english(transcription, speaker_source_lang, translate_to_lang)
+                    except Exception as e:
+                        logger.error(f"Two-step translation failed for {listener['name']}: {e}")
+                        continue
+                else:
+                    # Direct translation (faster, sufficient for most cases)
+                    icelandic_instructions = ""
+                    if translate_to_lang == "is" or speaker_source_lang == "is":
+                        icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+                    
+                    translation_prompt = f"Translate from {speaker_source_lang} to {translate_to_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
+                    
+                    translation_response = requests.post(
+                        "https://api.openai.com/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {OPENAI_API_KEY}",
+                            "Content-Type": "application/json"
+                        },
+                        json={
+                            "model": "gpt-3.5-turbo",
+                            "messages": [
+                                {"role": "user", "content": translation_prompt}
+                            ],
+                            "max_tokens": 1000,  # Increased to handle longer translations
+                            "temperature": 0,
+                        },
+                        timeout=4
+                    )
+                    
+                    if translation_response.status_code != 200:
+                        logger.error(f"Translation failed for {listener['name']}: {translation_response.status_code}")
+                        continue
+                    
+                    translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                 
-                translation_prompt = f"Translate from {speaker_source_lang} to {translate_to_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
-                
-                translation_response = requests.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {OPENAI_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "gpt-3.5-turbo",
-                        "messages": [
-                            {"role": "user", "content": translation_prompt}
-                        ],
-                        "max_tokens": 1000,  # Increased to handle longer translations
-                        "temperature": 0,
-                    },
-                    timeout=4
-                )
-                
-                if translation_response.status_code != 200:
-                    logger.error(f"Translation failed for {listener['name']}: {translation_response.status_code}")
-                    continue
-                
-                translated = translation_response.json()["choices"][0]["message"]["content"].strip()
                 translation_time = int((time.time() - translation_start) * 1000)
                 logger.info(f"✅ Translation for {listener['name']}: '{translated}' ({translation_time}ms)")
                 logger.info(f"🔍 DEBUG - Translation details: speaker_lang={speaker_source_lang}, translate_to_lang={translate_to_lang}, translated_text_lang={translate_to_lang}")
@@ -1209,8 +1305,9 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 
                 latency_ms = int((time.time() - start_time) * 1000)
                 
-                # Hide original transcription for Icelandic (not needed for display)
-                # Still transcribe internally for translation, but don't show to users
+                # Hide original transcription ONLY when source is Icelandic (workers don't need to see what they said)
+                # BUT show it when target is Icelandic (workers need to see what refugees said)
+                # So: hide when speaker_source_lang == "is", show when translate_to_lang == "is"
                 original_display = "" if speaker_source_lang == "is" else transcription
                 
                 # Send translation to this specific listener

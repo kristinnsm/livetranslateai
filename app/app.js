@@ -473,15 +473,16 @@ function startAudioCapture() {
  * Display translation in UI
  */
 function displayTranslation(data) {
-    // Hide original text for Icelandic (not needed - workers don't need it, refugees don't understand it)
-    const isIcelandic = data.source_lang === "is";
+    // Hide original text ONLY when source is Icelandic (workers don't need to see what they said)
+    // BUT show it when target is Icelandic (workers need to see what refugees said)
+    const hideOriginal = data.source_lang === "is";
     
-    if (isIcelandic) {
-        // Hide the original text box for Icelandic
+    if (hideOriginal) {
+        // Hide the original text box when source is Icelandic
         elements.originalText.textContent = "";
         elements.originalText.parentElement.style.display = "none";
     } else {
-        // Show original text for other languages
+        // Show original text for other languages (including when target is Icelandic)
         elements.originalText.parentElement.style.display = "";
         if (data.original) {
             elements.originalText.textContent = data.original;
@@ -1282,15 +1283,16 @@ function handleRoomMessage(event) {
                 console.log(`🔍 Original text (${message.source_lang}): "${message.original ? message.original.substring(0, 50) : '(hidden for Icelandic)'}..."`);
                 console.log(`🔍 Translated text (${message.target_lang}): "${message.translated.substring(0, 50)}..."`);
                 
-                // Hide original text for Icelandic (not needed - workers don't need it, refugees don't understand it)
-                const isIcelandic = message.source_lang === "is";
+                // Hide original text ONLY when source is Icelandic (workers don't need to see what they said)
+                // BUT show it when target is Icelandic (workers need to see what refugees said)
+                const hideOriginal = message.source_lang === "is";
                 
-                if (isIcelandic) {
-                    // Hide the original text box for Icelandic
+                if (hideOriginal) {
+                    // Hide the original text box when source is Icelandic
                     elements.originalText.textContent = "";
                     elements.originalText.parentElement.style.display = "none";
                 } else {
-                    // Show original text for other languages
+                    // Show original text for other languages (including when target is Icelandic)
                     elements.originalText.parentElement.style.display = "";
                     elements.originalText.textContent = message.original || "";
                 }
