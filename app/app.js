@@ -473,11 +473,21 @@ function startAudioCapture() {
  * Display translation in UI
  */
 function displayTranslation(data) {
-    // Update original text
-    if (data.original) {
-        elements.originalText.textContent = data.original;
-        elements.originalText.classList.add('fade-in');
-        setTimeout(() => elements.originalText.classList.remove('fade-in'), 500);
+    // Hide original text for Icelandic (not needed - workers don't need it, refugees don't understand it)
+    const isIcelandic = data.source_lang === "is";
+    
+    if (isIcelandic) {
+        // Hide the original text box for Icelandic
+        elements.originalText.textContent = "";
+        elements.originalText.parentElement.style.display = "none";
+    } else {
+        // Show original text for other languages
+        elements.originalText.parentElement.style.display = "";
+        if (data.original) {
+            elements.originalText.textContent = data.original;
+            elements.originalText.classList.add('fade-in');
+            setTimeout(() => elements.originalText.classList.remove('fade-in'), 500);
+        }
     }
 
     // Update translated text
@@ -487,7 +497,7 @@ function displayTranslation(data) {
         setTimeout(() => elements.translatedText.classList.remove('fade-in'), 500);
     }
 
-    console.log(`Translation: "${data.original}" → "${data.translated}" (${data.latency_ms}ms)`);
+    console.log(`Translation: "${data.original || '(hidden for Icelandic)'}" → "${data.translated}" (${data.latency_ms}ms)`);
     
     // Play TTS audio if available
     if (data.audio_base64) {
@@ -749,13 +759,18 @@ function triggerReplay() {
     // Show replay UI
     elements.replayPlayer.classList.remove('hidden');
     
-    // Display the last translation text
+    // Display the last translation text (hide original for Icelandic)
+    const isIcelandic = lastTranslation.source_lang === "is";
+    const originalSection = isIcelandic ? '' : `
+        <div style="margin-bottom: 10px;">
+            <strong style="color: #64B5F6;">Original:</strong><br>
+            <span style="font-size: 1.1em;">${lastTranslation.original || ''}</span>
+        </div>
+    `;
+    
     elements.replaySubtitles.innerHTML = `
         <div style="padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 10px;">
-            <div style="margin-bottom: 10px;">
-                <strong style="color: #64B5F6;">Original:</strong><br>
-                <span style="font-size: 1.1em;">${lastTranslation.original}</span>
-            </div>
+            ${originalSection}
             <div>
                 <strong style="color: #81C784;">Translation:</strong><br>
                 <span style="font-size: 1.1em;">${lastTranslation.translated}</span>
@@ -1264,11 +1279,22 @@ function handleRoomMessage(event) {
                 
                 console.log(`✅ Processing translation for me!`);
                 console.log(`🔍 Translation data - source_lang: ${message.source_lang}, target_lang: ${message.target_lang}`);
-                console.log(`🔍 Original text (${message.source_lang}): "${message.original.substring(0, 50)}..."`);
+                console.log(`🔍 Original text (${message.source_lang}): "${message.original ? message.original.substring(0, 50) : '(hidden for Icelandic)'}..."`);
                 console.log(`🔍 Translated text (${message.target_lang}): "${message.translated.substring(0, 50)}..."`);
                 
-                // Handle translation
-                elements.originalText.textContent = message.original;
+                // Hide original text for Icelandic (not needed - workers don't need it, refugees don't understand it)
+                const isIcelandic = message.source_lang === "is";
+                
+                if (isIcelandic) {
+                    // Hide the original text box for Icelandic
+                    elements.originalText.textContent = "";
+                    elements.originalText.parentElement.style.display = "none";
+                } else {
+                    // Show original text for other languages
+                    elements.originalText.parentElement.style.display = "";
+                    elements.originalText.textContent = message.original || "";
+                }
+                
                 elements.translatedText.textContent = message.translated;
                 elements.latencyDisplay.textContent = `${message.latency_ms}ms`;
                 

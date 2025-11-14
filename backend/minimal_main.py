@@ -785,10 +785,14 @@ async def websocket_translate(websocket: WebSocket):
                         latency_ms = int((time.time() - start_time) * 1000)
                         logger.info(f"⏱️ Total latency: {latency_ms}ms (Whisper: {whisper_time}ms | Translation: {translation_time}ms | TTS: {tts_time if tts_response.status_code == 200 else 0}ms)")
                         
+                        # Hide original transcription for Icelandic (not needed for display)
+                        # Still transcribe internally for translation, but don't show to users
+                        original_display = "" if source_lang == "is" else transcription
+                        
                         await websocket.send_json({
                             "type": "translation",
                             "timestamp": datetime.utcnow().timestamp(),
-                            "original": transcription,
+                            "original": original_display,
                             "translated": translated,
                             "source_lang": source_lang,
                             "target_lang": target_lang,
@@ -1205,11 +1209,15 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 
                 latency_ms = int((time.time() - start_time) * 1000)
                 
+                # Hide original transcription for Icelandic (not needed for display)
+                # Still transcribe internally for translation, but don't show to users
+                original_display = "" if speaker_source_lang == "is" else transcription
+                
                 # Send translation to this specific listener
                 translation_message = {
                     "type": "translation",
                     "timestamp": datetime.utcnow().timestamp(),
-                    "original": transcription,
+                    "original": original_display,
                     "translated": translated,
                     "source_lang": speaker_source_lang,
                     "target_lang": translate_to_lang,
