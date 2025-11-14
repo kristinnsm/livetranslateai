@@ -41,16 +41,17 @@ FREE_MINUTES_LIMIT = 15  # Free tier limit
 MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB max audio chunk (security limit)
 MAX_CONCURRENT_CALLS_PER_USER = 3  # Prevent abuse
 
-# Helper function for two-step translation (improves quality for Icelandic)
+# Helper function for two-step translation (improves quality via English intermediary)
 def translate_via_english(text: str, source_lang: str, target_lang: str) -> str:
     """
     Two-step translation: source → English → target
-    Improves quality for Icelandic translations (English has best training data)
+    Improves quality because English has the best training data
+    Works for any language pair, especially useful for Icelandic
     
     Args:
         text: Source text to translate
         source_lang: Source language code
-        target_lang: Target language code (should be "is" for Icelandic)
+        target_lang: Target language code
     
     Returns:
         Translated text
@@ -84,9 +85,13 @@ def translate_via_english(text: str, source_lang: str, target_lang: str) -> str:
         else:
             english_text = text
         
-        # Step 2: Translate English → Icelandic (with Icelandic-specific instructions)
+        # Step 2: Translate English → target language
         logger.info(f"🌍 Step 2: Translating English → {target_lang}")
-        icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
+        
+        # Add Icelandic-specific instructions only if target is Icelandic
+        target_instructions = ""
+        if target_lang == "is":
+            target_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
         
         step2_response = requests.post(
             "https://api.openai.com/v1/chat/completions",
@@ -97,7 +102,7 @@ def translate_via_english(text: str, source_lang: str, target_lang: str) -> str:
             json={
                 "model": "gpt-3.5-turbo",
                 "messages": [
-                    {"role": "user", "content": f"Translate from English to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{english_text}"}
+                    {"role": "user", "content": f"Translate from English to {target_lang}.{target_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{english_text}"}
                 ],
                 "max_tokens": 200,
                 "temperature": 0,
@@ -795,7 +800,7 @@ async def websocket_translate(websocket: WebSocket):
                             raise Exception("Empty transcription - no speech detected")
                         
                         # Step 2: Translate with GPT-3.5-turbo
-                        # Use two-step translation (via English) for Icelandic when source is not English
+                        # Use two-step translation (via English) for Icelandic translations
                         # This improves quality because English has the best training data
                         translation_start = time.time()
                         logger.info("🌍 Starting translation...")
@@ -804,10 +809,14 @@ async def websocket_translate(websocket: WebSocket):
                             # Two-step: source → English → Icelandic (better quality)
                             logger.info(f"🌍 Using two-step translation for better Icelandic quality: {source_lang} → English → Icelandic")
                             translated = translate_via_english(transcription, source_lang, target_lang)
+                        elif source_lang == "is" and target_lang != "en":
+                            # Two-step: Icelandic → English → target (ensures proper translation from Icelandic)
+                            logger.info(f"🌍 Using two-step translation from Icelandic: {source_lang} → English → {target_lang}")
+                            translated = translate_via_english(transcription, source_lang, target_lang)
                         else:
                             # Direct translation (faster, sufficient for most cases)
                             icelandic_instructions = ""
-                            if target_lang == "is" or source_lang == "is":
+                            if target_lang == "is":
                                 icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
                             
                             translation_prompt = f"Translate from {source_lang} to {target_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
@@ -1233,7 +1242,7 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                 logger.info(f"🌍 Translating for {listener_name}: {speaker_source_lang} → {translate_to_lang} (speaker speaks {speaker_source_lang}, listener wants {translate_to_lang})")
                 
                 # Step 2a: Translate with GPT-3.5-turbo
-                # Use two-step translation (via English) for Icelandic when source is not English
+                # Use two-step translation (via English) for Icelandic translations
                 translation_start = time.time()
                 
                 if translate_to_lang == "is" and speaker_source_lang != "en":
@@ -1244,10 +1253,18 @@ async def process_room_translation(room_id: str, audio_chunk: bytes, speaker_id:
                     except Exception as e:
                         logger.error(f"Two-step translation failed for {listener['name']}: {e}")
                         continue
+                elif speaker_source_lang == "is" and translate_to_lang != "en":
+                    # Two-step: Icelandic → English → target (ensures proper translation from Icelandic)
+                    logger.info(f"🌍 Using two-step translation from Icelandic: {speaker_source_lang} → English → {translate_to_lang}")
+                    try:
+                        translated = translate_via_english(transcription, speaker_source_lang, translate_to_lang)
+                    except Exception as e:
+                        logger.error(f"Two-step translation failed for {listener['name']}: {e}")
+                        continue
                 else:
                     # Direct translation (faster, sufficient for most cases)
                     icelandic_instructions = ""
-                    if translate_to_lang == "is" or speaker_source_lang == "is":
+                    if translate_to_lang == "is":
                         icelandic_instructions = "\n\nCRITICAL for Icelandic: Use correct spelling and grammar. Pay special attention to:\n- Special characters: ð (eth), þ (thorn), æ, ö\n- Correct declensions and conjugations\n- Proper capitalization (Icelandic uses lowercase for most nouns)\n- Natural Icelandic word order\n"
                     
                     translation_prompt = f"Translate from {speaker_source_lang} to {translate_to_lang}.{icelandic_instructions}Maintain natural conversational tone. Use correct spelling, grammar, and punctuation.\n\nText to translate:\n{transcription}"
