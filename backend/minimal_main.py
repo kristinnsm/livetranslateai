@@ -572,12 +572,22 @@ async def create_stripe_portal(request: Request):
         # Get user's Stripe customer ID
         customer_id = get_user_stripe_customer_id(user_id)
         
-        if not customer_id:
-            logger.warning(f"⚠️ No Stripe customer ID found for user {user_id} ({user['email']})")
-            logger.warning(f"   Database fields: stripe_customer_id={user.get('stripe_customer_id')}, subscription_id={user.get('subscription_id')}")
+        # Try to create portal session, but if customer ID is invalid, recover from Stripe
+        frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
+        return_url = f"{frontend_url}/app"
+        
+        try:
+            # Try to create portal session with existing customer ID
+            if customer_id:
+                session = create_portal_session(customer_id, return_url)
+            else:
+                raise Exception("No customer ID in database")
+        except Exception as portal_error:
+            # Customer ID might be invalid (e.g., test mode ID in live mode)
+            # Try to recover from Stripe by email
+            logger.warning(f"⚠️ Portal creation failed with customer ID {customer_id}: {portal_error}")
+            logger.info(f"🔍 Attempting to recover customer ID from Stripe by email: {user['email']}")
             
-            # TRY TO FIND IT FROM STRIPE DIRECTLY
-            # This is a fallback if webhook didn't fire or database wasn't updated
             try:
                 import stripe
                 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
@@ -586,14 +596,17 @@ async def create_stripe_portal(request: Request):
                 customers = stripe.Customer.list(email=user['email'], limit=1)
                 if customers.data:
                     found_customer_id = customers.data[0].id
-                    logger.info(f"🔍 Found customer in Stripe: {found_customer_id}, storing in DB...")
+                    logger.info(f"✅ Found customer in Stripe: {found_customer_id}, storing in DB...")
                     
                     # Store it in database for next time
                     update_stripe_customer(user_id, found_customer_id)
                     customer_id = found_customer_id
-                    logger.info(f"✅ Recovered customer ID from Stripe and stored in DB")
+                    
+                    # Try portal session again with recovered customer ID
+                    session = create_portal_session(customer_id, return_url)
+                    logger.info(f"✅ Recovered customer ID from Stripe and created portal session")
                 else:
-                    logger.error(f"❌ Customer not found in Stripe either for email: {user['email']}")
+                    logger.error(f"❌ Customer not found in Stripe for email: {user['email']}")
                     return JSONResponse({
                         "error": "No subscription found. Please contact support@livetranslateai.com"
                     }, status_code=404)
@@ -602,12 +615,6 @@ async def create_stripe_portal(request: Request):
                 return JSONResponse({
                     "error": "No subscription found. If you just paid, please wait 30 seconds and try again."
                 }, status_code=404)
-        
-        # Create portal session
-        frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
-        return_url = f"{frontend_url}/app"
-        
-        session = create_portal_session(customer_id, return_url)
         
         logger.info(f"✅ Created Stripe portal session for user {user_id} ({user['email']})")
         
