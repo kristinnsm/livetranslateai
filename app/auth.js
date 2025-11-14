@@ -542,30 +542,36 @@ function handlePaymentStatus() {
     if (payment === 'success') {
         console.log('✅ Payment successful! Refreshing user data...');
         
-        // FORCE logout and re-fetch from database to get updated tier
-        setTimeout(async () => {
-            console.log('🔄 Forcing data refresh from database...');
+        // Retry logic: Check up to 5 times with increasing delays
+        // Webhook might take a few seconds to process
+        const refreshUserData = async (attempt = 1, maxAttempts = 5) => {
+            console.log(`🔄 Attempting data refresh (attempt ${attempt}/${maxAttempts})...`);
             
-            // Clear localStorage to force fresh fetch
             const authToken = localStorage.getItem('auth_token');
             const userStr = localStorage.getItem('user');
             
-            if (userStr) {
-                const user = JSON.parse(userStr);
+            if (!userStr) {
+                console.error('❌ No user data found in localStorage');
+                return;
+            }
+            
+            const user = JSON.parse(userStr);
+            const backendUrl = window.location.hostname === 'localhost' 
+                ? 'http://localhost:8000'
+                : 'https://livetranslateai.onrender.com';
+            
+            try {
+                const response = await fetch(`${backendUrl}/api/user/usage?user_id=${user.user_id}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
                 
-                // Fetch fresh user data from backend
-                const backendUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:8000'
-                    : 'https://livetranslateai.onrender.com';
-                
-                try {
-                    const response = await fetch(`${backendUrl}/api/user/usage?user_id=${user.user_id}`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
+                if (response.ok) {
+                    const freshData = await response.json();
+                    console.log('🔄 Fresh user data:', freshData);
                     
-                    if (response.ok) {
-                        const freshData = await response.json();
-                        console.log('🔄 Fresh user data:', freshData);
+                    // Check if tier was updated to premium
+                    if (freshData.tier === 'premium') {
+                        console.log('✅ Premium tier confirmed! Updating UI...');
                         
                         // Update localStorage with fresh tier
                         user.tier = freshData.tier;
@@ -573,22 +579,48 @@ function handlePaymentStatus() {
                         localStorage.setItem('user', JSON.stringify(user));
                         currentUser = user;
                         
-                        // Update UI
+                        // Force UI update
                         updateAuthUI(true);
                         
-                        // Show success modal (beautiful, not ugly alert)
+                        // Show success modal
                         showPaymentSuccessModal();
+                        
+                        // Clean URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        return; // Success! Exit retry loop
+                    } else {
+                        // Still showing as free, retry if we have attempts left
+                        if (attempt < maxAttempts) {
+                            const delay = attempt * 2000; // 2s, 4s, 6s, 8s, 10s
+                            console.log(`⏳ Tier still "free", retrying in ${delay}ms...`);
+                            setTimeout(() => refreshUserData(attempt + 1, maxAttempts), delay);
+                        } else {
+                            console.warn('⚠️ Max retries reached. Tier still showing as "free".');
+                            // Show success modal anyway (webhook might be delayed)
+                            showPaymentSuccessModal();
+                            showToast('Payment successful! If your account doesn\'t show Premium, please refresh the page in a few seconds.', 'info', 8000);
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
                     }
-                } catch (error) {
-                    console.error('❌ Failed to refresh user data:', error);
-                    // Fallback: Force logout/login
-                    alert('🎉 Payment successful! Please logout and login again to see your Premium status.');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+            } catch (error) {
+                console.error(`❌ Failed to refresh user data (attempt ${attempt}):`, error);
+                
+                if (attempt < maxAttempts) {
+                    const delay = attempt * 2000;
+                    setTimeout(() => refreshUserData(attempt + 1, maxAttempts), delay);
+                } else {
+                    // Final fallback
+                    showToast('Payment successful! Please refresh the page to see your Premium status.', 'info', 8000);
+                    window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
-            
-            // Clean URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }, 1500); // Wait 1.5 sec for webhook to process
+        };
+        
+        // Start refresh after initial delay (webhook needs time to process)
+        setTimeout(() => refreshUserData(), 3000); // Wait 3 seconds for webhook to process
         
     } else if (payment === 'cancelled') {
         console.log('❌ Payment cancelled');
