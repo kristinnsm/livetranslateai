@@ -586,6 +586,68 @@ async def reset_account(request: Request):
         logger.error(f"❌ Reset account error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.post("/api/admin/sync-stripe")
+async def sync_stripe_subscription(request: Request):
+    """Manually sync user subscription from Stripe (useful if webhook didn't fire)"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return JSONResponse({"error": "user_id required"}, status_code=400)
+        
+        # Get user
+        user = get_user_by_user_id(user_id)
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        logger.info(f"🔄 Syncing Stripe subscription for user {user_id} ({user['email']})")
+        
+        # Look up customer in Stripe by email
+        import stripe
+        stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+        
+        customers = stripe.Customer.list(email=user['email'], limit=1)
+        if not customers.data:
+            return JSONResponse({
+                "status": "no_subscription",
+                "message": "No Stripe customer found for this email"
+            })
+        
+        customer = customers.data[0]
+        customer_id = customer.id
+        
+        # Get active subscriptions for this customer
+        subscriptions = stripe.Subscription.list(customer=customer_id, status='active', limit=1)
+        
+        if subscriptions.data:
+            subscription = subscriptions.data[0]
+            subscription_id = subscription.id
+            
+            # Store customer ID and upgrade user
+            update_stripe_customer(user_id, customer_id)
+            update_user_tier(user_id, 'premium', subscription_id)
+            
+            logger.info(f"✅ Synced subscription: customer={customer_id}, subscription={subscription_id}")
+            
+            return JSONResponse({
+                "status": "success",
+                "message": f"User upgraded to premium",
+                "customer_id": customer_id,
+                "subscription_id": subscription_id
+            })
+        else:
+            # No active subscription found
+            logger.warning(f"⚠️ Customer {customer_id} exists but no active subscription")
+            return JSONResponse({
+                "status": "no_subscription",
+                "message": "Customer exists but no active subscription found"
+            })
+        
+    except Exception as e:
+        logger.error(f"❌ Sync Stripe error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 @app.post("/api/stripe/create-portal-session")
 async def create_stripe_portal(request: Request):
     """Create a Stripe Customer Portal session for subscription management"""
