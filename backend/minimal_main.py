@@ -221,17 +221,10 @@ async def google_auth(request: Request):
         user = get_user_by_google_id(google_id)
         
         if not user:
-            # Check if fingerprint was already used (abuse detection)
+            # Log fingerprint for analytics (but don't block - Stripe protects against abuse via free trial limits)
             existing_google_id = check_fingerprint_used(fingerprint)
-            abuse_flag = existing_google_id and existing_google_id != google_id
-            
-            if abuse_flag:
-                logger.warning(f"🚨 ABUSE DETECTED: Fingerprint {fingerprint} already used by account {existing_google_id}. Blocking new signup for {google_id}.")
-                return JSONResponse({
-                    "success": False,
-                    "error": "This device has already been used for a free trial. Please use your existing account or upgrade to premium for unlimited access.",
-                    "abuse_detected": True
-                }, status_code=403)
+            if existing_google_id and existing_google_id != google_id:
+                logger.info(f"ℹ️ Fingerprint {fingerprint} previously used by account {existing_google_id}, but allowing signup (Stripe protects via free trial limits)")
             
             # Create new user in database
             user_id = str(uuid.uuid4())
