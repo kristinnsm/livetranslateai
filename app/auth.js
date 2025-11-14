@@ -366,12 +366,15 @@ window.addEventListener('load', () => {
     if (!isLoggedIn) {
         initGoogleAuth();
     } else {
-        // If logged in, refresh usage every 30 seconds
+        // If logged in, refresh usage immediately and then every 10 seconds
+        // This ensures tier updates are detected quickly after payment
+        refreshUsage(); // Immediate refresh on page load
+        
         setInterval(async () => {
             if (isAuthenticated()) {
                 await refreshUsage();
             }
-        }, 30000); // Every 30 seconds
+        }, 10000); // Every 10 seconds (reduced from 30s for faster payment detection)
     }
 });
 
@@ -394,15 +397,28 @@ async function refreshUsage() {
         if (response.ok) {
             const usageData = await response.json();
             
-            // Update stored user with latest usage
+            // Check if tier changed (important for payment upgrades)
+            const oldTier = currentUser.tier;
+            const tierChanged = oldTier !== usageData.tier;
+            
+            // Update stored user with latest usage AND tier
             currentUser.minutes_used = usageData.minutes_used;
+            currentUser.tier = usageData.tier; // CRITICAL: Update tier too!
             localStorage.setItem('user', JSON.stringify(currentUser));
             
-            // Update displays
+            // Update displays (this will refresh the UI with new tier)
             updateAuthUI(true);
             updateUsageDisplay(currentUser);
             
-            console.log(`📊 Usage refreshed: ${usageData.minutes_used}/${usageData.minutes_limit} min`);
+            if (tierChanged) {
+                console.log(`🎉 Tier updated from "${oldTier}" to "${usageData.tier}"!`);
+                // If upgraded to premium, show success modal
+                if (usageData.tier === 'premium' && oldTier === 'free') {
+                    showPaymentSuccessModal();
+                }
+            } else {
+                console.log(`📊 Usage refreshed: ${usageData.minutes_used}/${usageData.minutes_limit} min (tier: ${usageData.tier})`);
+            }
             
             return usageData;
         }
