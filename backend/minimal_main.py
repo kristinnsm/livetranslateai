@@ -22,7 +22,7 @@ from database import (
     init_database, create_user, get_user_by_google_id, 
     get_user_by_user_id, update_user_usage, update_user_last_login,
     check_fingerprint_used, update_user_tier, get_user_by_subscription_id,
-    update_stripe_customer, get_user_stripe_customer_id
+    update_stripe_customer, get_user_stripe_customer_id, get_db_connection
 )
 from stripe_integration import (
     create_checkout_session, create_portal_session,
@@ -550,6 +550,48 @@ async def create_stripe_checkout(request: Request):
         logger.error(f"❌ Stripe checkout error: {e}")
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.post("/api/admin/reset-account")
+async def reset_account(request: Request):
+    """Admin endpoint to reset user account (clear test mode Stripe data)"""
+    try:
+        data = await request.json()
+        user_id = data.get('user_id')
+        
+        if not user_id:
+            return JSONResponse({"error": "user_id required"}, status_code=400)
+        
+        # Get user
+        user = get_user_by_user_id(user_id)
+        if not user:
+            return JSONResponse({"error": "User not found"}, status_code=404)
+        
+        # Reset to free tier and clear Stripe data
+        update_user_tier(user['user_id'], 'free', None)
+        
+        # Clear stripe_customer_id
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE users 
+                    SET stripe_customer_id = NULL
+                    WHERE user_id = %s
+                """, (user['user_id'],))
+                conn.commit()
+                logger.info(f"✅ Cleared Stripe customer ID for user {user['user_id']}")
+        except Exception as e:
+            logger.error(f"❌ Failed to clear customer ID: {e}")
+        
+        logger.info(f"✅ Reset account for user {user['user_id']} ({user['email']})")
+        
+        return JSONResponse({
+            "status": "success",
+            "message": f"Account reset for {user['email']}. You can now go through checkout again."
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Reset account error: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/api/stripe/create-portal-session")
 async def create_stripe_portal(request: Request):
