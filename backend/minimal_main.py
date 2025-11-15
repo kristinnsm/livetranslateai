@@ -34,6 +34,31 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
+# Sentry error tracking (optional - set SENTRY_DSN env var to enable)
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
+    if SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[
+                FastApiIntegration(),
+                LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
+            ],
+            traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
+            environment=os.getenv("ENVIRONMENT", "production"),
+        )
+        print("✅ Sentry error tracking enabled")
+    else:
+        print("ℹ️ Sentry DSN not set - error tracking disabled")
+except ImportError:
+    print("ℹ️ Sentry SDK not installed - error tracking disabled")
+except Exception as e:
+    print(f"⚠️ Sentry initialization failed: {e}")
+
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 DAILY_API_KEY = os.getenv("DAILY_API_KEY")  # Get from https://dashboard.daily.co/developers

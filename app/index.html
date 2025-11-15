@@ -10,6 +10,35 @@
     <link rel="stylesheet" href="upgrade-modal.css">
     <!-- Daily.co Video SDK -->
     <script src="https://unpkg.com/@daily-co/daily-js@0.66.0/dist/daily-iframe.js"></script>
+    <!-- Sentry Error Tracking (DSN will be injected by Netlify build script) -->
+    <script src="https://browser.sentry-cdn.com/7.95.0/bundle.min.js" integrity="sha384-7O8b5nPmJXqJ5Q2b1I8c5KbCDx6x7fv2Q2v9x7h3iM5f6q7lZ2F7O4kNWd2N8xY" crossorigin="anonymous"></script>
+    <script>
+        // Sentry DSN placeholder - will be replaced by netlify-build.sh
+        (function() {
+            if (typeof Sentry !== 'undefined' && window.location.hostname !== 'localhost') {
+                const sentryDsn = '{{SENTRY_DSN}}'; // Replaced at build time by netlify-build.sh
+                
+                // Only initialize if DSN is set and not the placeholder
+                if (sentryDsn && sentryDsn !== '{{SENTRY_DSN}}' && sentryDsn.startsWith('https://')) {
+                    try {
+                        Sentry.init({
+                            dsn: sentryDsn,
+                            environment: window.location.hostname.includes('netlify') ? 'staging' : 'production',
+                            tracesSampleRate: 0.1,
+                            beforeSend(event) {
+                                // Don't send errors from localhost
+                                if (window.location.hostname === 'localhost') return null;
+                                return event;
+                            }
+                        });
+                        console.log('✅ Sentry error tracking enabled');
+                    } catch (e) {
+                        console.warn('⚠️ Sentry initialization failed:', e);
+                    }
+                }
+            }
+        })();
+    </script>
     <!-- Auth Script -->
     <script src="auth.js" defer></script>
 </head>

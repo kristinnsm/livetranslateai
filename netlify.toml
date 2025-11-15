@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo 'No build step needed for static site'"
+  command = "bash netlify-build.sh"
   
 [build.environment]
   NODE_VERSION = "18"

@@ -36,3 +36,6 @@ requests==2.31.0
 
 # Security & Rate Limiting
 slowapi==0.1.9
+
+# Error Tracking
+sentry-sdk[fastapi]==2.19.0
