@@ -41,28 +41,57 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* No scrolling */
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
     background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f3a 100%);
     color: var(--text-primary);
-    min-height: 100vh;
-    padding: var(--spacing-md);
-    padding-right: 120px; /* Space for fixed controls on right */
-    padding-left: 200px; /* Space for fixed language selector on left */
-    line-height: 1.6;
-    overflow-x: hidden;
+    height: 100vh;
+    padding: 0.5rem;
+    padding-right: 100px; /* Space for fixed controls on right */
+    padding-left: 180px; /* Space for fixed language selector on left */
+    line-height: 1.4;
+    overflow: hidden; /* No scrolling */
+    box-sizing: border-box;
+}
+
+/* Ensure fullscreen works */
+body:fullscreen,
+body:-webkit-full-screen,
+body:-moz-full-screen,
+body:-ms-fullscreen {
+    padding: 0.5rem;
+    padding-right: 100px;
+    padding-left: 180px;
 }
 
 .container {
-    max-width: calc(100% - 320px); /* Account for fixed left (200px) and right (120px) sidebars */
+    max-width: calc(100% - 280px); /* Account for fixed left (180px) and right (100px) sidebars */
     margin: 0 auto;
     width: 100%;
+    height: calc(100vh - 1rem);
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden; /* No scrolling normally */
+    overflow-x: hidden;
+}
+
+/* Allow scrolling when replay button is clicked */
+.container.scroll-enabled {
+    overflow-y: auto;
 }
 
 /* Header */
 .header {
     text-align: center;
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: 0.5rem;
+    padding: 0.25rem 0;
 }
 
 .logo {
@@ -70,11 +99,12 @@ body {
 }
 
 .title {
-    font-size: 3.5rem;
+    font-size: 2rem;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--text-primary);
-    margin-bottom: 0.25rem;
+    margin-bottom: 0;
+    line-height: 1.2;
 }
 
 .title .ai {
@@ -87,9 +117,10 @@ body {
 
 .tagline {
     color: var(--text-secondary);
-    font-size: 1.125rem;
+    font-size: 0.75rem;
     font-weight: 400;
     letter-spacing: 0.01em;
+    margin-top: 0;
 }
 
 /* Controls Section */
@@ -97,9 +128,9 @@ body {
 .room-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .room-controls {
@@ -200,21 +231,21 @@ body {
 /* Fixed language selector on left side */
 .language-selector {
     position: fixed !important;
-    left: 20px !important;
+    left: 10px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     background: rgba(31, 41, 55, 0.95) !important;
     backdrop-filter: blur(10px);
-    padding: var(--spacing-md) !important;
-    border-radius: var(--radius-lg) !important;
+    padding: 0.5rem !important;
+    border-radius: var(--radius-md) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
     z-index: 1000 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: var(--spacing-sm) !important;
+    gap: 0.25rem !important;
     align-items: center !important;
-    width: 160px !important;
+    width: 150px !important;
     margin: 0 !important;
 }
 
@@ -269,20 +300,20 @@ body {
 /* Float ONLY the action buttons on right side */
 .action-buttons {
     position: fixed !important;
-    right: 20px !important;
+    right: 10px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     background: rgba(31, 41, 55, 0.95) !important;
     backdrop-filter: blur(10px);
-    padding: var(--spacing-sm) !important;
-    border-radius: var(--radius-lg) !important;
+    padding: 0.5rem !important;
+    border-radius: var(--radius-md) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
     z-index: 1000 !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    width: 80px !important; /* Compact width */
+    width: 70px !important; /* Compact width */
     display: flex !important;
     flex-direction: column !important;
-    gap: var(--spacing-sm) !important;
+    gap: 0.5rem !important;
     align-items: center !important;
 }
 
@@ -360,20 +391,20 @@ body {
 
 /* Compact circular buttons for floating side panel */
 .action-buttons .btn {
-    width: 64px !important;
-    height: 64px !important;
+    width: 56px !important;
+    height: 56px !important;
     padding: 0 !important;
     border-radius: 50% !important;
     flex-direction: column !important;
     gap: 0 !important;
     font-size: 0.7rem !important;
     position: relative !important;
-    min-width: 64px !important;
-    max-width: 64px !important;
+    min-width: 56px !important;
+    max-width: 56px !important;
 }
 
 .action-buttons .btn .btn-icon {
-    font-size: 1.8rem !important;
+    font-size: 1.5rem !important;
     margin: 0 !important;
 }
 
@@ -406,20 +437,25 @@ body {
 .translation-area {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    max-height: calc(50vh - 150px); /* Take up remaining space */
-    overflow-y: auto;
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .status-indicator {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-sm);
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
     border-bottom: 1px solid var(--border);
+    font-size: 0.75rem;
+    flex: 0 0 auto;
 }
 
 .status-dot {
@@ -474,11 +510,12 @@ body {
 /* Mic Indicator */
 .mic-indicator {
     background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    height: 40px;
-    margin-bottom: var(--spacing-md);
+    border-radius: var(--radius-sm);
+    height: 20px;
+    margin-bottom: 0.25rem;
     overflow: hidden;
     position: relative;
+    flex: 0 0 auto;
 }
 
 .mic-level {
@@ -491,30 +528,38 @@ body {
 /* Subtitles */
 .subtitles-container {
     display: grid;
-    gap: var(--spacing-md);
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .subtitle-box {
     background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-sm) var(--spacing-md);
-    min-height: 80px;
-    max-height: 200px;
-    overflow-y: auto;
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    min-height: 60px;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .subtitle-label {
     color: var(--text-muted);
-    font-size: 0.875rem;
+    font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 0.25rem;
+    flex: 0 0 auto;
 }
 
 .subtitle-text {
     color: var(--text-primary);
-    font-size: 1.125rem;
-    line-height: 1.6;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    word-wrap: break-word;
 }
 
 .subtitle-text.fade-in {
@@ -530,18 +575,29 @@ body {
 .replay-section {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex: 0 0 auto;
 }
 
 .replay-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 0.5rem;
     flex-wrap: wrap;
     gap: var(--spacing-sm);
+}
+
+.replay-header h2 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Hide original replay button - we have it in sidebar now */
+.replay-header .replay-controls {
+    display: none;
 }
 
 .replay-header h2 {
@@ -668,22 +724,25 @@ body {
 /* Video Call Styles */
 .video-section {
     background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex: 0 0 auto;
 }
 
 .video-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0;
 }
 
 .video-header h3 {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 0.9rem;
     color: var(--text-primary);
+    font-weight: 600;
 }
 
 .video-controls {
@@ -729,9 +788,8 @@ body {
 
 .daily-call-container {
     width: 100%;
-    height: calc(50vh - 100px); /* Take up half viewport height, leaving room for translation */
-    max-height: 500px;
-    min-height: 300px;
+    height: calc(45vh - 60px); /* Take up 45% of viewport height */
+    min-height: 250px;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: #000;

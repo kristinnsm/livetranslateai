@@ -49,6 +49,7 @@ const elements = {
     startBtn: document.getElementById('startBtn'),
     stopBtn: document.getElementById('stopBtn'),
     replayBtn: document.getElementById('replayBtn'),
+    replayBtnSidebar: document.getElementById('replayBtnSidebar'),
     sourceLang: document.getElementById('sourceLang'),
     targetLang: document.getElementById('targetLang'),
     replayDuration: document.getElementById('replayDuration'),
@@ -64,6 +65,7 @@ const elements = {
     replayPlayer: document.getElementById('replayPlayer'),
     replayAudio: document.getElementById('replayAudio'),
     replaySubtitles: document.getElementById('replaySubtitles'),
+    replaySection: document.querySelector('.replay-section'),
     toastContainer: document.getElementById('toastContainer'),
     // Room elements
     createRoomBtn: document.getElementById('createRoomBtn'),
@@ -79,6 +81,24 @@ const elements = {
 elements.startBtn.addEventListener('click', startTranslation);
 elements.stopBtn.addEventListener('click', stopTranslation);
 elements.replayBtn.addEventListener('click', triggerReplay);
+if (elements.replayBtnSidebar) {
+    elements.replayBtnSidebar.addEventListener('click', () => {
+        // Scroll to replay section (temporarily enable scrolling)
+        const container = document.querySelector('.container');
+        if (elements.replaySection && container) {
+            container.classList.add('scroll-enabled');
+            elements.replaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Re-disable scrolling after scroll completes
+            setTimeout(() => {
+                container.classList.remove('scroll-enabled');
+            }, 1500);
+        }
+        // Trigger replay after a short delay to allow scroll
+        setTimeout(() => {
+            triggerReplay();
+        }, 300);
+    });
+}
 elements.sourceLang.addEventListener('change', handleLanguageChange);
 elements.targetLang.addEventListener('change', handleLanguageChange);
 
@@ -361,6 +381,7 @@ function handleWebSocketMessage(event) {
                 // Store for replay
                 lastTranslation = message;
                 elements.replayBtn.disabled = false;
+                if (elements.replayBtnSidebar) elements.replayBtnSidebar.disabled = false;
                 break;
 
             case 'replay_ready':
@@ -1303,6 +1324,7 @@ function handleRoomMessage(event) {
                 // Store for replay
                 lastTranslation = message;
                 elements.replayBtn.disabled = false;
+                if (elements.replayBtnSidebar) elements.replayBtnSidebar.disabled = false;
                 
                 // Play audio if available
                 if (message.audio_base64) {

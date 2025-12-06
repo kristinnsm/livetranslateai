@@ -183,14 +183,18 @@
         
         <!-- Connection Controls - FLOATING SIDE PANEL (Desktop) / BOTTOM BAR (Mobile) -->
         <!-- Version: FLOATING-v2.0 -->
-        <div class="action-buttons" style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(31, 41, 55, 0.95); padding: 12px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); z-index: 1000; border: 1px solid rgba(255, 255, 255, 0.1); width: 80px; display: flex; flex-direction: column; gap: 12px; align-items: center;">
-            <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking" style="width: 64px; height: 64px; padding: 0; border-radius: 50%; min-width: 64px; max-width: 64px;">
-                <span class="btn-icon" style="font-size: 1.8rem; margin: 0;">🎤</span>
+        <div class="action-buttons" style="position: fixed; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(31, 41, 55, 0.95); padding: 0.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); z-index: 1000; border: 1px solid rgba(255, 255, 255, 0.1); width: 70px; display: flex; flex-direction: column; gap: 0.5rem; align-items: center;">
+            <button id="startBtn" class="btn btn-primary" data-tooltip="Start Speaking" title="Start Speaking" style="width: 56px; height: 56px; padding: 0; border-radius: 50%; min-width: 56px; max-width: 56px;">
+                <span class="btn-icon" style="font-size: 1.5rem; margin: 0;">🎤</span>
                 <span data-i18n="startSpeaking" style="display: none;">Start Speaking</span>
             </button>
-            <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled style="width: 64px; height: 64px; padding: 0; border-radius: 50%; min-width: 64px; max-width: 64px;">
-                <span class="btn-icon" style="font-size: 1.8rem; margin: 0;">⏹️</span>
+            <button id="stopBtn" class="btn btn-secondary" data-tooltip="Stop & Translate" title="Stop & Translate" disabled style="width: 56px; height: 56px; padding: 0; border-radius: 50%; min-width: 56px; max-width: 56px;">
+                <span class="btn-icon" style="font-size: 1.5rem; margin: 0;">⏹️</span>
                 <span data-i18n="stopTranslate" style="display: none;">Stop & Translate</span>
+            </button>
+            <button id="replayBtnSidebar" class="btn btn-accent" data-tooltip="Replay" title="Replay Last Translation" disabled style="width: 56px; height: 56px; padding: 0; border-radius: 50%; min-width: 56px; max-width: 56px;">
+                <span class="btn-icon" style="font-size: 1.5rem; margin: 0;">⏮️</span>
+                <span data-i18n="replayLast" style="display: none;">Replay</span>
             </button>
         </div>
 
