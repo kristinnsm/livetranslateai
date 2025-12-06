@@ -124,64 +124,62 @@
             </div>
         </section>
 
-        <!-- Language Selection -->
-        <section class="controls">
-            <div class="language-selector">
-                <div class="selector-group">
-                    <label for="sourceLang" data-i18n="from">From</label>
-                    <select id="sourceLang" class="lang-select">
-                        <option value="en">🇺🇸 English</option>
-                        <option value="es">🇪🇸 Spanish</option>
-                        <option value="fr">🇫🇷 French</option>
-                        <option value="de">🇩🇪 German</option>
-                        <option value="zh">🇨🇳 Chinese</option>
-                        <option value="ar">🇸🇦 Arabic</option>
-                        <option value="ru">🇷🇺 Russian</option>
-                        <option value="ja">🇯🇵 Japanese</option>
-                        <option value="ko">🇰🇷 Korean</option>
-                        <option value="pt">🇵🇹 Portuguese</option>
-                        <option value="it">🇮🇹 Italian</option>
-                        <option value="nl">🇳🇱 Dutch</option>
-                        <option value="hi">🇮🇳 Hindi</option>
-                        <option value="tr">🇹🇷 Turkish</option>
-                        <option value="vi">🇻🇳 Vietnamese</option>
-                        <option value="is">🇮🇸 Icelandic</option>
-                        <option value="uk">🇺🇦 Ukrainian</option>
-                        <option value="auto">🌍 Auto-detect</option>
-                    </select>
-                </div>
-                
-                <div class="arrow">→</div>
-                
-                <div class="selector-group">
-                    <label for="targetLang" data-i18n="to">To</label>
-                    <select id="targetLang" class="lang-select">
-                        <option value="es">🇪🇸 Spanish</option>
-                        <option value="en">🇺🇸 English</option>
-                        <option value="fr">🇫🇷 French</option>
-                        <option value="de">🇩🇪 German</option>
-                        <option value="zh">🇨🇳 Chinese</option>
-                        <option value="ar">🇸🇦 Arabic</option>
-                        <option value="ru">🇷🇺 Russian</option>
-                        <option value="ja">🇯🇵 Japanese</option>
-                        <option value="ko">🇰🇷 Korean</option>
-                        <option value="pt">🇵🇹 Portuguese</option>
-                        <option value="it">🇮🇹 Italian</option>
-                        <option value="nl">🇳🇱 Dutch</option>
-                        <option value="hi">🇮🇳 Hindi</option>
-                        <option value="tr">🇹🇷 Turkish</option>
-                        <option value="vi">🇻🇳 Vietnamese</option>
-                        <option value="is">🇮🇸 Icelandic</option>
-                        <option value="uk">🇺🇦 Ukrainian</option>
-                    </select>
-                </div>
+        <!-- Language Selection - FIXED LEFT SIDE -->
+        <div class="language-selector">
+            <div class="selector-group">
+                <label for="sourceLang" data-i18n="from">From</label>
+                <select id="sourceLang" class="lang-select">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Spanish</option>
+                    <option value="fr">🇫🇷 French</option>
+                    <option value="de">🇩🇪 German</option>
+                    <option value="zh">🇨🇳 Chinese</option>
+                    <option value="ar">🇸🇦 Arabic</option>
+                    <option value="ru">🇷🇺 Russian</option>
+                    <option value="ja">🇯🇵 Japanese</option>
+                    <option value="ko">🇰🇷 Korean</option>
+                    <option value="pt">🇵🇹 Portuguese</option>
+                    <option value="it">🇮🇹 Italian</option>
+                    <option value="nl">🇳🇱 Dutch</option>
+                    <option value="hi">🇮🇳 Hindi</option>
+                    <option value="tr">🇹🇷 Turkish</option>
+                    <option value="vi">🇻🇳 Vietnamese</option>
+                    <option value="is">🇮🇸 Icelandic</option>
+                    <option value="uk">🇺🇦 Ukrainian</option>
+                    <option value="auto">🌍 Auto-detect</option>
+                </select>
             </div>
             
-            <!-- Mobile video tip -->
-            <div id="mobileVideoTip" style="display: none; margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 193, 7, 0.1); border-radius: 4px; font-size: 0.85rem; text-align: center; color: var(--warning);">
-                💡 <span data-i18n="mobileVideoTip">Tip: Turn off camera (📹) to save battery and improve performance</span>
+            <div class="arrow">→</div>
+            
+            <div class="selector-group">
+                <label for="targetLang" data-i18n="to">To</label>
+                <select id="targetLang" class="lang-select">
+                    <option value="es">🇪🇸 Spanish</option>
+                    <option value="en">🇺🇸 English</option>
+                    <option value="fr">🇫🇷 French</option>
+                    <option value="de">🇩🇪 German</option>
+                    <option value="zh">🇨🇳 Chinese</option>
+                    <option value="ar">🇸🇦 Arabic</option>
+                    <option value="ru">🇷🇺 Russian</option>
+                    <option value="ja">🇯🇵 Japanese</option>
+                    <option value="ko">🇰🇷 Korean</option>
+                    <option value="pt">🇵🇹 Portuguese</option>
+                    <option value="it">🇮🇹 Italian</option>
+                    <option value="nl">🇳🇱 Dutch</option>
+                    <option value="hi">🇮🇳 Hindi</option>
+                    <option value="tr">🇹🇷 Turkish</option>
+                    <option value="vi">🇻🇳 Vietnamese</option>
+                    <option value="is">🇮🇸 Icelandic</option>
+                    <option value="uk">🇺🇦 Ukrainian</option>
+                </select>
             </div>
-        </section>
+        </div>
+        
+        <!-- Mobile video tip -->
+        <div id="mobileVideoTip" style="display: none; position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); padding: 0.5rem; background: rgba(255, 193, 7, 0.1); border-radius: 4px; font-size: 0.85rem; text-align: center; color: var(--warning); z-index: 999;">
+            💡 <span data-i18n="mobileVideoTip">Tip: Turn off camera (📹) to save battery and improve performance</span>
+        </div>
         
         <!-- Connection Controls - FLOATING SIDE PANEL (Desktop) / BOTTOM BAR (Mobile) -->
         <!-- Version: FLOATING-v2.0 -->

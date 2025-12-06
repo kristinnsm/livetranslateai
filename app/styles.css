@@ -48,11 +48,13 @@ body {
     min-height: 100vh;
     padding: var(--spacing-md);
     padding-right: 120px; /* Space for fixed controls on right */
+    padding-left: 200px; /* Space for fixed language selector on left */
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: calc(100% - 320px); /* Account for fixed left (200px) and right (120px) sidebars */
     margin: 0 auto;
     width: 100%;
 }
@@ -191,32 +193,43 @@ body {
 }
 
 .controls {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    /* Remove from normal flow - now fixed */
+    display: none;
 }
 
+/* Fixed language selector on left side */
 .language-selector {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    flex-wrap: wrap;
+    position: fixed !important;
+    left: 20px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(31, 41, 55, 0.95) !important;
+    backdrop-filter: blur(10px);
+    padding: var(--spacing-md) !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    z-index: 1000 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-sm) !important;
+    align-items: center !important;
+    width: 160px !important;
+    margin: 0 !important;
 }
 
 .selector-group {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
+    width: 100%;
 }
 
 .selector-group label {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
+    text-align: center;
 }
 
 .lang-select {
@@ -224,10 +237,11 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     color: var(--text-primary);
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 1rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.85rem;
     cursor: pointer;
     transition: var(--transition);
+    width: 100%;
 }
 
 .lang-select:hover {
@@ -241,9 +255,10 @@ body {
 }
 
 .arrow {
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: var(--text-muted);
-    margin-top: 1.5rem;
+    margin: var(--spacing-xs) 0;
+    transform: rotate(90deg);
 }
 
 /* Keep controls section in normal flow */
@@ -392,8 +407,10 @@ body {
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
+    max-height: calc(50vh - 150px); /* Take up remaining space */
+    overflow-y: auto;
 }
 
 .status-indicator {
@@ -480,8 +497,10 @@ body {
 .subtitle-box {
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
-    min-height: 100px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .subtitle-label {
@@ -651,7 +670,7 @@ body {
     background: var(--bg-secondary);
     border-radius: var(--radius-lg);
     padding: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
 .video-header {
@@ -710,7 +729,9 @@ body {
 
 .daily-call-container {
     width: 100%;
-    height: 500px;
+    height: calc(50vh - 100px); /* Take up half viewport height, leaving room for translation */
+    max-height: 500px;
+    min-height: 300px;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: #000;
@@ -772,7 +793,26 @@ body {
     
     body {
         padding-right: var(--spacing-md) !important;
+        padding-left: var(--spacing-md) !important;
         padding-bottom: 90px !important;
+    }
+    
+    /* Move language selector to bottom on mobile */
+    .language-selector {
+        position: fixed !important;
+        bottom: 90px !important;
+        left: 50% !important;
+        top: auto !important;
+        transform: translateX(-50%) !important;
+        width: calc(100% - 2rem) !important;
+        max-width: 300px !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+    }
+    
+    .language-selector .arrow {
+        transform: rotate(0deg) !important;
+        margin: 0 var(--spacing-sm) !important;
     }
     
     .title {
