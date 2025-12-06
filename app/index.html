@@ -198,52 +198,55 @@
             </button>
         </div>
 
-        <!-- Video Call Container -->
-        <section class="video-section" id="videoSection" style="display: none;">
-            <div class="video-header">
-                <h3 data-i18n="videoCall">Video Call</h3>
-                <div class="video-controls">
-                    <button id="toggleCamera" class="btn-icon-only" title="Toggle Camera">
-                        📹
-                    </button>
-                    <button id="toggleMic" class="btn-icon-only" title="Toggle Microphone">
-                        🎤
-                    </button>
-                    <button id="leaveCall" class="btn-icon-only btn-danger" title="Leave Call">
-                        📞
-                    </button>
+        <!-- Video and Translation Side-by-Side Container -->
+        <div class="video-translation-wrapper">
+            <!-- Video Call Container -->
+            <section class="video-section" id="videoSection" style="display: none;">
+                <div class="video-header">
+                    <h3 data-i18n="videoCall">Video Call</h3>
+                    <div class="video-controls">
+                        <button id="toggleCamera" class="btn-icon-only" title="Toggle Camera">
+                            📹
+                        </button>
+                        <button id="toggleMic" class="btn-icon-only" title="Toggle Microphone">
+                            🎤
+                        </button>
+                        <button id="leaveCall" class="btn-icon-only btn-danger" title="Leave Call">
+                            📞
+                        </button>
+                    </div>
                 </div>
-            </div>
-            <!-- Daily.co video iframe will be injected here -->
-            <div id="dailyCallContainer" class="daily-call-container"></div>
-        </section>
+                <!-- Daily.co video iframe will be injected here -->
+                <div id="dailyCallContainer" class="daily-call-container"></div>
+            </section>
 
-        <!-- Live Translation Display -->
-        <section class="translation-area">
-            <div class="status-indicator">
-                <span id="statusDot" class="status-dot"></span>
-                <span id="statusText" data-i18n-status="disconnected">Disconnected</span>
-                <span id="latencyDisplay" class="latency"></span>
-            </div>
-
-            <!-- Mic Visualization -->
-            <div class="mic-indicator">
-                <div id="micLevel" class="mic-level"></div>
-            </div>
-
-            <!-- Live Subtitles -->
-            <div class="subtitles-container">
-                <div class="subtitle-box">
-                    <div class="subtitle-label" data-i18n="original">Original</div>
-                    <div id="originalText" class="subtitle-text" data-i18n="waitingForSpeech">Waiting for speech...</div>
+            <!-- Live Translation Display -->
+            <section class="translation-area">
+                <div class="status-indicator">
+                    <span id="statusDot" class="status-dot"></span>
+                    <span id="statusText" data-i18n-status="disconnected">Disconnected</span>
+                    <span id="latencyDisplay" class="latency"></span>
                 </div>
-                
-                <div class="subtitle-box">
-                    <div class="subtitle-label" data-i18n="translation">Translation</div>
-                    <div id="translatedText" class="subtitle-text" data-i18n="readyToTranslate">Ready to translate...</div>
+
+                <!-- Mic Visualization -->
+                <div class="mic-indicator">
+                    <div id="micLevel" class="mic-level"></div>
                 </div>
-            </div>
-        </section>
+
+                <!-- Live Subtitles -->
+                <div class="subtitles-container">
+                    <div class="subtitle-box">
+                        <div class="subtitle-label" data-i18n="original">Original</div>
+                        <div id="originalText" class="subtitle-text" data-i18n="waitingForSpeech">Waiting for speech...</div>
+                    </div>
+                    
+                    <div class="subtitle-box">
+                        <div class="subtitle-label" data-i18n="translation">Translation</div>
+                        <div id="translatedText" class="subtitle-text" data-i18n="readyToTranslate">Ready to translate...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
         <!-- Replay Section -->
         <section class="replay-section">
