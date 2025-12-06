@@ -82,13 +82,67 @@ body:-ms-fullscreen .container {
     max-width: calc(100vw - 300px);
 }
 
-/* Ensure side-by-side layout works in fullscreen */
+/* Custom fullscreen mode - maintains side-by-side layout */
+.video-translation-wrapper.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: var(--bg-primary);
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.video-translation-wrapper.fullscreen-mode .video-section {
+    flex: 0 0 50%; /* 50% width in fullscreen */
+    height: 100%;
+}
+
+.video-translation-wrapper.fullscreen-mode .translation-area {
+    flex: 0 0 50%; /* 50% width in fullscreen */
+    height: 100%;
+}
+
+.video-translation-wrapper.fullscreen-mode .daily-call-container {
+    height: calc(100% - 60px); /* Account for header */
+}
+
+/* Prevent Daily.co's native fullscreen from breaking layout */
+.daily-call-container iframe {
+    pointer-events: auto;
+}
+
+/* Hide Daily.co's fullscreen button or prevent its action */
+.video-translation-wrapper.fullscreen-mode .daily-call-container {
+    height: 100%;
+}
+
+/* Ensure side-by-side layout works in browser fullscreen */
 body:fullscreen .video-translation-wrapper,
 body:-webkit-full-screen .video-translation-wrapper,
 body:-moz-full-screen .video-translation-wrapper,
 body:-ms-fullscreen .video-translation-wrapper {
     display: flex;
     height: 100%;
+    width: 100%;
+}
+
+body:fullscreen .video-translation-wrapper .video-section,
+body:-webkit-full-screen .video-translation-wrapper .video-section,
+body:-moz-full-screen .video-translation-wrapper .video-section,
+body:-ms-fullscreen .video-translation-wrapper .video-section {
+    flex: 0 0 50%;
+}
+
+body:fullscreen .video-translation-wrapper .translation-area,
+body:-webkit-full-screen .video-translation-wrapper .translation-area,
+body:-moz-full-screen .video-translation-wrapper .translation-area,
+body:-ms-fullscreen .video-translation-wrapper .translation-area {
+    flex: 0 0 50%;
 }
 
 /* Ensure fixed sidebars stay visible in fullscreen */

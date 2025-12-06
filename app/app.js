@@ -106,6 +106,7 @@ elements.targetLang.addEventListener('change', handleLanguageChange);
 document.getElementById('toggleCamera')?.addEventListener('click', toggleCamera);
 document.getElementById('toggleMic')?.addEventListener('click', toggleMicrophone);
 document.getElementById('leaveCall')?.addEventListener('click', leaveVideoCall);
+document.getElementById('toggleFullscreen')?.addEventListener('click', toggleCustomFullscreen);
 
 // Room event listeners
 elements.createRoomBtn.addEventListener('click', () => {
@@ -1467,7 +1468,7 @@ async function initializeVideoCall(isMobileMode = false) {
             document.getElementById('dailyCallContainer'),
             {
                 showLeaveButton: false,
-                showFullscreenButton: true,
+                showFullscreenButton: false, // Disable Daily's fullscreen - we'll use custom one
                 iframeStyle: {
                     width: '100%',
                     height: '100%',
@@ -1649,8 +1650,35 @@ async function toggleMicrophone() {
     }
 }
 
+// Custom fullscreen toggle - maintains side-by-side layout
+function toggleCustomFullscreen() {
+    const wrapper = document.querySelector('.video-translation-wrapper');
+    if (!wrapper) return;
+    
+    const isFullscreen = wrapper.classList.contains('fullscreen-mode');
+    
+    if (isFullscreen) {
+        // Exit fullscreen
+        wrapper.classList.remove('fullscreen-mode');
+        document.getElementById('toggleFullscreen').textContent = '⛶';
+        document.body.style.overflow = '';
+    } else {
+        // Enter fullscreen
+        wrapper.classList.add('fullscreen-mode');
+        document.getElementById('toggleFullscreen').textContent = '⛶';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
 async function leaveVideoCall() {
     if (!dailyCallFrame) return;
+    
+    // Exit fullscreen if active
+    const wrapper = document.querySelector('.video-translation-wrapper');
+    if (wrapper) {
+        wrapper.classList.remove('fullscreen-mode');
+        document.body.style.overflow = '';
+    }
     
     try {
         await dailyCallFrame.leave();
