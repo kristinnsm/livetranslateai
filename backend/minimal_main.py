@@ -546,12 +546,14 @@ async def create_stripe_checkout(request: Request):
         frontend_url = data.get('frontend_url', 'https://livetranslateai.com')
         success_url = f"{frontend_url}/app?payment=success"
         cancel_url = f"{frontend_url}/app?payment=cancelled"
+        promo_code = data.get('promo_code')  # Optional promo code (e.g., "PRODUCTHUNT50")
         
         session = create_checkout_session(
             user_id=user['user_id'],
             user_email=user['email'],
             success_url=success_url,
-            cancel_url=cancel_url
+            cancel_url=cancel_url,
+            promo_code=promo_code
         )
         
         # Store Stripe customer ID

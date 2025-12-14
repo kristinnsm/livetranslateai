@@ -25,7 +25,8 @@ def create_checkout_session(
     user_id: str,
     user_email: str,
     success_url: str,
-    cancel_url: str
+    cancel_url: str,
+    promo_code: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Create a Stripe Checkout Session for subscription signup
@@ -35,6 +36,7 @@ def create_checkout_session(
         user_email: User's email address
         success_url: Redirect URL after successful payment
         cancel_url: Redirect URL if user cancels
+        promo_code: Optional promo code to apply (e.g., "PRODUCTHUNT50")
     
     Returns:
         Dict with checkout session details (id, url)
@@ -54,29 +56,46 @@ def create_checkout_session(
             )
             logger.info(f"💳 Created new Stripe customer: {customer.id}")
         
-        # Create checkout session with 7-day free trial
-        session = stripe.checkout.Session.create(
-            customer=customer.id,
-            payment_method_types=['card'],
-            line_items=[{
+        # Prepare checkout session parameters
+        session_params = {
+            'customer': customer.id,
+            'payment_method_types': ['card'],
+            'line_items': [{
                 'price': STRIPE_PRICE_ID,
                 'quantity': 1,
             }],
-            mode='subscription',
-            subscription_data={
+            'mode': 'subscription',
+            'subscription_data': {
                 'trial_period_days': TRIAL_DAYS,
                 'metadata': {
                     'user_id': user_id
                 }
             },
-            success_url=success_url + '?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=cancel_url,
-            allow_promotion_codes=True,
-            billing_address_collection='auto',
-            metadata={
+            'success_url': success_url + '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url': cancel_url,
+            'allow_promotion_codes': True,
+            'billing_address_collection': 'auto',
+            'metadata': {
                 'user_id': user_id
             }
-        )
+        }
+        
+        # Apply promo code if provided
+        if promo_code:
+            try:
+                # Look up the promotion code
+                promo_codes = stripe.PromotionCode.list(code=promo_code, limit=1)
+                if promo_codes.data:
+                    coupon_id = promo_codes.data[0].coupon.id
+                    session_params['discounts'] = [{'coupon': coupon_id}]
+                    logger.info(f"🎟️ Applying promo code: {promo_code} (coupon: {coupon_id})")
+                else:
+                    logger.warning(f"⚠️ Promo code {promo_code} not found in Stripe, continuing without discount")
+            except Exception as promo_error:
+                logger.warning(f"⚠️ Error applying promo code {promo_code}: {promo_error}, continuing without discount")
+        
+        # Create checkout session with 7-day free trial
+        session = stripe.checkout.Session.create(**session_params)
         
         logger.info(f"✅ Checkout session created: {session.id}")
         
