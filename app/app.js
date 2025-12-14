@@ -99,6 +99,25 @@ if (elements.replayBtnSidebar) {
         }, 300);
     });
 }
+
+// Ensure video section stays visible when replay audio ends
+if (elements.replayAudio) {
+    elements.replayAudio.addEventListener('ended', () => {
+        // Ensure video section remains visible after replay ends
+        const videoSection = document.getElementById('videoSection');
+        if (videoSection && dailyCallActive) {
+            videoSection.style.display = 'flex';
+            videoSection.style.visibility = 'visible';
+            
+            // Refresh Daily.co layout if needed
+            if (dailyCallFrame) {
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
+            }
+        }
+    });
+}
 elements.sourceLang.addEventListener('change', handleLanguageChange);
 elements.targetLang.addEventListener('change', handleLanguageChange);
 
