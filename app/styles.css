@@ -921,6 +921,7 @@ body:has(.replay-player:not(.hidden)) .video-translation-wrapper {
     align-items: center;
     margin-bottom: 0.75rem;
     padding: 0;
+    flex: 0 0 auto; /* Don't grow or shrink */
 }
 
 .video-header h3 {
@@ -973,8 +974,7 @@ body:has(.replay-player:not(.hidden)) .video-translation-wrapper {
 
 .daily-call-container {
     width: 100%;
-    height: 100%;
-    flex: 1 1 auto;
+    flex: 1 1 auto; /* Take remaining space after header */
     min-height: 0; /* Changed from 400px to 0 to allow proper flex sizing */
     max-height: 100%; /* Prevent overflow */
     border-radius: var(--radius-md);
@@ -982,8 +982,7 @@ body:has(.replay-player:not(.hidden)) .video-translation-wrapper {
     background: #000;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     position: relative;
-    display: flex; /* Changed to flex to properly contain iframe */
-    flex-direction: column;
+    display: block; /* Block display for proper sizing */
 }
 
 .daily-call-container iframe {
