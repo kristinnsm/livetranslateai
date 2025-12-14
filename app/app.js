@@ -1683,6 +1683,7 @@ function toggleCustomFullscreen() {
     if (!wrapper) return;
     
     const isFullscreen = wrapper.classList.contains('fullscreen-mode');
+    const videoSection = document.getElementById('videoSection');
     
     if (isFullscreen) {
         // Exit fullscreen
@@ -1690,12 +1691,59 @@ function toggleCustomFullscreen() {
         document.body.classList.remove('fullscreen-active'); // Remove class for CSS fallback
         document.getElementById('toggleFullscreen').textContent = '⛶';
         document.body.style.overflow = '';
+        
+        // Ensure video section stays visible after exiting fullscreen
+        if (videoSection && dailyCallActive) {
+            videoSection.style.display = 'flex';
+            videoSection.style.visibility = 'visible';
+            videoSection.style.opacity = '1';
+            
+            // Force Daily.co to recalculate layout after exiting fullscreen
+            if (dailyCallFrame) {
+                try {
+                    // Use requestAnimationFrame for smoother transition
+                    requestAnimationFrame(() => {
+                        // Trigger resize events to force Daily.co to recalculate
+                        window.dispatchEvent(new Event('resize'));
+                        
+                        // Also trigger a custom event that Daily.co might listen to
+                        const resizeEvent = new UIEvent('resize', { bubbles: true, cancelable: false });
+                        window.dispatchEvent(resizeEvent);
+                        
+                        // Force browser to recalculate layout for the container
+                        const dailyContainer = document.getElementById('dailyCallContainer');
+                        if (dailyContainer) {
+                            // Temporarily force reflow to ensure proper sizing
+                            const iframe = dailyContainer.querySelector('iframe');
+                            if (iframe) {
+                                // Reset iframe dimensions to force recalculation
+                                const currentWidth = iframe.style.width;
+                                const currentHeight = iframe.style.height;
+                                iframe.style.width = '99%';
+                                iframe.style.height = '99%';
+                                dailyContainer.offsetHeight; // Trigger reflow
+                                iframe.style.width = currentWidth || '100%';
+                                iframe.style.height = currentHeight || '100%';
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.warn('Could not refresh Daily.co layout:', error);
+                }
+            }
+        }
     } else {
         // Enter fullscreen
         wrapper.classList.add('fullscreen-mode');
         document.body.classList.add('fullscreen-active'); // Add class for CSS fallback
         document.getElementById('toggleFullscreen').textContent = '⛶';
         document.body.style.overflow = 'hidden';
+        
+        // Ensure video section is visible when entering fullscreen
+        if (videoSection && dailyCallActive) {
+            videoSection.style.display = 'flex';
+            videoSection.style.visibility = 'visible';
+        }
     }
 }
 
