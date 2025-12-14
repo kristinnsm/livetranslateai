@@ -234,8 +234,8 @@ def get_user_by_subscription_id(subscription_id: str) -> dict:
         logger.error(f"❌ Failed to get user by subscription ID: {e}")
         return None
 
-def update_stripe_customer(user_id: str, stripe_customer_id: str):
-    """Store Stripe customer ID for user"""
+def update_stripe_customer(user_id: str, stripe_customer_id: str = None):
+    """Store Stripe customer ID for user (or clear it if None)"""
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -249,7 +249,10 @@ def update_stripe_customer(user_id: str, stripe_customer_id: str):
                 SET stripe_customer_id = %s
                 WHERE user_id = %s
             """, (stripe_customer_id, user_id))
-            logger.info(f"✅ Stored Stripe customer ID for user {user_id}")
+            if stripe_customer_id:
+                logger.info(f"✅ Stored Stripe customer ID for user {user_id}")
+            else:
+                logger.info(f"🧹 Cleared Stripe customer ID for user {user_id}")
     except Exception as e:
         logger.error(f"❌ Failed to store Stripe customer ID: {e}")
         raise

@@ -716,9 +716,15 @@ async def create_stripe_portal(request: Request):
             else:
                 raise Exception("No customer ID in database")
         except Exception as portal_error:
-            # Customer ID might be invalid (e.g., test mode ID in live mode)
+            # Customer ID might be invalid (e.g., test mode ID in live mode, or deleted customer)
             # Try to recover from Stripe by email
             logger.warning(f"⚠️ Portal creation failed with customer ID {customer_id}: {portal_error}")
+            
+            # Clear invalid customer ID from database
+            if customer_id:
+                logger.info(f"🧹 Clearing invalid customer ID {customer_id} from database")
+                update_stripe_customer(user_id, None)  # Clear invalid ID
+            
             logger.info(f"🔍 Attempting to recover customer ID from Stripe by email: {user['email']}")
             
             try:
@@ -731,6 +737,16 @@ async def create_stripe_portal(request: Request):
                     found_customer_id = customers.data[0].id
                     logger.info(f"✅ Found customer in Stripe: {found_customer_id}, storing in DB...")
                     
+                    # Verify customer has an active subscription before allowing portal access
+                    subscriptions = stripe.Subscription.list(customer=found_customer_id, status='all', limit=10)
+                    active_subscriptions = [s for s in subscriptions.data if s.status in ['active', 'trialing', 'past_due']]
+                    
+                    if not active_subscriptions:
+                        logger.warning(f"⚠️ Customer {found_customer_id} exists but has no active subscription")
+                        return JSONResponse({
+                            "error": "No active subscription found. Your subscription may have been cancelled. Please subscribe again to manage your account."
+                        }, status_code=404)
+                    
                     # Store it in database for next time
                     update_stripe_customer(user_id, found_customer_id)
                     customer_id = found_customer_id
@@ -740,13 +756,20 @@ async def create_stripe_portal(request: Request):
                     logger.info(f"✅ Recovered customer ID from Stripe and created portal session")
                 else:
                     logger.error(f"❌ Customer not found in Stripe for email: {user['email']}")
-                    return JSONResponse({
-                        "error": "No subscription found. Please contact support@livetranslateai.com"
-                    }, status_code=404)
+                    # If user is marked as premium but has no Stripe customer, they may need to subscribe
+                    if user.get('tier') == 'premium':
+                        logger.warning(f"⚠️ User {user_id} is marked premium but has no Stripe customer - may need to subscribe")
+                        return JSONResponse({
+                            "error": "No subscription found. You may need to subscribe. Please try logging out and back in, or contact support@livetranslateai.com"
+                        }, status_code=404)
+                    else:
+                        return JSONResponse({
+                            "error": "No subscription found. Please subscribe to access subscription management."
+                        }, status_code=404)
             except Exception as stripe_error:
                 logger.error(f"❌ Failed to recover customer from Stripe: {stripe_error}")
                 return JSONResponse({
-                    "error": "No subscription found. If you just paid, please wait 30 seconds and try again."
+                    "error": "Unable to access subscription. If you just paid, please wait 30 seconds and try again. Otherwise, contact support@livetranslateai.com"
                 }, status_code=404)
         
         logger.info(f"✅ Created Stripe portal session for user {user_id} ({user['email']})")
