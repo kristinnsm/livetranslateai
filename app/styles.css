@@ -92,12 +92,15 @@ body:-ms-fullscreen .container {
     right: 0;
     bottom: 0;
     width: 100vw;
-    height: 100vh;
+    min-height: 100vh; /* Allow content to extend beyond viewport */
+    height: auto; /* Allow height to grow */
     z-index: 9999;
     background: var(--bg-primary);
     padding: 0; /* Remove padding to fill entire screen */
     gap: 0; /* Remove gap to fill entire screen */
     margin: 0;
+    overflow-y: auto; /* Allow vertical scrolling in fullscreen */
+    overflow-x: hidden;
 }
 
 .video-translation-wrapper.fullscreen-mode .video-section {
@@ -112,7 +115,8 @@ body:-ms-fullscreen .container {
 
 .video-translation-wrapper.fullscreen-mode .translation-area {
     flex: 0 0 50%; /* 50% width in fullscreen */
-    height: 100vh; /* Full viewport height */
+    min-height: 100vh; /* Minimum viewport height */
+    height: auto; /* Allow height to grow */
     padding: 1rem; /* Add padding back inside section */
     padding-right: 120px; /* Extra padding to prevent overlap with action buttons */
     margin: 0;
