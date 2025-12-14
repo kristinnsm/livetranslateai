@@ -575,8 +575,8 @@ body.fullscreen-active .action-buttons {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1rem;
-    padding-right: 120px; /* Extra padding to prevent overlap with action buttons (80px width + 20px margin + 20px buffer) */
-    flex: 0 0 40%; /* Translation takes 40% width */
+    padding-right: 110px; /* Padding to prevent overlap with action buttons */
+    flex: 0 0 50%; /* Translation takes 50% width - expanded to use dead space */
     min-height: 0;
     display: flex;
     flex-direction: column;
