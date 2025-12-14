@@ -112,6 +112,7 @@ body:-ms-fullscreen .container {
     flex: 0 0 50%; /* 50% width in fullscreen */
     height: 100vh; /* Full viewport height */
     padding: 1rem; /* Add padding back inside section */
+    padding-right: 120px; /* Extra padding to prevent overlap with action buttons */
     margin: 0;
 }
 
@@ -572,6 +573,7 @@ body.fullscreen-active .action-buttons {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1rem;
+    padding-right: 120px; /* Extra padding to prevent overlap with action buttons (80px width + 20px margin + 20px buffer) */
     flex: 0 0 40%; /* Translation takes 40% width */
     min-height: 0;
     display: flex;
@@ -701,9 +703,12 @@ body.fullscreen-active .action-buttons {
     line-height: 1.5;
     flex: 1 1 auto;
     overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
     word-wrap: break-word;
+    word-break: break-word; /* Ensure long words break properly */
     min-height: 1.5em; /* Minimum height for one line */
     max-height: 300px; /* Max height before scrolling */
+    padding-right: 0; /* No extra padding needed - handled by parent */
 }
 
 .subtitle-text.fade-in {
