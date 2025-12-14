@@ -90,22 +90,24 @@ body:-ms-fullscreen .container {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    /* Remove bottom: 0 to allow wrapper to extend beyond viewport */
     width: 100vw;
-    min-height: 100vh; /* Allow content to extend beyond viewport */
-    height: auto; /* Allow height to grow */
+    min-height: 100vh; /* Minimum viewport height */
+    height: auto; /* Allow height to grow with content */
     z-index: 9999;
     background: var(--bg-primary);
     padding: 0; /* Remove padding to fill entire screen */
     gap: 0; /* Remove gap to fill entire screen */
     margin: 0;
-    overflow-y: auto; /* Allow vertical scrolling in fullscreen */
+    margin-bottom: 0; /* Ensure no bottom margin */
+    overflow-y: visible; /* Allow content to extend - body will handle scrolling */
     overflow-x: hidden;
 }
 
 .video-translation-wrapper.fullscreen-mode .video-section {
     flex: 0 0 50%; /* 50% width in fullscreen */
-    height: 100vh; /* Full viewport height */
+    min-height: 100vh; /* Minimum viewport height */
+    height: auto; /* Allow height to grow */
     padding: 1rem; /* Add padding back inside section */
     display: flex;
     flex-direction: column;
