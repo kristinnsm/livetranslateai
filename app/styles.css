@@ -575,8 +575,8 @@ body.fullscreen-active .action-buttons {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: 1rem;
-    padding-right: 110px; /* Padding to prevent overlap with action buttons */
-    flex: 0 0 50%; /* Translation takes 50% width - expanded to use dead space */
+    padding-right: 120px; /* Extra padding to prevent overlap with action buttons (80px width + 20px margin + 20px buffer) */
+    flex: 0 0 40%; /* Translation takes 40% width */
     min-height: 0;
     display: flex;
     flex-direction: column;
@@ -675,13 +675,14 @@ body.fullscreen-active .action-buttons {
     background: var(--bg-tertiary);
     border-radius: var(--radius-md);
     padding: 0.75rem;
-    min-height: 60px; /* Smaller initial height */
+    min-height: 80px; /* Increased minimum height */
     max-height: none; /* Allow expansion */
-    flex: 0 1 auto; /* Don't force expansion, but allow if needed */
+    flex: 1 1 auto; /* Allow box to grow to fit content */
     display: flex;
     flex-direction: column;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: min-height 0.3s ease;
+    overflow: visible; /* Allow content to be fully visible */
 }
 
 /* Expand box if content overflows */
@@ -709,7 +710,7 @@ body.fullscreen-active .action-buttons {
     word-wrap: break-word;
     word-break: break-word; /* Ensure long words break properly */
     min-height: 1.5em; /* Minimum height for one line */
-    max-height: 300px; /* Max height before scrolling */
+    max-height: none; /* Remove height limit - allow full content to be visible */
     padding-right: 0; /* No extra padding needed - handled by parent */
 }
 

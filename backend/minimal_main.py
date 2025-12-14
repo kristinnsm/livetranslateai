@@ -756,16 +756,41 @@ async def create_stripe_portal(request: Request):
                     logger.info(f"✅ Recovered customer ID from Stripe and created portal session")
                 else:
                     logger.error(f"❌ Customer not found in Stripe for email: {user['email']}")
-                    # If user is marked as premium but has no Stripe customer, they may need to subscribe
-                    if user.get('tier') == 'premium':
-                        logger.warning(f"⚠️ User {user_id} is marked premium but has no Stripe customer - may need to subscribe")
-                        return JSONResponse({
-                            "error": "No subscription found. You may need to subscribe. Please try logging out and back in, or contact support@livetranslateai.com"
-                        }, status_code=404)
-                    else:
-                        return JSONResponse({
-                            "error": "No subscription found. Please subscribe to access subscription management."
-                        }, status_code=404)
+                    
+                    # Try to recover customer ID from subscription_id if user has one
+                    subscription_id = user.get('subscription_id')
+                    if subscription_id:
+                        logger.info(f"🔍 User has subscription_id {subscription_id}, attempting to retrieve customer from subscription...")
+                        try:
+                            subscription = stripe.Subscription.retrieve(subscription_id)
+                            if subscription and subscription.customer:
+                                found_customer_id = subscription.customer
+                                logger.info(f"✅ Found customer {found_customer_id} from subscription {subscription_id}")
+                                
+                                # Store it in database for next time
+                                update_stripe_customer(user_id, found_customer_id)
+                                customer_id = found_customer_id
+                                
+                                # Try portal session with recovered customer ID
+                                session = create_portal_session(customer_id, return_url)
+                                logger.info(f"✅ Recovered customer ID from subscription and created portal session")
+                            else:
+                                raise Exception("Subscription has no customer")
+                        except Exception as sub_error:
+                            logger.warning(f"⚠️ Could not retrieve customer from subscription {subscription_id}: {sub_error}")
+                    
+                    # If still no customer found
+                    if not customer_id:
+                        # If user is marked as premium but has no Stripe customer, they may need to subscribe
+                        if user.get('tier') == 'premium':
+                            logger.warning(f"⚠️ User {user_id} is marked premium but has no Stripe customer - may need to subscribe")
+                            return JSONResponse({
+                                "error": "No subscription found. You may need to subscribe. Please try logging out and back in, or contact support@livetranslateai.com"
+                            }, status_code=404)
+                        else:
+                            return JSONResponse({
+                                "error": "No subscription found. Please subscribe to access subscription management."
+                            }, status_code=404)
             except Exception as stripe_error:
                 logger.error(f"❌ Failed to recover customer from Stripe: {stripe_error}")
                 return JSONResponse({
