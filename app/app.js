@@ -779,6 +779,13 @@ function triggerReplay() {
         return;
     }
 
+    // Ensure video section stays visible during replay
+    const videoSection = document.getElementById('videoSection');
+    if (videoSection && dailyCallActive) {
+        videoSection.style.display = 'flex';
+        videoSection.style.visibility = 'visible';
+    }
+
     // Show replay UI
     elements.replayPlayer.classList.remove('hidden');
     
@@ -1469,11 +1476,16 @@ async function initializeVideoCall(isMobileMode = false) {
             {
                 showLeaveButton: false,
                 showFullscreenButton: false, // Disable Daily's fullscreen - we'll use custom one
+                showLocalVideo: true,
+                showParticipantsBar: false, // Hide participants bar to maximize video space
                 iframeStyle: {
                     width: '100%',
                     height: '100%',
                     border: '0',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0'
                 }
             }
         );
@@ -1530,7 +1542,22 @@ async function initializeVideoCall(isMobileMode = false) {
             };
         }
         
+        // Configure Daily.co to use proper layout that doesn't crop videos
         await dailyCallFrame.join(joinConfig);
+        
+        // Set Daily.co layout to ensure all videos are visible
+        try {
+            // Use grid layout to show all participants properly
+            await dailyCallFrame.setLayoutMode('grid');
+            // Ensure videos are not cropped
+            await dailyCallFrame.setBandwidth({
+                video: 2000, // Higher bandwidth for better quality
+                screenShare: 3000
+            });
+        } catch (layoutError) {
+            console.warn('Could not set Daily.co layout:', layoutError);
+            // Continue anyway - layout might not be available in all Daily.co versions
+        }
 
         dailyCallActive = true;
         
@@ -1660,11 +1687,13 @@ function toggleCustomFullscreen() {
     if (isFullscreen) {
         // Exit fullscreen
         wrapper.classList.remove('fullscreen-mode');
+        document.body.classList.remove('fullscreen-active'); // Remove class for CSS fallback
         document.getElementById('toggleFullscreen').textContent = '⛶';
         document.body.style.overflow = '';
     } else {
         // Enter fullscreen
         wrapper.classList.add('fullscreen-mode');
+        document.body.classList.add('fullscreen-active'); // Add class for CSS fallback
         document.getElementById('toggleFullscreen').textContent = '⛶';
         document.body.style.overflow = 'hidden';
     }
