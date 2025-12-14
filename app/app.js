@@ -901,22 +901,7 @@ function displayReplaySubtitles(vttContent) {
  * Handle language change from dropdown
  */
 function handleLanguageChange() {
-    // In room mode, warn that language changes aren't recommended mid-session
-    if (currentRoom) {
-        const confirmed = confirm(
-            "⚠️ Changing languages mid-session can cause translation errors.\n\n" +
-            "For best results, set your language before speaking.\n\n" +
-            "Continue with language change?"
-        );
-        
-        if (!confirmed) {
-            // Revert to previous values (read from room data)
-            // For now, just warn
-            showToast('Language change cancelled', 'info');
-            return;
-        }
-    }
-    
+    // Language changes are now allowed without warning
     updateLanguages();
 }
 
