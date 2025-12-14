@@ -1741,7 +1741,7 @@ function toggleCustomFullscreen() {
         wrapper.classList.add('fullscreen-mode');
         document.body.classList.add('fullscreen-active'); // Add class for CSS fallback
         document.getElementById('toggleFullscreen').textContent = '⛶';
-        document.body.style.overflow = 'hidden';
+        document.body.style.overflow = 'auto'; // Allow scrolling in fullscreen to access replay section
         
         // Ensure video section is visible when entering fullscreen
         if (videoSection && dailyCallActive) {
